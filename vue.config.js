@@ -3,6 +3,7 @@ const path = require('path')
 
 module.exports = defineConfig({
   transpileDependencies: true,
+  publicPath: '/',
   
   // 配置路径别名
   configureWebpack: {
@@ -26,11 +27,19 @@ module.exports = defineConfig({
   devServer: {
     port: 8081,
     open: true,
+    host: 'localhost',
     client: {
       overlay: {
         warnings: false,
         errors: true
       }
+    },
+    historyApiFallback: {
+      rewrites: [
+        { from: /^\/merchant\/.*$/, to: '/index.html' },
+        { from: /^\/admin\/.*$/, to: '/index.html' },
+        { from: /./, to: '/index.html' }
+      ]
     }
   }
 })

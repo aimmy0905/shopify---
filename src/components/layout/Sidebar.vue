@@ -121,7 +121,7 @@ import {
   Wallet,
   Money,
   Document,
-  Truck,
+  Ship,
   User,
   Service,
   // 管理端图标
@@ -132,8 +132,7 @@ import {
   DocumentChecked,
   CreditCard,
   PieChart,
-  Files,
-  Ship
+  Files
 } from '@element-plus/icons-vue'
 
 const props = defineProps({
@@ -174,7 +173,7 @@ const merchantMenuItems = [
     key: 'dashboard',
     title: '仪表板',
     icon: Monitor,
-    route: '/dashboard'
+    route: '/merchant/dashboard'
   },
   {
     key: 'stores',
@@ -185,13 +184,13 @@ const merchantMenuItems = [
         key: 'stores-list',
         title: '店铺列表',
         icon: Shop,
-        route: '/stores'
+        route: '/merchant/stores'
       },
       {
         key: 'stores-add',
         title: '添加店铺',
         icon: Shop,
-        route: '/stores/add'
+        route: '/merchant/stores/add'
       }
     ]
   },
@@ -204,19 +203,19 @@ const merchantMenuItems = [
         key: 'products-all',
         title: '平台商品',
         icon: Goods,
-        route: '/products/all'
+        route: '/merchant/products/all'
       },
       {
         key: 'products-import',
         title: '导入商品列表',
         icon: Goods,
-        route: '/products/import'
+        route: '/merchant/products/import'
       },
       {
         key: 'products-my',
         title: '我的商品',
         icon: Goods,
-        route: '/products/my'
+        route: '/merchant/products/my'
       }
     ]
   },
@@ -229,19 +228,19 @@ const merchantMenuItems = [
         key: 'orders-store',
         title: '店铺订单',
         icon: ShoppingCart,
-        route: '/orders/store'
+        route: '/merchant/orders/store'
       },
       {
         key: 'orders-purchase',
         title: '采购订单',
         icon: ShoppingBag,
-        route: '/orders/purchase'
+        route: '/merchant/orders/purchase'
       },
       {
         key: 'orders-aftersale',
         title: '售后订单',
         icon: ShoppingCart,
-        route: '/orders/aftersale'
+        route: '/merchant/orders/aftersale'
       }
     ]
   },
@@ -254,13 +253,13 @@ const merchantMenuItems = [
         key: 'purchase-applications',
         title: '采购申请',
         icon: Document,
-        route: '/purchase/applications'
+        route: '/merchant/purchase/applications'
       },
       {
         key: 'purchase-create',
         title: '发起采购',
         icon: ShoppingBag,
-        route: '/purchase/applications/create'
+        route: '/merchant/purchase/create'
       }
     ]
   },
@@ -274,31 +273,31 @@ const merchantMenuItems = [
     key: 'commission',
     title: '佣金管理',
     icon: Money,
-    route: '/commission'
+    route: '/merchant/commission'
   },
   {
     key: 'invoices',
     title: 'Invoice管理',
     icon: Document,
-    route: '/invoices'
+    route: '/merchant/invoices'
   },
   {
     key: 'logistics',
     title: '物流查询',
-    icon: Truck,
-    route: '/logistics'
+    icon: Ship,
+    route: '/merchant/logistics'
   },
   {
     key: 'profile',
     title: '个人设置',
     icon: User,
-    route: '/profile'
+    route: '/merchant/profile'
   },
   {
     key: 'support',
     title: '客服支持',
     icon: Service,
-    route: '/support'
+    route: '/merchant/support'
   }
 ]
 
@@ -450,7 +449,7 @@ const adminMenuItems = [
   {
     key: 'shipping-templates',
     title: '运费模板管理',
-    icon: Truck,
+    icon: Ship,
     route: '/admin/shipping-templates'
   },
   {

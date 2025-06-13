@@ -1,4 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { autoValidateRoutes } from '@/utils/routeValidator.js'
+import { setupRouterErrorHandling } from './handle-errors'
 
 // 认证相关页面
 const Login = () => import('@/views/auth/Login.vue')
@@ -197,6 +199,10 @@ const routes = [
         }
       },
       // 采购管理
+      {
+        path: 'purchase',
+        redirect: '/merchant/purchase/applications'
+      },
       {
         path: 'purchase/applications',
         name: 'PurchaseApplications',
@@ -474,7 +480,7 @@ const routes = [
 ]
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHistory(process.env.BASE_URL),
   routes,
   scrollBehavior(to, from, savedPosition) {
     if (savedPosition) {
@@ -539,4 +545,10 @@ function getCurrentUserType() {
   return localStorage.getItem('userType') || 'merchant'
 }
 
-export default router 
+// 在开发环境中自动验证路由
+autoValidateRoutes(router)
+
+// 添加错误处理
+const routerWithErrorHandling = setupRouterErrorHandling(router)
+
+export default routerWithErrorHandling 

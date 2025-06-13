@@ -45,10 +45,6 @@
           <el-button v-if="storeInfo.status !== 'active'" type="primary" @click="handleReauth">
             重新授权
           </el-button>
-          <el-button type="success" @click="handleSync" :loading="syncing">
-            <el-icon><Refresh /></el-icon>
-            同步数据
-          </el-button>
           <el-button type="danger" @click="handleDeleteStore">
             <el-icon><Delete /></el-icon>
             删除店铺
@@ -58,67 +54,110 @@
     </div>
 
     <!-- 数据概览卡片 -->
-    <div class="overview-cards">
-      <div class="overview-card products-card">
-        <div class="card-header">
-          <div class="card-icon">
-            <el-icon size="24"><Goods /></el-icon>
-          </div>
-          <div class="card-title">店铺商品</div>
-        </div>
-        <div class="card-content">
-          <div class="main-value">{{ storeStats.totalProducts }}</div>
-          <div class="sub-info">
-            <span class="sub-value">+{{ storeStats.newProducts }}</span>
-            <span class="sub-label">本月新增</span>
-          </div>
-        </div>
+    <div class="overview-section">
+      <div class="overview-header">
+        <h3>数据概览</h3>
+        <el-radio-group v-model="overviewPeriod" @change="updateOverviewData">
+          <el-radio-button label="7d">7天</el-radio-button>
+          <el-radio-button label="30d">30天</el-radio-button>
+          <el-radio-button label="90d">90天</el-radio-button>
+          <el-radio-button label="1y">一年</el-radio-button>
+        </el-radio-group>
       </div>
-      
-      <div class="overview-card orders-card">
-        <div class="card-header">
-          <div class="card-icon">
-            <el-icon size="24"><DocumentChecked /></el-icon>
+      <div class="overview-cards">
+        <div class="overview-card sales-card">
+          <div class="card-header">
+            <div class="card-icon">
+              <el-icon size="24"><Money /></el-icon>
+            </div>
+            <div class="card-title">今日销售额</div>
           </div>
-          <div class="card-title">订单数量</div>
-        </div>
-        <div class="card-content">
-          <div class="main-value">{{ storeStats.totalOrders }}</div>
-          <div class="sub-info">
-            <span class="sub-value">+{{ storeStats.newOrders }}</span>
-            <span class="sub-label">本月新增</span>
-          </div>
-        </div>
-      </div>
-      
-      <div class="overview-card revenue-card">
-        <div class="card-header">
-          <div class="card-icon">
-            <el-icon size="24"><Money /></el-icon>
-          </div>
-          <div class="card-title">销售收入</div>
-        </div>
-        <div class="card-content">
-          <div class="main-value">${{ storeStats.totalRevenue }}</div>
-          <div class="sub-info">
-            <span class="sub-value">+${{ storeStats.monthlyRevenue }}</span>
-            <span class="sub-label">本月收入</span>
+          <div class="card-content">
+            <div class="main-value">${{ todayStats.salesAmount }}</div>
+            <div class="sub-info">
+              <span class="sub-value">{{ todayStats.salesGrowth }}%</span>
+              <span class="sub-label">较昨日</span>
+            </div>
           </div>
         </div>
-      </div>
-      
-      <div class="overview-card sync-card">
-        <div class="card-header">
-          <div class="card-icon">
-            <el-icon size="24"><Upload /></el-icon>
+        
+        <div class="overview-card orders-card">
+          <div class="card-header">
+            <div class="card-icon">
+              <el-icon size="24"><DocumentChecked /></el-icon>
+            </div>
+            <div class="card-title">今日订单数</div>
           </div>
-          <div class="card-title">同步状态</div>
+          <div class="card-content">
+            <div class="main-value">{{ todayStats.orderCount }}</div>
+            <div class="sub-info">
+              <span class="sub-value">{{ todayStats.orderGrowth }}%</span>
+              <span class="sub-label">较昨日</span>
+            </div>
+          </div>
         </div>
-        <div class="card-content">
-          <div class="main-value">{{ storeStats.syncedProducts }}</div>
-          <div class="sub-info">
-            <span class="sub-value">{{ storeStats.syncRate }}%</span>
-            <span class="sub-label">同步率</span>
+        
+        <div class="overview-card avg-order-card">
+          <div class="card-header">
+            <div class="card-icon">
+              <el-icon size="24"><Goods /></el-icon>
+            </div>
+            <div class="card-title">今日客单价</div>
+          </div>
+          <div class="card-content">
+            <div class="main-value">${{ todayStats.avgOrderValue }}</div>
+            <div class="sub-info">
+              <span class="sub-value">{{ todayStats.avgOrderGrowth }}%</span>
+              <span class="sub-label">较昨日</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="overview-card aftersale-amount-card">
+          <div class="card-header">
+            <div class="card-icon">
+              <el-icon size="24"><RefreshLeft /></el-icon>
+            </div>
+            <div class="card-title">今日售后金额</div>
+          </div>
+          <div class="card-content">
+            <div class="main-value">${{ todayStats.aftersaleAmount }}</div>
+            <div class="sub-info">
+              <span class="sub-value">{{ todayStats.aftersaleAmountGrowth }}%</span>
+              <span class="sub-label">较昨日</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="overview-card aftersale-count-card">
+          <div class="card-header">
+            <div class="card-icon">
+              <el-icon size="24"><Warning /></el-icon>
+            </div>
+            <div class="card-title">今日售后数量</div>
+          </div>
+          <div class="card-content">
+            <div class="main-value">{{ todayStats.aftersaleCount }}</div>
+            <div class="sub-info">
+              <span class="sub-value">{{ todayStats.aftersaleCountGrowth }}%</span>
+              <span class="sub-label">较昨日</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="overview-card profit-card">
+          <div class="card-header">
+            <div class="card-icon">
+              <el-icon size="24"><TrendCharts /></el-icon>
+            </div>
+            <div class="card-title">今日利润</div>
+          </div>
+          <div class="card-content">
+            <div class="main-value">${{ todayStats.profit }}</div>
+            <div class="sub-info">
+              <span class="sub-value">{{ todayStats.profitGrowth }}%</span>
+              <span class="sub-label">较昨日</span>
+            </div>
           </div>
         </div>
       </div>
@@ -128,17 +167,176 @@
     <div class="chart-section">
       <div class="chart-header">
         <h3>数据趋势</h3>
-        <el-radio-group v-model="chartPeriod" @change="updateChart">
-          <el-radio-button label="7d">近7天</el-radio-button>
-          <el-radio-button label="30d">近30天</el-radio-button>
-          <el-radio-button label="90d">近90天</el-radio-button>
-        </el-radio-group>
+        <div class="chart-controls">
+          <el-radio-group v-model="chartPeriod" @change="updateChart">
+            <el-radio-button label="7d">近7日</el-radio-button>
+            <el-radio-button label="1m">近1个月</el-radio-button>
+            <el-radio-button label="3m">近3个月</el-radio-button>
+            <el-radio-button label="1y">近1年</el-radio-button>
+            <el-radio-button label="custom">自定义</el-radio-button>
+          </el-radio-group>
+          <div v-if="chartPeriod === 'custom'" class="custom-date-range">
+            <el-date-picker
+              v-model="customDateRange"
+              type="daterange"
+              range-separator="至"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+              size="small"
+              @change="updateChart"
+            />
+          </div>
+        </div>
       </div>
       <div class="chart-container">
-        <div class="chart-placeholder">
-          <el-icon size="48" color="#c0c4cc"><TrendCharts /></el-icon>
-          <p>数据图表展示区域</p>
-          <p class="chart-note">（实际项目中这里会显示 ECharts 图表）</p>
+        <svg 
+          ref="chartSvg" 
+          width="100%" 
+          height="350" 
+          @mousemove="handleChartMouseMove"
+          @mouseleave="hideTooltip"
+        >
+          <!-- 网格背景 -->
+          <defs>
+            <pattern id="grid" width="50" height="35" patternUnits="userSpaceOnUse">
+              <path d="M 50 0 L 0 0 0 35" fill="none" stroke="#f0f0f0" stroke-width="1"/>
+            </pattern>
+            <!-- 渐变定义 -->
+            <linearGradient id="salesGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" style="stop-color:#667eea;stop-opacity:0.3" />
+              <stop offset="100%" style="stop-color:#667eea;stop-opacity:0.05" />
+            </linearGradient>
+            <linearGradient id="ordersGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" style="stop-color:#f093fb;stop-opacity:0.3" />
+              <stop offset="100%" style="stop-color:#f093fb;stop-opacity:0.05" />
+            </linearGradient>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#grid)" />
+          
+          <!-- Y轴标签 -->
+          <g class="y-axis">
+            <text v-for="(label, index) in yAxisLabels.sales" :key="'sales-' + index"
+                  :x="30" 
+                  :y="getSalesYPosition(label) + 5"
+                  fill="#666" 
+                  font-size="12" 
+                  text-anchor="end">
+              ${{ label }}
+            </text>
+            <text v-for="(label, index) in yAxisLabels.orders" :key="'orders-' + index"
+                  :x="chartWidth - 10" 
+                  :y="getOrderYPosition(label) + 5"
+                  fill="#666" 
+                  font-size="12" 
+                  text-anchor="start">
+              {{ label }}
+            </text>
+          </g>
+          
+          <!-- X轴标签 -->
+          <g class="x-axis">
+            <text v-for="(point, index) in chartData" :key="'x-' + index"
+                  :x="getXPosition(index)" 
+                  :y="chartHeight - 10"
+                  fill="#666" 
+                  font-size="12" 
+                  text-anchor="middle">
+              {{ point.date }}
+            </text>
+          </g>
+          
+          <!-- 销售额区域填充 -->
+          <path
+            :d="salesAreaPath"
+            fill="url(#salesGradient)"
+          />
+          
+          <!-- 订单量区域填充 -->
+          <path
+            :d="ordersAreaPath"
+            fill="url(#ordersGradient)"
+          />
+          
+          <!-- 销售额数据线 -->
+          <polyline
+            :points="salesLinePoints"
+            fill="none"
+            stroke="#667eea"
+            stroke-width="3"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+          
+          <!-- 订单量数据线 -->
+          <polyline
+            :points="ordersLinePoints"
+            fill="none"
+            stroke="#f093fb"
+            stroke-width="3"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+          
+          <!-- 销售额数据点 -->
+          <circle
+            v-for="(point, index) in chartData"
+            :key="'sales-point-' + index"
+            :cx="getXPosition(index)"
+            :cy="getSalesYPosition(point.sales)"
+            r="5"
+            fill="#667eea"
+            stroke="white"
+            stroke-width="2"
+            class="data-point"
+            @mouseenter="showPointTooltip(point)"
+          />
+          
+          <!-- 订单量数据点 -->
+          <circle
+            v-for="(point, index) in chartData"
+            :key="'orders-point-' + index"
+            :cx="getXPosition(index)"
+            :cy="getOrderYPosition(point.orders)"
+            r="5"
+            fill="#f093fb"
+            stroke="white"
+            stroke-width="2"
+            class="data-point"
+            @mouseenter="showPointTooltip(point)"
+          />
+        </svg>
+        
+        <!-- 图表图例 -->
+        <div class="chart-legend">
+          <div class="legend-item">
+            <span class="legend-color" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></span>
+            <span>销售额 (美元)</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-color" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);"></span>
+            <span>订单数量</span>
+          </div>
+        </div>
+        
+        <!-- 悬停提示框 -->
+        <div 
+          v-if="showTooltip" 
+          class="chart-tooltip" 
+          :style="{ left: tooltipX + 'px', top: tooltipY + 'px' }"
+        >
+          <div class="tooltip-header">{{ tooltipData.date }}</div>
+          <div class="tooltip-item">
+            <span class="tooltip-label">销售额:</span>
+            <span class="tooltip-value">${{ tooltipData.sales?.toLocaleString() }}</span>
+          </div>
+          <div class="tooltip-item">
+            <span class="tooltip-label">订单数:</span>
+            <span class="tooltip-value">{{ tooltipData.orders }}</span>
+          </div>
+          <div class="tooltip-item">
+            <span class="tooltip-label">客单价:</span>
+            <span class="tooltip-value">${{ tooltipData.avgOrderValue }}</span>
+          </div>
         </div>
       </div>
     </div>
@@ -271,34 +469,7 @@
           </div>
         </el-tab-pane>
 
-        <el-tab-pane label="同步记录" name="sync-logs">
-          <div class="tab-content">
-            <div class="content-header">
-              <h4>数据同步记录</h4>
-              <el-button type="primary" size="small" @click="handleSync">
-                <el-icon><Refresh /></el-icon>
-                立即同步
-              </el-button>
-            </div>
-            <el-table :data="syncLogs" stripe>
-              <el-table-column prop="sync_type" label="同步类型" />
-              <el-table-column prop="sync_time" label="同步时间">
-                <template #default="{ row }">
-                  {{ formatDateTime(row.sync_time) }}
-                </template>
-              </el-table-column>
-              <el-table-column label="同步状态">
-                <template #default="{ row }">
-                  <el-tag :type="row.status === 'success' ? 'success' : 'danger'" size="small">
-                    {{ row.status === 'success' ? '成功' : '失败' }}
-                  </el-tag>
-                </template>
-              </el-table-column>
-              <el-table-column prop="sync_count" label="同步数量" />
-              <el-table-column prop="message" label="备注" />
-            </el-table>
-          </div>
-        </el-tab-pane>
+
       </el-tabs>
     </div>
   </div>
@@ -313,25 +484,34 @@ import {
   Link,
   Key,
   Calendar,
-  Refresh,
   Delete,
   Goods,
   DocumentChecked,
   Money,
-  Upload,
   TrendCharts,
-  Plus
+  Plus,
+  RefreshLeft,
+  Warning
 } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const route = useRoute()
 
 // 响应式数据
-const syncing = ref(false)
-const chartPeriod = ref('30d')
+const chartPeriod = ref('7d')
 const activeTab = ref('products')
 const productsPeriod = ref('30d')
 const orderTypeFilter = ref('all')
+const overviewPeriod = ref('30d')
+const customDateRange = ref([])
+
+// 图表相关
+const showTooltip = ref(false)
+const tooltipX = ref(0)
+const tooltipY = ref(0)
+const tooltipData = ref({})
+const chartWidth = ref(800)
+const chartHeight = ref(350)
 
 // 店铺基本信息（模拟数据）
 const storeInfo = ref({
@@ -343,17 +523,34 @@ const storeInfo = ref({
   created_at: '2023-12-01T10:00:00Z'
 })
 
-// 店铺统计数据
-const storeStats = ref({
-  totalProducts: 156,
-  newProducts: 12,
-  totalOrders: 1234,
-  newOrders: 89,
-  totalRevenue: '45,678.90',
-  monthlyRevenue: '8,234.50',
-  syncedProducts: 148,
-  syncRate: 95
+
+
+// 今日统计数据
+const todayStats = ref({
+  salesAmount: 1234.56,
+  salesGrowth: 5.6,
+  orderCount: 89,
+  orderGrowth: 3.4,
+  avgOrderValue: 13.87,
+  avgOrderGrowth: 2.3,
+  aftersaleAmount: 234.56,
+  aftersaleAmountGrowth: 4.5,
+  aftersaleCount: 12,
+  aftersaleCountGrowth: 2.5,
+  profit: 1000.00,
+  profitGrowth: 3.0
 })
+
+// 图表数据
+const chartData = ref([
+  { date: '12-04', sales: 1200, orders: 45, avgOrderValue: 26.67 },
+  { date: '12-05', sales: 1500, orders: 67, avgOrderValue: 22.39 },
+  { date: '12-06', sales: 1100, orders: 52, avgOrderValue: 21.15 },
+  { date: '12-07', sales: 1800, orders: 78, avgOrderValue: 23.08 },
+  { date: '12-08', sales: 1600, orders: 61, avgOrderValue: 26.23 },
+  { date: '12-09', sales: 2000, orders: 80, avgOrderValue: 25.00 },
+  { date: '12-10', sales: 1234, orders: 89, avgOrderValue: 13.87 }
+])
 
 // 商品列表数据（按销量排序）
 const productList = ref([
@@ -470,23 +667,7 @@ const orderList = ref([
   }
 ])
 
-// 同步记录数据
-const syncLogs = ref([
-  {
-    sync_type: '商品同步',
-    sync_time: '2023-12-10T08:00:00Z',
-    status: 'success',
-    sync_count: 10,
-    message: '成功同步10个商品'
-  },
-  {
-    sync_type: '订单同步',
-    sync_time: '2023-12-09T20:00:00Z',
-    status: 'success',
-    sync_count: 5,
-    message: '成功同步5个订单'
-  }
-])
+
 
 // 计算属性
 const filteredOrderList = computed(() => {
@@ -496,23 +677,65 @@ const filteredOrderList = computed(() => {
   return orderList.value.filter(order => order.order_type === orderTypeFilter.value)
 })
 
+// 图表计算属性
+const yAxisLabels = computed(() => {
+  const maxSales = Math.max(...chartData.value.map(d => d.sales))
+  const maxOrders = Math.max(...chartData.value.map(d => d.orders))
+  
+  return {
+    sales: [0, Math.round(maxSales * 0.25), Math.round(maxSales * 0.5), Math.round(maxSales * 0.75), maxSales],
+    orders: [0, Math.round(maxOrders * 0.25), Math.round(maxOrders * 0.5), Math.round(maxOrders * 0.75), maxOrders]
+  }
+})
+
+const salesLinePoints = computed(() => {
+  return chartData.value.map((_, index) => {
+    const x = getXPosition(index)
+    const y = getSalesYPosition(chartData.value[index].sales)
+    return `${x},${y}`
+  }).join(' ')
+})
+
+const ordersLinePoints = computed(() => {
+  return chartData.value.map((_, index) => {
+    const x = getXPosition(index)
+    const y = getOrderYPosition(chartData.value[index].orders)
+    return `${x},${y}`
+  }).join(' ')
+})
+
+const salesAreaPath = computed(() => {
+  if (chartData.value.length === 0) return ''
+  
+  let path = `M 50 ${chartHeight.value - 50}`
+  chartData.value.forEach((_, index) => {
+    const x = getXPosition(index)
+    const y = getSalesYPosition(chartData.value[index].sales)
+    path += ` L ${x} ${y}`
+  })
+  path += ` L ${getXPosition(chartData.value.length - 1)} ${chartHeight.value - 50} Z`
+  return path
+})
+
+const ordersAreaPath = computed(() => {
+  if (chartData.value.length === 0) return ''
+  
+  let path = `M 50 ${chartHeight.value - 50}`
+  chartData.value.forEach((_, index) => {
+    const x = getXPosition(index)
+    const y = getOrderYPosition(chartData.value[index].orders)
+    path += ` L ${x} ${y}`
+  })
+  path += ` L ${getXPosition(chartData.value.length - 1)} ${chartHeight.value - 50} Z`
+  return path
+})
+
 // 方法
 const handleReauth = () => {
   ElMessage.info('重新授权功能开发中')
 }
 
-const handleSync = async () => {
-  syncing.value = true
-  try {
-    // 模拟同步过程
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    ElMessage.success('数据同步成功')
-  } catch (error) {
-    ElMessage.error('数据同步失败')
-  } finally {
-    syncing.value = false
-  }
-}
+
 
 const handleDeleteStore = async () => {
   try {
@@ -533,8 +756,95 @@ const handleDeleteStore = async () => {
   }
 }
 
+// 图表相关方法
+const getXPosition = (index) => {
+  const padding = 50
+  const stepWidth = (chartWidth.value - 2 * padding) / (chartData.value.length - 1)
+  return padding + index * stepWidth
+}
+
+const getSalesYPosition = (sales) => {
+  const padding = 50
+  const maxSales = Math.max(...chartData.value.map(d => d.sales))
+  const ratio = (chartHeight.value - 2 * padding) / maxSales
+  return chartHeight.value - padding - sales * ratio
+}
+
+const getOrderYPosition = (orders) => {
+  const padding = 50
+  const maxOrders = Math.max(...chartData.value.map(d => d.orders))
+  const ratio = (chartHeight.value - 2 * padding) / maxOrders
+  return chartHeight.value - padding - orders * ratio
+}
+
+const handleChartMouseMove = (event) => {
+  const rect = event.currentTarget.getBoundingClientRect()
+  const x = event.clientX - rect.left
+  const dataIndex = Math.round((x - 50) / ((chartWidth.value - 100) / (chartData.value.length - 1)))
+  
+  if (dataIndex >= 0 && dataIndex < chartData.value.length) {
+    showTooltip.value = true
+    tooltipX.value = event.clientX - rect.left
+    tooltipY.value = event.clientY - rect.top - 10
+    tooltipData.value = chartData.value[dataIndex]
+  }
+}
+
+const hideTooltip = () => {
+  showTooltip.value = false
+}
+
+const showPointTooltip = (point) => {
+  showTooltip.value = true
+  tooltipData.value = point
+}
+
 const updateChart = () => {
   ElMessage.info(`正在加载 ${chartPeriod.value} 的数据`)
+  // 根据时间段更新图表数据
+  if (chartPeriod.value === '7d') {
+    chartData.value = [
+      { date: '12-04', sales: 1200, orders: 45, avgOrderValue: 26.67 },
+      { date: '12-05', sales: 1500, orders: 67, avgOrderValue: 22.39 },
+      { date: '12-06', sales: 1100, orders: 52, avgOrderValue: 21.15 },
+      { date: '12-07', sales: 1800, orders: 78, avgOrderValue: 23.08 },
+      { date: '12-08', sales: 1600, orders: 61, avgOrderValue: 26.23 },
+      { date: '12-09', sales: 2000, orders: 80, avgOrderValue: 25.00 },
+      { date: '12-10', sales: 1234, orders: 89, avgOrderValue: 13.87 }
+    ]
+  } else if (chartPeriod.value === '1m') {
+    // 1个月数据示例
+    chartData.value = [
+      { date: '11-11', sales: 800, orders: 35, avgOrderValue: 22.86 },
+      { date: '11-18', sales: 1200, orders: 45, avgOrderValue: 26.67 },
+      { date: '11-25', sales: 1500, orders: 67, avgOrderValue: 22.39 },
+      { date: '12-02', sales: 1800, orders: 78, avgOrderValue: 23.08 },
+      { date: '12-09', sales: 2000, orders: 80, avgOrderValue: 25.00 }
+    ]
+  } else if (chartPeriod.value === '3m') {
+    // 3个月数据示例
+    chartData.value = [
+      { date: '09-10', sales: 600, orders: 25, avgOrderValue: 24.00 },
+      { date: '10-10', sales: 1000, orders: 40, avgOrderValue: 25.00 },
+      { date: '11-10', sales: 1500, orders: 60, avgOrderValue: 25.00 },
+      { date: '12-10', sales: 2000, orders: 80, avgOrderValue: 25.00 }
+    ]
+  } else if (chartPeriod.value === '1y') {
+    // 1年数据示例
+    chartData.value = [
+      { date: '2023-03', sales: 5000, orders: 200, avgOrderValue: 25.00 },
+      { date: '2023-06', sales: 8000, orders: 320, avgOrderValue: 25.00 },
+      { date: '2023-09', sales: 12000, orders: 480, avgOrderValue: 25.00 },
+      { date: '2023-12', sales: 15000, orders: 600, avgOrderValue: 25.00 }
+    ]
+  } else if (chartPeriod.value === 'custom' && customDateRange.value.length === 2) {
+    // 自定义时间范围数据
+    chartData.value = [
+      { date: '自定义1', sales: 1000, orders: 40, avgOrderValue: 25.00 },
+      { date: '自定义2', sales: 1200, orders: 48, avgOrderValue: 25.00 },
+      { date: '自定义3', sales: 1500, orders: 60, avgOrderValue: 25.00 }
+    ]
+  }
 }
 
 const updateProductsData = () => {
@@ -571,16 +881,7 @@ const formatDate = (dateString) => {
   })
 }
 
-const formatDateTime = (dateString) => {
-  const date = new Date(dateString)
-  return date.toLocaleString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
-}
+
 
 const getOrderStatusType = (status) => {
   const statusMap = {
@@ -622,6 +923,11 @@ const getShippingStatusText = (status) => {
     'exchanged': '已换货'
   }
   return statusMap[status] || '未知'
+}
+
+const updateOverviewData = () => {
+  ElMessage.info(`正在加载 ${overviewPeriod.value} 的数据`)
+  // 这里可以根据时间段重新计算今日统计数据
 }
 
 // 生命周期
@@ -700,87 +1006,116 @@ onMounted(() => {
     }
   }
 
-  .overview-cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 20px;
+  .overview-section {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
     margin-bottom: 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 
-    .overview-card {
-      background: white;
-      border-radius: 12px;
-      padding: 24px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      transition: transform 0.2s, box-shadow 0.2s;
+    .overview-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
 
-      &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+      h3 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 600;
+        color: #1f2937;
       }
+    }
 
-      .card-header {
-        display: flex;
-        align-items: center;
-        margin-bottom: 16px;
+    .overview-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
 
-        .card-icon {
-          width: 40px;
-          height: 40px;
-          border-radius: 10px;
+      .overview-card {
+        background: white;
+        border-radius: 12px;
+        padding: 24px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s, box-shadow 0.2s;
+
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-header {
           display: flex;
           align-items: center;
-          justify-content: center;
-          margin-right: 12px;
-          color: white;
-        }
+          margin-bottom: 16px;
 
-        .card-title {
-          font-size: 14px;
-          font-weight: 500;
-          color: #6b7280;
-        }
-      }
+          .card-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            color: white;
+          }
 
-      .card-content {
-        .main-value {
-          font-size: 32px;
-          font-weight: 700;
-          color: #1f2937;
-          margin-bottom: 8px;
-        }
-
-        .sub-info {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-
-          .sub-value {
+          .card-title {
             font-size: 14px;
-            font-weight: 600;
-            color: #10b981;
-          }
-
-          .sub-label {
-            font-size: 12px;
-            color: #9ca3af;
+            font-weight: 500;
+            color: #6b7280;
           }
         }
-      }
 
-      &.products-card .card-icon {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      }
+        .card-content {
+          .main-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 8px;
+          }
 
-      &.orders-card .card-icon {
-        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-      }
+          .sub-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
 
-      &.revenue-card .card-icon {
-        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-      }
+            .sub-value {
+              font-size: 14px;
+              font-weight: 600;
+              color: #10b981;
+            }
 
-      &.sync-card .card-icon {
-        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            .sub-label {
+              font-size: 12px;
+              color: #9ca3af;
+            }
+          }
+        }
+
+        &.sales-card .card-icon {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        &.orders-card .card-icon {
+          background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        &.avg-order-card .card-icon {
+          background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        &.aftersale-amount-card .card-icon {
+          background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+
+        &.aftersale-count-card .card-icon {
+          background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+
+        &.profit-card .card-icon {
+          background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
       }
     }
   }
@@ -806,27 +1141,107 @@ onMounted(() => {
       }
     }
 
-    .chart-container {
-      height: 300px;
-      
-      .chart-placeholder {
-        height: 100%;
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 16px;
+
+      h3 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 600;
+        color: #1f2937;
+      }
+
+      .chart-controls {
         display: flex;
         flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        background: #f9fafb;
-        border-radius: 8px;
-        border: 2px dashed #d1d5db;
+        gap: 12px;
+        align-items: flex-end;
 
-        p {
-          margin: 8px 0;
-          color: #6b7280;
+        .custom-date-range {
+          margin-top: 8px;
+        }
+      }
+    }
+
+    .chart-container {
+      position: relative;
+      background: #f9fafb;
+      border-radius: 8px;
+      padding: 20px;
+
+      svg {
+        border-radius: 8px;
+        background: white;
+      }
+
+      .data-point {
+        cursor: pointer;
+        transition: all 0.2s ease;
+
+        &:hover {
+          r: 7;
+          filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+        }
+      }
+
+      .chart-legend {
+        display: flex;
+        justify-content: center;
+        gap: 24px;
+        margin-top: 16px;
+
+        .legend-item {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 14px;
+          color: #374151;
+
+          .legend-color {
+            width: 16px;
+            height: 3px;
+            border-radius: 2px;
+          }
+        }
+      }
+
+      .chart-tooltip {
+        position: absolute;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 12px;
+        border-radius: 8px;
+        font-size: 12px;
+        pointer-events: none;
+        z-index: 1000;
+        min-width: 120px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+
+        .tooltip-header {
+          font-weight: 600;
+          margin-bottom: 8px;
+          padding-bottom: 6px;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.2);
         }
 
-        .chart-note {
-          font-size: 12px;
-          color: #9ca3af;
+        .tooltip-item {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 4px;
+
+          .tooltip-label {
+            color: #d1d5db;
+          }
+
+          .tooltip-value {
+            font-weight: 600;
+            color: white;
+          }
         }
       }
     }

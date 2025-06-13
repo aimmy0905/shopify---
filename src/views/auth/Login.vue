@@ -87,12 +87,12 @@
         <!-- 链接区域 -->
         <div class="auth-links">
           <!-- 链接1：忘记密码，指向密码重置页面 -->
-          <router-link to="/forgot-password" class="forgot-password-link">
+          <router-link :to="getForgotPasswordLink()" class="forgot-password-link">
             忘记密码？
           </router-link>
           
           <!-- 链接2：没有账号？立即注册，指向注册页面 -->
-          <router-link to="/register" class="register-link">
+          <router-link :to="getRegisterLink()" class="register-link">
             没有账号？立即注册
           </router-link>
         </div>
@@ -120,6 +120,38 @@ import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { View, Hide, Message, Lock } from '@element-plus/icons-vue'
+
+// 内联调试工具，避免导入路径问题
+const debugUtils = {
+  showCurrentStatus() {
+    const status = {
+      currentPath: window.location.pathname,
+      userType: localStorage.getItem('userType'),
+      authToken: localStorage.getItem('auth_token'),
+      token: localStorage.getItem('token')
+    }
+    console.group('🐛 当前系统状态')
+    console.log('当前路径:', status.currentPath)
+    console.log('用户类型:', status.userType)
+    console.log('认证令牌:', status.authToken ? '已设置' : '未设置')
+    console.groupEnd()
+    return status
+  },
+  validatePath(expectedUserType) {
+    const currentPath = window.location.pathname
+    const userType = localStorage.getItem('userType')
+    let isCorrect = false
+    if (expectedUserType === 'merchant' && currentPath.startsWith('/merchant')) {
+      isCorrect = true
+    } else if (expectedUserType === 'admin' && currentPath.startsWith('/admin')) {
+      isCorrect = true
+    }
+    console.log(`✅ 路径验证: ${isCorrect ? '正确' : '错误'}`)
+    console.log(`期望用户类型: ${expectedUserType}, 实际用户类型: ${userType}`)
+    console.log(`当前路径: ${currentPath}`)
+    return isCorrect
+  }
+}
 
 const router = useRouter()
 const loginFormRef = ref()
@@ -150,6 +182,31 @@ const togglePassword = () => {
   showPassword.value = !showPassword.value
 }
 
+// 获取当前用户类型
+const getCurrentUserType = () => {
+  const currentRoute = router.currentRoute.value
+  if (currentRoute.path.startsWith('/admin')) {
+    return 'admin'
+  } else if (currentRoute.path.startsWith('/merchant')) {
+    return 'merchant'
+  } else if (currentRoute.meta?.userType) {
+    return currentRoute.meta.userType
+  }
+  return 'merchant'
+}
+
+// 获取注册链接
+const getRegisterLink = () => {
+  const userType = getCurrentUserType()
+  return userType === 'admin' ? '/admin/register' : '/merchant/register'
+}
+
+// 获取忘记密码链接
+const getForgotPasswordLink = () => {
+  const userType = getCurrentUserType()
+  return userType === 'admin' ? '/admin/forgot-password' : '/merchant/forgot-password'
+}
+
 // 处理登录提交
 const handleSubmit = async () => {
   console.log('登录按钮被点击了!')
@@ -168,6 +225,13 @@ const handleSubmit = async () => {
       loading.value = true
       console.log('开始登录处理...')
       
+      // 清理之前的认证状态，防止串扰
+      localStorage.removeItem('auth_token')
+      localStorage.removeItem('userType')
+      localStorage.removeItem('token')
+      localStorage.removeItem('userInfo')
+      console.log('清理之前的认证状态')
+      
       // 模拟API调用延迟
       setTimeout(() => {
         ElMessage.success('登录成功！')
@@ -176,6 +240,7 @@ const handleSubmit = async () => {
         // 保存认证状态到localStorage
         const authToken = 'mock_auth_token_' + Date.now()
         localStorage.setItem('auth_token', authToken)
+        localStorage.setItem('token', authToken)
         console.log('保存认证token:', authToken)
         
         // 根据记住我选项处理登录状态
@@ -194,19 +259,40 @@ const handleSubmit = async () => {
         
         loading.value = false
         
-        // 保存用户类型
-        const userType = router.currentRoute.value.meta?.userType || 'merchant'
+        // 根据当前路由的meta信息确定用户类型
+        const currentRoute = router.currentRoute.value
+        console.log('当前路由:', currentRoute.path)
+        console.log('路由meta:', currentRoute.meta)
+        
+        // 从路由路径中确定用户类型（更可靠的方法）
+        let userType = 'merchant' // 默认值
+        if (currentRoute.path.startsWith('/admin')) {
+          userType = 'admin'
+        } else if (currentRoute.path.startsWith('/merchant')) {
+          userType = 'merchant'
+        } else if (currentRoute.meta?.userType) {
+          userType = currentRoute.meta.userType
+        }
+        
         localStorage.setItem('userType', userType)
-        localStorage.setItem('token', authToken)
-        console.log('保存用户类型:', userType)
+        console.log('检测到的用户类型:', userType)
         
         // 根据用户类型跳转到对应的dashboard
         const dashboardPath = userType === 'admin' ? '/admin/dashboard' : '/merchant/dashboard'
         console.log('即将跳转到:', dashboardPath)
+        
         router.push(dashboardPath).then(() => {
-          console.log('路由跳转完成')
+          console.log('✅ 路由跳转完成')
+          console.log('目标路径:', dashboardPath)
+          console.log('用户类型:', userType)
+          // 验证跳转是否正确
+          setTimeout(() => {
+            debugUtils.showCurrentStatus()
+            debugUtils.validatePath(userType)
+          }, 100)
         }).catch(error => {
-          console.error('路由跳转错误:', error)
+          console.error('❌ 路由跳转错误:', error)
+          ElMessage.error('页面跳转失败，请刷新重试')
         })
       }, 1000)
     }
