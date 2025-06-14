@@ -299,12 +299,53 @@ const routes = [
           requiresAdmin: true
         }
       },
+      // 供应商管理路由
       {
         path: 'suppliers',
         name: 'Suppliers',
         component: () => import('@/views/admin/Suppliers.vue'),
         meta: {
           title: '供应商管理 - Shopify铺货系统',
+          requiresAuth: true,
+          requiresAdmin: true
+        }
+      },
+      {
+        path: 'suppliers/create',
+        name: 'CreateSupplier',
+        component: () => import('@/views/admin/CreateSupplier.vue'),
+        meta: {
+          title: '新建供应商 - Shopify铺货系统',
+          requiresAuth: true,
+          requiresAdmin: true
+        }
+      },
+      {
+        path: 'suppliers/:id',
+        name: 'SupplierDetail',
+        component: () => import('@/views/admin/SupplierDetail.vue'),
+        meta: {
+          title: '供应商详情 - Shopify铺货系统',
+          requiresAuth: true,
+          requiresAdmin: true
+        }
+      },
+      {
+        path: 'suppliers/:id/edit',
+        name: 'EditSupplier',
+        component: () => import('@/views/admin/EditSupplier.vue'),
+        meta: {
+          title: '编辑供应商 - Shopify铺货系统',
+          requiresAuth: true,
+          requiresAdmin: true
+        }
+      },
+      {
+        path: 'suppliers/:id/products',
+        name: 'SupplierProducts',
+        component: () => import('@/views/admin/SupplierProducts.vue'),
+        meta: {
+          title: '供应商商品 - Shopify铺货系统',
           requiresAuth: true,
           requiresAdmin: true
         }
@@ -501,8 +542,13 @@ router.beforeEach((to, from, next) => {
   // 检查认证状态
   if (to.meta.requiresAuth) {
     if (!checkAuthStatus()) {
-      // 根据用户类型重定向到对应的登录页面
-      const userType = getCurrentUserType() || 'merchant'
+      // 根据目标路由确定用户类型，而不是从本地存储
+      let userType = 'merchant'
+      if (to.path.startsWith('/admin')) {
+        userType = 'admin'
+      } else if (to.meta?.userType) {
+        userType = to.meta.userType
+      }
       next(`/${userType}/login`)
       return
     }
@@ -519,7 +565,13 @@ router.beforeEach((to, from, next) => {
   // 检查guest权限（仅未登录用户可访问）
   if (to.meta.requiresGuest) {
     if (checkAuthStatus()) {
-      const userType = getCurrentUserType()
+      // 根据目标路由的路径确定用户类型
+      let userType = 'merchant'
+      if (to.path.startsWith('/admin')) {
+        userType = 'admin'
+      } else if (to.meta?.userType) {
+        userType = to.meta.userType
+      }
       next(`/${userType}/dashboard`)
       return
     }

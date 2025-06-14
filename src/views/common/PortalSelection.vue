@@ -58,13 +58,25 @@ import { Shop, Setting } from '@element-plus/icons-vue'
 
 const router = useRouter()
 
+// 清理之前的登录状态
+const clearAuthState = () => {
+  localStorage.removeItem('auth_token')
+  localStorage.removeItem('userType')
+  localStorage.removeItem('token')
+  localStorage.removeItem('userInfo')
+  localStorage.removeItem('rememberMe')
+  console.log('已清理所有认证状态')
+}
+
 // 进入商家端
 const goToMerchant = () => {
+  clearAuthState()
   router.push('/merchant/login')
 }
 
 // 进入管理端
 const goToAdmin = () => {
+  clearAuthState()
   router.push('/admin/login')
 }
 </script>

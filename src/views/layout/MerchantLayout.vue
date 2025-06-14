@@ -20,67 +20,67 @@
       >
         <el-menu-item index="/merchant/dashboard">
           <el-icon><Odometer /></el-icon>
-          <span>Dashboard</span>
+          <span>{{ t('dashboard') }}</span>
         </el-menu-item>
         
         <el-menu-item index="/merchant/stores">
           <el-icon><Shop /></el-icon>
-          <span>我的店铺</span>
+          <span>{{ t('myStores') }}</span>
         </el-menu-item>
         
         <el-sub-menu index="products">
           <template #title>
             <el-icon><Goods /></el-icon>
-            <span>商品管理</span>
+            <span>{{ t('productManagement') }}</span>
           </template>
-          <el-menu-item index="/merchant/products/all">平台商品</el-menu-item>
-          <el-menu-item index="/merchant/products/import">导入商品列表</el-menu-item>
-          <el-menu-item index="/merchant/products/my">我的商品</el-menu-item>
+          <el-menu-item index="/merchant/products/all">{{ t('platformProducts') }}</el-menu-item>
+          <el-menu-item index="/merchant/products/import">{{ t('importProducts') }}</el-menu-item>
+          <el-menu-item index="/merchant/products/my">{{ t('myProducts') }}</el-menu-item>
         </el-sub-menu>
         
         <el-sub-menu index="orders">
           <template #title>
             <el-icon><DocumentChecked /></el-icon>
-            <span>订单管理</span>
+            <span>{{ t('orderManagement') }}</span>
           </template>
-          <el-menu-item index="/merchant/orders/store">店铺订单</el-menu-item>
-          <el-menu-item index="/merchant/orders/purchase">采购订单</el-menu-item>
-          <el-menu-item index="/merchant/orders/aftersale">售后订单</el-menu-item>
+          <el-menu-item index="/merchant/orders/store">{{ t('storeOrders') }}</el-menu-item>
+          <el-menu-item index="/merchant/orders/purchase">{{ t('purchaseOrders') }}</el-menu-item>
+          <el-menu-item index="/merchant/orders/aftersale">{{ t('aftersaleOrders') }}</el-menu-item>
         </el-sub-menu>
         
         <el-menu-item index="/merchant/purchase">
           <el-icon><ShoppingCart /></el-icon>
-          <span>采购管理</span>
+          <span>{{ t('purchaseManagement') }}</span>
         </el-menu-item>
         
         <el-menu-item index="/merchant/balance">
           <el-icon><Wallet /></el-icon>
-          <span>余额管理</span>
+          <span>{{ t('balanceManagement') }}</span>
         </el-menu-item>
         
         <el-menu-item index="/merchant/commission">
           <el-icon><Money /></el-icon>
-          <span>佣金管理</span>
+          <span>{{ t('commissionManagement') }}</span>
         </el-menu-item>
         
         <el-menu-item index="/merchant/invoices">
           <el-icon><Document /></el-icon>
-          <span>Invoice管理</span>
+          <span>{{ t('invoiceManagement') }}</span>
         </el-menu-item>
         
         <el-menu-item index="/merchant/logistics">
           <el-icon><Van /></el-icon>
-          <span>物流信息</span>
+          <span>{{ t('logisticsInfo') }}</span>
         </el-menu-item>
         
         <el-menu-item index="/merchant/profile">
           <el-icon><User /></el-icon>
-          <span>个人设置</span>
+          <span>{{ t('personalSettings') }}</span>
         </el-menu-item>
         
         <el-menu-item index="/merchant/support">
           <el-icon><Service /></el-icon>
-          <span>客服支持</span>
+          <span>{{ t('customerSupport') }}</span>
         </el-menu-item>
       </el-menu>
     </div>
@@ -92,28 +92,47 @@
         <div class="header-left">
           <!-- 面包屑导航 -->
           <el-breadcrumb separator="/">
-            <el-breadcrumb-item :to="{ path: '/merchant/dashboard' }">首页</el-breadcrumb-item>
+            <el-breadcrumb-item :to="{ path: '/merchant/dashboard' }">{{ t('home') }}</el-breadcrumb-item>
             <el-breadcrumb-item v-if="currentPageName">{{ currentPageName }}</el-breadcrumb-item>
           </el-breadcrumb>
         </div>
         
         <div class="header-right">
+          <!-- 语言切换下拉菜单 -->
+          <el-dropdown @command="handleLanguageChange" class="language-dropdown">
+            <div class="language-selector">
+              <el-icon><Globe /></el-icon>
+              <span class="language-text">{{ t('language') }}</span>
+              <el-icon class="dropdown-icon"><ArrowDown /></el-icon>
+            </div>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item command="zh" :class="{ 'is-active': currentLang === 'zh' }">
+                  {{ t('chinese') }}
+                </el-dropdown-item>
+                <el-dropdown-item command="en" :class="{ 'is-active': currentLang === 'en' }">
+                  {{ t('english') }}
+                </el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+
           <!-- 用户信息下拉菜单 -->
           <el-dropdown>
             <div class="user-info">
               <el-avatar :size="32" src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png" />
-              <span class="username">商家用户</span>
+              <span class="username">{{ t('merchant') }}</span>
               <el-icon class="dropdown-icon"><ArrowDown /></el-icon>
             </div>
             <template #dropdown>
               <el-dropdown-menu>
                 <el-dropdown-item @click="goToProfile">
                   <el-icon><User /></el-icon>
-                  个人资料
+                  {{ t('profile') }}
                 </el-dropdown-item>
                 <el-dropdown-item @click="logout" divided>
                   <el-icon><SwitchButton /></el-icon>
-                  退出登录
+                  {{ t('logout') }}
                 </el-dropdown-item>
               </el-dropdown-menu>
             </template>
@@ -132,6 +151,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
 import {
   Shop,
   Odometer,
@@ -145,8 +165,10 @@ import {
   User,
   Service,
   ArrowDown,
-  SwitchButton
+  SwitchButton,
+  Globe
 } from '@element-plus/icons-vue'
+import { t, currentLang, switchLanguage } from '@/utils/i18n.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -154,29 +176,30 @@ const router = useRouter()
 // 当前激活的菜单项
 const activeMenu = ref('/merchant/dashboard')
 
-// 页面名称映射
-const pageNames = {
-  '/merchant/dashboard': 'Dashboard',
-  '/merchant/stores': '我的店铺',
-  '/merchant/products/all': '平台商品',
-  '/merchant/products/import': '导入商品列表',
-  '/merchant/products/my': '我的商品',
-  '/merchant/orders/store': '店铺订单',
-  '/merchant/orders/purchase': '采购订单',
-  '/merchant/orders/aftersale': '售后订单',
-  '/merchant/purchase': '采购管理',
-  '/merchant/purchase/applications': '采购申请列表',
-  '/merchant/purchase/create': '发起采购申请',
-  '/merchant/balance': '余额管理',
-  '/merchant/commission': '佣金管理',
-  '/merchant/invoices': 'Invoice管理',
-  '/merchant/logistics': '物流信息',
-  '/merchant/profile': '个人设置',
-  '/merchant/support': '客服支持'
-}
+// 页面名称映射（使用国际化）
+const getPageNames = () => ({
+  '/merchant/dashboard': t('dashboard'),
+  '/merchant/stores': t('myStores'),
+  '/merchant/products/all': t('platformProducts'),
+  '/merchant/products/import': t('importProducts'),
+  '/merchant/products/my': t('myProducts'),
+  '/merchant/orders/store': t('storeOrders'),
+  '/merchant/orders/purchase': t('purchaseOrders'),
+  '/merchant/orders/aftersale': t('aftersaleOrders'),
+  '/merchant/purchase': t('purchaseManagement'),
+  '/merchant/purchase/applications': t('purchaseManagement'),
+  '/merchant/purchase/create': t('purchaseManagement'),
+  '/merchant/balance': t('balanceManagement'),
+  '/merchant/commission': t('commissionManagement'),
+  '/merchant/invoices': t('invoiceManagement'),
+  '/merchant/logistics': t('logisticsInfo'),
+  '/merchant/profile': t('personalSettings'),
+  '/merchant/support': t('customerSupport')
+})
 
 // 当前页面名称
 const currentPageName = computed(() => {
+  const pageNames = getPageNames()
   return pageNames[route.path] || ''
 })
 
@@ -185,17 +208,39 @@ watch(() => route.path, (newPath) => {
   activeMenu.value = newPath
 }, { immediate: true })
 
+// 监听语言变化，更新页面名称
+watch(currentLang, () => {
+  // 当语言变化时，强制更新页面名称
+}, { deep: true })
+
 // 方法
 const goToProfile = () => {
   router.push('/merchant/profile')
 }
 
+// 处理语言切换
+const handleLanguageChange = (lang) => {
+  switchLanguage(lang)
+  ElMessage.success(`语言已切换到 ${lang === 'zh' ? '中文' : 'English'}`)
+}
+
+// 退出登录 - 修复：返回首页选择页面
 const logout = () => {
-  // 清除登录状态
+  console.log('用户点击退出登录')
+  
+  // 清除所有登录状态
   localStorage.removeItem('auth_token')
+  localStorage.removeItem('token')
+  localStorage.removeItem('userType')
+  localStorage.removeItem('userInfo')
   localStorage.removeItem('rememberMe')
-  // 跳转到登录页
-  router.push('/merchant/login')
+  
+  console.log('已清除所有登录状态')
+  
+  ElMessage.success('已退出登录')
+  
+  // 跳转到首页选择页面，而不是登录页面
+  router.push('/')
 }
 </script>
 
@@ -282,6 +327,57 @@ const logout = () => {
 .header-right {
   display: flex;
   align-items: center;
+  gap: 16px;
+}
+
+.language-dropdown {
+  margin-right: 12px;
+}
+
+.language-selector {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 6px;
+  transition: background-color 0.3s;
+  color: #606266;
+  font-size: 14px;
+}
+
+.language-selector:hover {
+  background-color: #f5f7fa;
+  color: #409eff;
+}
+
+.language-text {
+  margin: 0 8px;
+  font-weight: 500;
+}
+
+/* 语言切换下拉菜单样式 */
+:deep(.language-dropdown .el-dropdown-menu__item) {
+  padding: 10px 16px;
+  font-size: 14px;
+  transition: all 0.3s;
+}
+
+:deep(.language-dropdown .el-dropdown-menu__item:hover) {
+  background-color: #f5f7fa;
+  color: #409eff;
+}
+
+:deep(.language-dropdown .el-dropdown-menu__item.is-active) {
+  color: #409eff;
+  font-weight: 600;
+  background: linear-gradient(135deg, rgba(64, 158, 255, 0.1) 0%, rgba(64, 158, 255, 0.05) 100%);
+}
+
+:deep(.language-dropdown .el-dropdown-menu__item.is-active::before) {
+  content: "✓";
+  margin-right: 8px;
+  color: #409eff;
+  font-weight: bold;
 }
 
 .user-info {
