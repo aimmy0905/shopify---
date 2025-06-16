@@ -569,11 +569,111 @@ const routes = [
         }
       },
       {
-        path: 'balance',
-        name: 'AdminBalance',
-        component: () => import('@/views/admin/Balance.vue'),
+        path: 'purchase-applications',
+        name: 'AdminPurchaseApplications',
+        component: () => import('@/views/admin/PurchaseApplications.vue'),
+        meta: {
+          title: '采购申请列表 - Shopify铺货系统',
+          requiresAuth: true,
+          requiresAdmin: true
+        }
+      },
+      {
+        path: 'purchase-applications/:id',
+        name: 'AdminPurchaseApplicationDetail',
+        component: () => import('@/views/admin/PurchaseApplicationDetail.vue'),
+        meta: {
+          title: '采购申请详情 - Shopify铺货系统',
+          requiresAuth: true,
+          requiresAdmin: true
+        }
+      },
+      {
+        path: 'purchase-orders',
+        name: 'AdminPurchaseOrders',
+        component: () => import('@/views/admin/PurchaseOrders.vue'),
+        meta: {
+          title: '采购订单管理 - Shopify铺货系统',
+          requiresAuth: true,
+          requiresAdmin: true
+        }
+      },
+      {
+        path: 'purchase-orders/:id',
+        name: 'AdminPurchaseOrderDetail',
+        component: () => import('@/views/admin/PurchaseOrderDetail.vue'),
+        meta: {
+          title: '采购订单详情 - Shopify铺货系统',
+          requiresAuth: true,
+          requiresAdmin: true
+        }
+      },
+      {
+        path: 'shipping-records',
+        name: 'AdminShippingRecords',
+        component: () => import('@/views/admin/ShippingRecords.vue'),
+        meta: {
+          title: '发货记录 - Shopify铺货系统',
+          requiresAuth: true,
+          requiresAdmin: true
+        }
+      },
+      {
+        path: 'customer-balance',
+        name: 'AdminCustomerBalance',
+        component: () => import('@/views/admin/CustomerBalance.vue'),
         meta: {
           title: '客户余额管理 - Shopify铺货系统',
+          requiresAuth: true,
+          requiresAdmin: true
+        }
+      },
+      {
+        path: 'customer-balance/:id',
+        name: 'AdminCustomerBalanceDetail',
+        component: () => import('@/views/admin/CustomerBalanceDetail.vue'),
+        meta: {
+          title: '客户余额详情 - Shopify铺货系统',
+          requiresAuth: true,
+          requiresAdmin: true
+        }
+      },
+      {
+        path: 'recharge-audit',
+        name: 'AdminRechargeAudit',
+        component: () => import('@/views/admin/RechargeAudit.vue'),
+        meta: {
+          title: '充值审核 - Shopify铺货系统',
+          requiresAuth: true,
+          requiresAdmin: true
+        }
+      },
+      {
+        path: 'withdrawal-management',
+        name: 'AdminWithdrawalManagement',
+        component: () => import('@/views/admin/WithdrawalManagement.vue'),
+        meta: {
+          title: '余额提现管理 - Shopify铺货系统',
+          requiresAuth: true,
+          requiresAdmin: true
+        }
+      },
+      {
+        path: 'recharge-settings',
+        name: 'AdminRechargeSettings',
+        component: () => import('@/views/admin/RechargeSettings.vue'),
+        meta: {
+          title: '余额充值规则设置 - Shopify铺货系统',
+          requiresAuth: true,
+          requiresAdmin: true
+        }
+      },
+      {
+        path: 'withdrawal-management',
+        name: 'AdminWithdrawalManagement',
+        component: () => import('@/views/admin/WithdrawalManagement.vue'),
+        meta: {
+          title: '提现管理 - Shopify铺货系统',
           requiresAuth: true,
           requiresAdmin: true
         }

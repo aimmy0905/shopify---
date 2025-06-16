@@ -72,10 +72,16 @@
           <el-menu-item index="/admin/shipping-records">发货记录</el-menu-item>
         </el-sub-menu>
         
-        <el-menu-item index="/admin/balance">
-          <el-icon><Wallet /></el-icon>
-          <span>余额管理</span>
-        </el-menu-item>
+        <el-sub-menu index="balance">
+          <template #title>
+            <el-icon><Wallet /></el-icon>
+            <span>余额管理</span>
+          </template>
+          <el-menu-item index="/admin/customer-balance">客户余额管理</el-menu-item>
+          <el-menu-item index="/admin/recharge-audit">充值审核管理</el-menu-item>
+          <el-menu-item index="/admin/withdrawal-management">余额提现管理</el-menu-item>
+          <el-menu-item index="/admin/recharge-settings">余额充值规则设置</el-menu-item>
+        </el-sub-menu>
         
         <el-menu-item index="/admin/commission">
           <el-icon><Money /></el-icon>
@@ -187,7 +193,10 @@ const pageNames = {
   '/admin/purchase-applications': '采购申请管理',
   '/admin/purchase-orders': '采购订单管理',
   '/admin/shipping-records': '发货记录管理',
-  '/admin/balance': '余额管理',
+  '/admin/customer-balance': '客户余额管理',
+  '/admin/recharge-audit': '充值审核管理',
+  '/admin/withdrawal-management': '余额提现管理',
+  '/admin/recharge-settings': '余额充值规则设置',
   '/admin/commission': '分佣管理',
   '/admin/invoices': 'Invoice管理',
   '/admin/shipping': '运费模板',

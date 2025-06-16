@@ -230,15 +230,18 @@
               />
             </el-form-item>
             
-            <el-form-item 
-              v-if="auditForm.result === 'approve'" 
+            <el-form-item
+              v-if="auditForm.result === 'approve'"
               label="指派报价人员"
               required
             >
               <el-select v-model="auditForm.quoter" placeholder="请选择报价人员" style="width: 100%">
-                <el-option label="张三" value="zhangsan" />
-                <el-option label="李四" value="lisi" />
-                <el-option label="王五" value="wangwu" />
+                <el-option
+                  v-for="quoter in quoterList"
+                  :key="quoter.id"
+                  :label="`${quoter.name} (${quoter.department})`"
+                  :value="quoter.id"
+                />
               </el-select>
             </el-form-item>
           </el-form>
@@ -407,6 +410,7 @@ import {
   UploadFilled,
   Document
 } from '@element-plus/icons-vue'
+import { purchaseApplications, quoters } from '@/data/mockData.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -435,30 +439,24 @@ const completeForm = reactive({
   failReason: ''
 })
 
-// 示例数据 - 在实际应用中应该从API获取
-const application = ref({
-  id: 'PA202312001',
-  merchant_name: '商家A',
-  type: 'existing',
-  product_name: '蓝牙耳机Pro',
-  product_image: 'https://via.placeholder.com/300x300',
-  product_url: 'https://example.com/product/bluetooth-earphone-pro',
-  target_country: '美国',
-  target_price: 29.99,
-  daily_orders: 50,
-  accept_similar: true,
-  description: '高质量蓝牙耳机，支持降噪功能，续航时间长达8小时。适合运动和日常使用。',
-  remark: '希望能找到性价比高的供应商，有现货库存。',
-  status: 'pending',
-  created_at: '2023-12-15 10:30:00',
-  processed_at: null,
-  processor: null,
-  quoter: null,
-  quoted_at: null,
-  final_quote: null,
-  reject_reason: null,
-  quote_document: null
-})
+// 获取申请数据
+const application = ref(null)
+
+// 根据路由参数获取申请详情
+const loadApplicationDetail = () => {
+  const applicationId = route.params.id
+  const foundApplication = purchaseApplications.find(app => app.id === applicationId)
+
+  if (foundApplication) {
+    application.value = { ...foundApplication }
+  } else {
+    ElMessage.error('采购申请不存在')
+    router.push('/admin/purchase-applications')
+  }
+}
+
+// 报价人员数据
+const quoterList = ref([...quoters])
 
 // 状态类型映射
 const getStatusType = (status) => {
@@ -630,12 +628,7 @@ const goBack = () => {
 
 // 生命周期
 onMounted(() => {
-  // 根据路由参数获取申请ID
-  const applicationId = route.params.id
-  console.log('加载申请详情:', applicationId)
-  
-  // 在实际应用中，这里应该调用API获取数据
-  // fetchApplicationDetail(applicationId)
+  loadApplicationDetail()
 })
 </script>
 

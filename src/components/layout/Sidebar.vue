@@ -387,6 +387,25 @@ const adminMenuItems = [
         title: '采购订单',
         icon: ShoppingBag,
         route: '/admin/orders/purchase'
+      }
+    ]
+  },
+  {
+    key: 'purchase-management',
+    title: '采购管理',
+    icon: DocumentChecked,
+    children: [
+      {
+        key: 'purchase-applications',
+        title: '采购申请管理',
+        icon: DocumentChecked,
+        route: '/admin/purchase-applications'
+      },
+      {
+        key: 'purchase-orders',
+        title: '采购订单管理',
+        icon: ShoppingBag,
+        route: '/admin/purchase-orders'
       },
       {
         key: 'shipping-records',
@@ -395,12 +414,6 @@ const adminMenuItems = [
         route: '/admin/shipping-records'
       }
     ]
-  },
-  {
-    key: 'purchase-applications',
-    title: '采购申请管理',
-    icon: DocumentChecked,
-    route: '/admin/purchase-applications'
   },
   {
     key: 'customer-balance',

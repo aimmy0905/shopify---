@@ -41,6 +41,7 @@
               <el-option label="报价中" value="quotation_processing" />
               <el-option label="报价成功" value="quotation_success" />
               <el-option label="报价失败" value="quotation_failed" />
+              <el-option label="已拒绝" value="rejected" />
             </el-select>
           </div>
           
@@ -262,14 +263,17 @@
               />
             </el-form-item>
             
-            <el-form-item 
-              v-if="auditForm.result === 'approve'" 
+            <el-form-item
+              v-if="auditForm.result === 'approve'"
               label="指派报价人员"
             >
               <el-select v-model="auditForm.quoter" placeholder="请选择报价人员" style="width: 100%">
-                <el-option label="张三" value="zhangsan" />
-                <el-option label="李四" value="lisi" />
-                <el-option label="王五" value="wangwu" />
+                <el-option
+                  v-for="quoter in quoterList"
+                  :key="quoter.id"
+                  :label="`${quoter.name} (${quoter.department})`"
+                  :value="quoter.id"
+                />
               </el-select>
             </el-form-item>
           </el-form>
@@ -427,11 +431,11 @@
               style="width: 100%"
               filterable
             >
-              <el-option 
-                v-for="customer in customerList" 
-                :key="customer.id" 
-                :label="customer.name" 
-                :value="customer.id" 
+              <el-option
+                v-for="customer in customerList"
+                :key="customer.id"
+                :label="`${customer.name} (${customer.email})`"
+                :value="customer.id"
               />
             </el-select>
           </el-form-item>
@@ -441,9 +445,13 @@
               <div v-for="(item, index) in orderForm.items" :key="index" class="order-item">
                 <el-row :gutter="10">
                   <el-col :span="8">
-                    <el-select v-model="item.product" placeholder="选择商品" style="width: 100%">
-                      <el-option label="示例商品A" value="product_a" />
-                      <el-option label="示例商品B" value="product_b" />
+                    <el-select v-model="item.product" placeholder="选择商品" style="width: 100%" filterable>
+                      <el-option
+                        v-for="product in productList.slice(0, 20)"
+                        :key="product.id"
+                        :label="product.name"
+                        :value="product.name"
+                      />
                     </el-select>
                   </el-col>
                   <el-col :span="4">
@@ -518,12 +526,16 @@
 <script setup>
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { 
-  Plus, 
-  Search, 
-  Download, 
-  UploadFilled 
+import {
+  Plus,
+  Search,
+  Download,
+  UploadFilled
 } from '@element-plus/icons-vue'
+import { purchaseApplications, quoters, customers, products } from '@/data/mockData.js'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
 
 // 响应式数据
 const loading = ref(false)
@@ -573,85 +585,11 @@ const orderForm = reactive({
   remark: ''
 })
 
-// 示例数据
-const applicationList = ref([
-  {
-    id: 'PA202312001',
-    merchant_name: '商家A',
-    type: 'existing',
-    product_name: '蓝牙耳机Pro',
-    product_image: 'https://via.placeholder.com/60x60',
-    product_url: 'https://example.com/product/bluetooth-earphone-pro',
-    target_country: '美国',
-    target_price: 29.99,
-    daily_orders: 50,
-    status: 'pending',
-    created_at: '2023-12-15',
-    final_quote: null
-  },
-  {
-    id: 'PA202312002',
-    merchant_name: '商家B',
-    type: 'external',
-    product_name: '智能手表',
-    product_image: 'https://via.placeholder.com/60x60',
-    product_url: 'https://aliexpress.com/item/smart-watch-fitness',
-    target_country: '加拿大',
-    target_price: 89.99,
-    daily_orders: 30,
-    status: 'quotation_pending',
-    created_at: '2023-12-14',
-    final_quote: null
-  },
-  {
-    id: 'PA202312003',
-    merchant_name: '商家C',
-    type: 'existing',
-    product_name: '无线充电器',
-    product_image: 'https://via.placeholder.com/60x60',
-    product_url: '',
-    target_country: '英国',
-    target_price: 19.99,
-    daily_orders: 80,
-    status: 'quotation_processing',
-    created_at: '2023-12-13',
-    final_quote: null
-  },
-  {
-    id: 'PA202312004',
-    merchant_name: '商家D',
-    type: 'external',
-    product_name: '运动相机',
-    product_image: 'https://via.placeholder.com/60x60',
-    product_url: 'https://amazon.com/action-camera-4k',
-    target_country: '澳大利亚',
-    target_price: 199.99,
-    daily_orders: 20,
-    status: 'quotation_success',
-    created_at: '2023-12-12',
-    final_quote: 179.99
-  },
-  {
-    id: 'PA202312005',
-    merchant_name: '商家E',
-    type: 'existing',
-    product_name: '手机支架',
-    product_image: 'https://via.placeholder.com/60x60',
-    product_url: '',
-    target_country: '德国',
-    target_price: 12.99,
-    daily_orders: 100,
-    status: 'quotation_failed',
-    created_at: '2023-12-11',
-    final_quote: null
-  }
-])
-
-const customerList = ref([
-  { id: 1, name: '商家A (merchant_a@example.com)' },
-  { id: 2, name: '商家B (merchant_b@example.com)' },
-  { id: 3, name: '商家C (merchant_c@example.com)' }
-])
+// 数据
+const applicationList = ref([...purchaseApplications])
+const customerList = ref([...customers])
+const quoterList = ref([...quoters])
+const productList = ref([...products])
 
 // 计算属性
 const filteredApplications = computed(() => {
@@ -676,7 +614,8 @@ const getStatusType = (status) => {
     'quotation_pending': 'info',
     'quotation_processing': 'primary',
     'quotation_success': 'success',
-    'quotation_failed': 'danger'
+    'quotation_failed': 'danger',
+    'rejected': 'danger'
   }
   return statusTypes[status] || 'info'
 }
@@ -688,7 +627,8 @@ const getStatusText = (status) => {
     'quotation_pending': '待报价',
     'quotation_processing': '报价中',
     'quotation_success': '报价成功',
-    'quotation_failed': '报价失败'
+    'quotation_failed': '报价失败',
+    'rejected': '已拒绝'
   }
   return statusTexts[status] || '未知状态'
 }
@@ -729,7 +669,7 @@ const handleCurrentChange = (page) => {
 
 const viewApplicationDetail = (application) => {
   // 跳转到详情页面
-  console.log('查看申请详情:', application)
+  router.push(`/admin/purchase-applications/${application.id}`)
 }
 
 const auditApplication = (application) => {
@@ -756,9 +696,20 @@ const confirmAudit = () => {
   if (application) {
     if (auditForm.result === 'approve') {
       application.status = 'quotation_pending'
+      application.processor = '管理员'
+      application.processed_at = new Date().toLocaleString()
+      // 设置报价人员
+      const quoter = quoterList.value.find(q => q.id === auditForm.quoter)
+      if (quoter) {
+        application.quoter_id = quoter.id
+        application.quoter = quoter.name
+      }
       ElMessage.success('审核通过，已进入待报价状态')
     } else {
-      application.status = 'quotation_failed'
+      application.status = 'rejected'
+      application.processor = '管理员'
+      application.processed_at = new Date().toLocaleString()
+      application.reject_reason = auditForm.remark
       ElMessage.success('已拒绝申请')
     }
   }
@@ -802,6 +753,9 @@ const confirmQuoteUpload = () => {
   const application = applicationList.value.find(app => app.id === currentApplication.value.id)
   if (application) {
     application.status = 'quotation_processing'
+    application.quote_document = quoteForm.fileList[0].name
+    application.quote_remark = quoteForm.remark
+    application.quoted_at = new Date().toLocaleString()
     ElMessage.success('报价单已上传，进入报价中状态')
   }
   
@@ -836,6 +790,7 @@ const confirmCompleteQuote = () => {
       ElMessage.success('报价完成，可以创建采购订单')
     } else {
       application.status = 'quotation_failed'
+      application.reject_reason = completeForm.failReason
       ElMessage.success('已标记为报价失败')
     }
   }
@@ -884,15 +839,63 @@ const confirmCreateOrder = () => {
     ElMessage.error('请选择客户')
     return
   }
-  
+
   const hasValidItems = orderForm.items.some(item => item.product && item.quantity > 0 && item.price > 0)
   if (!hasValidItems) {
     ElMessage.error('请至少添加一个有效的订单项')
     return
   }
-  
+
+  if (!orderForm.receiver_name || !orderForm.receiver_phone || !orderForm.address) {
+    ElMessage.error('请填写完整的收货信息')
+    return
+  }
+
+  // 创建新的采购订单
+  const customer = customerList.value.find(c => c.id === orderForm.customer)
+  const subtotal = orderForm.items.reduce((sum, item) => sum + (item.quantity * item.price), 0)
+  const totalAmount = subtotal + orderForm.shipping_fee
+
+  const newOrder = {
+    id: `PO${Date.now()}`,
+    application_id: currentApplication.value?.id || null,
+    customer_id: orderForm.customer,
+    customer_name: customer.name,
+    status: 'pending_payment',
+    payment_status: 'pending',
+    shipping_status: 'pending',
+    items: orderForm.items.map((item, index) => ({
+      id: index + 1,
+      product_name: item.product,
+      product_image: 'https://picsum.photos/400/400?random=' + (1000 + index),
+      quantity: item.quantity,
+      unit_price: item.price,
+      total_price: item.quantity * item.price
+    })),
+    subtotal: subtotal,
+    shipping_fee: orderForm.shipping_fee,
+    total_amount: totalAmount,
+    currency: 'USD',
+    exchange_rate: 1.0,
+    usd_amount: totalAmount,
+    receiver_name: orderForm.receiver_name,
+    receiver_phone: orderForm.receiver_phone,
+    receiver_address: orderForm.address,
+    tracking_number: null,
+    shipping_company: null,
+    shipped_at: null,
+    estimated_delivery: null,
+    remark: orderForm.remark,
+    created_at: new Date().toLocaleString(),
+    paid_at: null
+  }
+
+  // 这里应该调用API保存订单，现在先模拟成功
   ElMessage.success('采购订单创建成功')
   createOrderDialogVisible.value = false
+
+  // 跳转到采购订单管理页面
+  router.push('/admin/purchase-orders')
 }
 
 const deleteApplication = (application) => {

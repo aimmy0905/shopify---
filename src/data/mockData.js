@@ -507,6 +507,1344 @@ export const generateStockAdjustments = (productId, count = 5) => {
   return adjustments.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
 }
 
+// 采购申请状态定义
+export const purchaseApplicationStatuses = {
+  pending: { text: '待处理', color: 'warning' },
+  quotation_pending: { text: '待报价', color: 'info' },
+  quotation_processing: { text: '报价中', color: 'primary' },
+  quotation_success: { text: '报价成功', color: 'success' },
+  quotation_failed: { text: '报价失败', color: 'danger' },
+  rejected: { text: '已拒绝', color: 'danger' }
+}
+
+// 报价人员数据
+export const quoters = [
+  { id: 1, name: '张三', email: 'zhangsan@company.com', department: '采购部' },
+  { id: 2, name: '李四', email: 'lisi@company.com', department: '采购部' },
+  { id: 3, name: '王五', email: 'wangwu@company.com', department: '采购部' },
+  { id: 4, name: '赵六', email: 'zhaoliu@company.com', department: '采购部' }
+]
+
+// 商家客户数据
+export const customers = [
+  {
+    id: 1,
+    name: '商家A',
+    email: 'merchant_a@example.com',
+    phone: '13800138001',
+    company: 'A公司',
+    address: '深圳市南山区科技园',
+    balances: {
+      USD: 15000.00,
+      CNY: 8500.00,
+      EUR: 2300.00
+    },
+    frozen_balances: {
+      USD: 0.00,
+      CNY: 0.00,
+      EUR: 0.00
+    },
+    total_recharge: {
+      USD: 25000.00,
+      CNY: 15000.00,
+      EUR: 5000.00
+    },
+    total_consumption: {
+      USD: 10000.00,
+      CNY: 6500.00,
+      EUR: 2700.00
+    },
+    total_commission: 1200.00, // 佣金统一用美元
+    status: 'active',
+    account_status: 'normal',
+    created_at: '2023-01-15 10:30:00',
+    last_transaction_at: '2023-12-20 14:25:00'
+  },
+  {
+    id: 2,
+    name: '商家B',
+    email: 'merchant_b@example.com',
+    phone: '13800138002',
+    company: 'B公司',
+    address: '广州市天河区CBD',
+    balances: {
+      USD: 8500.00,
+      CNY: 12000.00,
+      EUR: 1500.00
+    },
+    frozen_balances: {
+      USD: 500.00,
+      CNY: 0.00,
+      EUR: 0.00
+    },
+    total_recharge: {
+      USD: 15000.00,
+      CNY: 18000.00,
+      EUR: 3000.00
+    },
+    total_consumption: {
+      USD: 6000.00,
+      CNY: 6000.00,
+      EUR: 1500.00
+    },
+    total_commission: 800.00,
+    status: 'active',
+    account_status: 'normal',
+    created_at: '2023-02-20 09:15:00',
+    last_transaction_at: '2023-12-19 16:40:00'
+  },
+  {
+    id: 3,
+    name: '商家C',
+    email: 'merchant_c@example.com',
+    phone: '13800138003',
+    company: 'C公司',
+    address: '上海市浦东新区',
+    balances: {
+      USD: 22000.00,
+      CNY: 5000.00,
+      EUR: 3500.00
+    },
+    frozen_balances: {
+      USD: 0.00,
+      CNY: 0.00,
+      EUR: 0.00
+    },
+    total_recharge: {
+      USD: 35000.00,
+      CNY: 8000.00,
+      EUR: 6000.00
+    },
+    total_consumption: {
+      USD: 13000.00,
+      CNY: 3000.00,
+      EUR: 2500.00
+    },
+    total_commission: 2100.00,
+    status: 'active',
+    account_status: 'normal',
+    created_at: '2023-03-10 11:20:00',
+    last_transaction_at: '2023-12-20 10:15:00'
+  },
+  {
+    id: 4,
+    name: '商家D',
+    email: 'merchant_d@example.com',
+    phone: '13800138004',
+    company: 'D公司',
+    address: '北京市朝阳区',
+    balances: {
+      USD: 5200.00,
+      CNY: 3000.00,
+      EUR: 800.00
+    },
+    frozen_balances: {
+      USD: 1000.00,
+      CNY: 500.00,
+      EUR: 0.00
+    },
+    total_recharge: {
+      USD: 12000.00,
+      CNY: 8000.00,
+      EUR: 2000.00
+    },
+    total_consumption: {
+      USD: 5800.00,
+      CNY: 4500.00,
+      EUR: 1200.00
+    },
+    total_commission: 450.00,
+    status: 'active',
+    account_status: 'frozen',
+    created_at: '2023-04-05 14:45:00',
+    last_transaction_at: '2023-12-18 13:30:00'
+  },
+  {
+    id: 5,
+    name: '商家E',
+    email: 'merchant_e@example.com',
+    phone: '13800138005',
+    company: 'E公司',
+    address: '杭州市西湖区',
+    balances: {
+      USD: 18500.00,
+      CNY: 6500.00,
+      EUR: 2800.00
+    },
+    frozen_balances: {
+      USD: 0.00,
+      CNY: 0.00,
+      EUR: 0.00
+    },
+    total_recharge: {
+      USD: 28000.00,
+      CNY: 12000.00,
+      EUR: 4500.00
+    },
+    total_consumption: {
+      USD: 9500.00,
+      CNY: 5500.00,
+      EUR: 1700.00
+    },
+    total_commission: 1650.00,
+    status: 'active',
+    account_status: 'normal',
+    created_at: '2023-05-12 16:20:00',
+    last_transaction_at: '2023-12-20 09:45:00'
+  }
+]
+
+// 余额交易记录
+export const balanceTransactions = [
+  {
+    id: 'BT202312001',
+    customer_id: 1,
+    customer_name: '商家A',
+    type: 'recharge',
+    currency: 'USD',
+    amount: 5000.00,
+    exchange_rate: 1.0,
+    usd_amount: 5000.00,
+    balance_before: 10000.00,
+    balance_after: 15000.00,
+    description: '在线充值',
+    payment_method: 'alipay',
+    transaction_id: 'ALI202312001',
+    status: 'completed',
+    created_at: '2023-12-20 14:25:00',
+    processed_by: '系统自动',
+    remark: '支付宝在线充值'
+  },
+  {
+    id: 'BT202312002',
+    customer_id: 1,
+    customer_name: '商家A',
+    type: 'consumption',
+    currency: 'USD',
+    amount: -2500.00,
+    exchange_rate: 1.0,
+    usd_amount: -2500.00,
+    balance_before: 15000.00,
+    balance_after: 12500.00,
+    description: '采购订单支付',
+    payment_method: null,
+    transaction_id: 'PO202312002',
+    status: 'completed',
+    created_at: '2023-12-19 16:30:00',
+    processed_by: '系统自动',
+    remark: '订单PO202312002支付'
+  },
+  {
+    id: 'BT202312003',
+    customer_id: 2,
+    customer_name: '商家B',
+    type: 'recharge',
+    currency: 'CNY',
+    amount: 20000.00,
+    exchange_rate: 0.14,
+    usd_amount: 2800.00,
+    balance_before: 40000.00,
+    balance_after: 60000.00,
+    description: '银行转账充值',
+    payment_method: 'bank_transfer',
+    transaction_id: 'BANK202312003',
+    status: 'completed',
+    created_at: '2023-12-19 16:40:00',
+    processed_by: '财务部-张三',
+    remark: '银行转账充值，已核实到账'
+  },
+  {
+    id: 'BT202312004',
+    customer_id: 3,
+    customer_name: '商家C',
+    type: 'commission',
+    currency: 'USD',
+    amount: 150.00,
+    exchange_rate: 1.0,
+    usd_amount: 150.00,
+    balance_before: 21850.00,
+    balance_after: 22000.00,
+    description: '推荐佣金',
+    payment_method: null,
+    transaction_id: 'COM202312004',
+    status: 'completed',
+    created_at: '2023-12-20 10:15:00',
+    processed_by: '系统自动',
+    remark: '推荐新客户佣金奖励'
+  },
+  {
+    id: 'BT202312005',
+    customer_id: 4,
+    customer_name: '商家D',
+    type: 'freeze',
+    currency: 'USD',
+    amount: -1000.00,
+    exchange_rate: 1.0,
+    usd_amount: -1000.00,
+    balance_before: 6200.00,
+    balance_after: 5200.00,
+    description: '资金冻结',
+    payment_method: null,
+    transaction_id: 'FREEZE202312005',
+    status: 'completed',
+    created_at: '2023-12-18 13:30:00',
+    processed_by: '风控部-李四',
+    remark: '异常交易风险控制，临时冻结部分资金'
+  },
+  {
+    id: 'BT202312006',
+    customer_id: 2,
+    customer_name: '商家B',
+    type: 'consumption',
+    currency: 'EUR',
+    amount: -800.00,
+    exchange_rate: 1.08,
+    usd_amount: -864.00,
+    balance_before: 2300.00,
+    balance_after: 1500.00,
+    description: '欧洲订单支付',
+    payment_method: null,
+    transaction_id: 'PO202312006',
+    status: 'completed',
+    created_at: '2023-12-18 11:20:00',
+    processed_by: '系统自动',
+    remark: '欧洲区域订单支付'
+  }
+]
+
+// 充值申请记录
+export const rechargeApplications = [
+  {
+    id: 'RC202312001',
+    customer_id: 1,
+    customer_name: '商家A',
+    currency: 'USD',
+    amount: 5000.00,
+    exchange_rate: 1.0,
+    usd_amount: 5000.00,
+    payment_method: 'alipay',
+    payment_account: 'ali***@example.com',
+    transaction_id: 'ALI202312001',
+    voucher_url: 'https://example.com/vouchers/rc202312001.jpg',
+    status: 'approved',
+    apply_time: '2023-12-20 14:20:00',
+    review_time: '2023-12-20 14:25:00',
+    reviewer: '财务部-张三',
+    review_remark: '支付宝充值，自动到账',
+    created_at: '2023-12-20 14:20:00'
+  },
+  {
+    id: 'RC202312002',
+    customer_id: 2,
+    customer_name: '商家B',
+    currency: 'CNY',
+    amount: 20000.00,
+    exchange_rate: 0.14,
+    usd_amount: 2800.00,
+    payment_method: 'bank_transfer',
+    payment_account: '招商银行***1234',
+    transaction_id: 'BANK202312003',
+    voucher_url: 'https://example.com/vouchers/rc202312002.jpg',
+    status: 'approved',
+    apply_time: '2023-12-19 15:30:00',
+    review_time: '2023-12-19 16:40:00',
+    reviewer: '财务部-张三',
+    review_remark: '银行转账已核实到账',
+    created_at: '2023-12-19 15:30:00'
+  },
+  {
+    id: 'RC202312003',
+    customer_id: 5,
+    customer_name: '商家E',
+    currency: 'USD',
+    amount: 8000.00,
+    exchange_rate: 1.0,
+    usd_amount: 8000.00,
+    payment_method: 'wechat_pay',
+    payment_account: 'wx***@example.com',
+    transaction_id: 'WX202312003',
+    voucher_url: 'https://example.com/vouchers/rc202312003.jpg',
+    status: 'pending',
+    apply_time: '2023-12-20 16:15:00',
+    review_time: null,
+    reviewer: null,
+    review_remark: null,
+    created_at: '2023-12-20 16:15:00'
+  },
+  {
+    id: 'RC202312004',
+    customer_id: 3,
+    customer_name: '商家C',
+    currency: 'EUR',
+    amount: 1800.00,
+    exchange_rate: 1.08,
+    usd_amount: 1944.00,
+    payment_method: 'bank_transfer',
+    payment_account: '工商银行***5678',
+    transaction_id: 'BANK202312004',
+    voucher_url: 'https://example.com/vouchers/rc202312004.jpg',
+    status: 'rejected',
+    apply_time: '2023-12-18 10:20:00',
+    review_time: '2023-12-18 14:30:00',
+    reviewer: '财务部-李四',
+    review_remark: '转账凭证不清晰，请重新提交',
+    created_at: '2023-12-18 10:20:00'
+  },
+  {
+    id: 'RC202312005',
+    customer_id: 4,
+    customer_name: '商家D',
+    currency: 'CNY',
+    amount: 15000.00,
+    exchange_rate: 0.14,
+    usd_amount: 2100.00,
+    payment_method: 'alipay',
+    payment_account: 'ali***@merchant-d.com',
+    transaction_id: 'ALI202312005',
+    voucher_url: 'https://example.com/vouchers/rc202312005.jpg',
+    status: 'pending',
+    apply_time: '2023-12-21 09:30:00',
+    review_time: null,
+    reviewer: null,
+    review_remark: null,
+    created_at: '2023-12-21 09:30:00'
+  }
+]
+
+// 提现申请记录
+export const withdrawalApplications = [
+  {
+    id: 'WD202312001',
+    customer_id: 1,
+    customer_name: '商家A',
+    currency: 'USD',
+    amount: 2000.00,
+    exchange_rate: 1.0,
+    usd_amount: 2000.00,
+    withdrawal_method: 'bank_transfer',
+    bank_name: '中国银行',
+    account_number: '6217***1234',
+    account_holder: '张三',
+    swift_code: 'BKCHCNBJ',
+    status: 'pending',
+    apply_time: '2023-12-21 10:30:00',
+    review_time: null,
+    reviewer: null,
+    review_remark: null,
+    processing_time: null,
+    completed_time: null,
+    transaction_id: null,
+    fee_amount: 10.00,
+    actual_amount: 1990.00,
+    created_at: '2023-12-21 10:30:00'
+  },
+  {
+    id: 'WD202312002',
+    customer_id: 2,
+    customer_name: '商家B',
+    currency: 'CNY',
+    amount: 15000.00,
+    exchange_rate: 0.14,
+    usd_amount: 2100.00,
+    withdrawal_method: 'alipay',
+    alipay_account: 'merchant-b@example.com',
+    account_holder: '李四',
+    status: 'approved',
+    apply_time: '2023-12-20 14:20:00',
+    review_time: '2023-12-20 15:30:00',
+    reviewer: '财务部-王五',
+    review_remark: '审核通过，账户信息正确',
+    processing_time: '2023-12-20 16:00:00',
+    completed_time: null,
+    transaction_id: 'ALI_WD_202312002',
+    fee_amount: 75.00,
+    actual_amount: 14925.00,
+    created_at: '2023-12-20 14:20:00'
+  },
+  {
+    id: 'WD202312003',
+    customer_id: 3,
+    customer_name: '商家C',
+    currency: 'EUR',
+    amount: 1500.00,
+    exchange_rate: 1.08,
+    usd_amount: 1620.00,
+    withdrawal_method: 'bank_transfer',
+    bank_name: 'Deutsche Bank',
+    account_number: 'DE89***5678',
+    account_holder: 'Wang Liu',
+    swift_code: 'DEUTDEFF',
+    status: 'completed',
+    apply_time: '2023-12-19 09:15:00',
+    review_time: '2023-12-19 11:20:00',
+    reviewer: '财务部-张三',
+    review_remark: '审核通过',
+    processing_time: '2023-12-19 14:30:00',
+    completed_time: '2023-12-20 10:45:00',
+    transaction_id: 'SWIFT_WD_202312003',
+    fee_amount: 25.00,
+    actual_amount: 1475.00,
+    created_at: '2023-12-19 09:15:00'
+  },
+  {
+    id: 'WD202312004',
+    customer_id: 4,
+    customer_name: '商家D',
+    currency: 'USD',
+    amount: 500.00,
+    exchange_rate: 1.0,
+    usd_amount: 500.00,
+    withdrawal_method: 'paypal',
+    paypal_account: 'merchant-d@paypal.com',
+    account_holder: '赵六',
+    status: 'rejected',
+    apply_time: '2023-12-18 16:45:00',
+    review_time: '2023-12-19 09:30:00',
+    reviewer: '财务部-李四',
+    review_remark: 'PayPal账户信息不匹配，请重新提交',
+    processing_time: null,
+    completed_time: null,
+    transaction_id: null,
+    fee_amount: 5.00,
+    actual_amount: 495.00,
+    created_at: '2023-12-18 16:45:00'
+  },
+  {
+    id: 'WD202312005',
+    customer_id: 5,
+    customer_name: '商家E',
+    currency: 'CNY',
+    amount: 8000.00,
+    exchange_rate: 0.14,
+    usd_amount: 1120.00,
+    withdrawal_method: 'wechat_pay',
+    wechat_account: 'wx_merchant_e',
+    account_holder: '孙七',
+    status: 'processing',
+    apply_time: '2023-12-21 08:20:00',
+    review_time: '2023-12-21 09:45:00',
+    reviewer: '财务部-王五',
+    review_remark: '审核通过，正在处理中',
+    processing_time: '2023-12-21 10:15:00',
+    completed_time: null,
+    transaction_id: 'WX_WD_202312005',
+    fee_amount: 40.00,
+    actual_amount: 7960.00,
+    created_at: '2023-12-21 08:20:00'
+  }
+]
+
+// 充值规则设置
+export const rechargeSettings = {
+  // 支持的币种
+  supportedCurrencies: [
+    {
+      code: 'USD',
+      name: '美元',
+      symbol: '$',
+      enabled: true,
+      minAmount: 10,
+      maxAmount: 50000,
+      dailyLimit: 100000,
+      monthlyLimit: 500000,
+      exchangeRate: 1.0,
+      lastUpdated: '2023-12-21 10:00:00'
+    },
+    {
+      code: 'CNY',
+      name: '人民币',
+      symbol: '¥',
+      enabled: true,
+      minAmount: 100,
+      maxAmount: 300000,
+      dailyLimit: 500000,
+      monthlyLimit: 2000000,
+      exchangeRate: 0.14,
+      lastUpdated: '2023-12-21 10:00:00'
+    },
+    {
+      code: 'EUR',
+      name: '欧元',
+      symbol: '€',
+      enabled: true,
+      minAmount: 10,
+      maxAmount: 45000,
+      dailyLimit: 90000,
+      monthlyLimit: 450000,
+      exchangeRate: 1.08,
+      lastUpdated: '2023-12-21 10:00:00'
+    }
+  ],
+
+  // 充值方式
+  paymentMethods: [
+    {
+      id: 'alipay',
+      name: '支付宝',
+      enabled: true,
+      supportedCurrencies: ['CNY'],
+      accountInfo: {
+        accountName: '铺货系统收款账户',
+        accountNumber: 'shopify_system@alipay.com',
+        qrCode: 'https://example.com/qr/alipay.png'
+      },
+      feeRate: 0.006,
+      minAmount: 100,
+      maxAmount: 50000,
+      processingTime: '实时到账',
+      description: '支持支付宝扫码支付和转账'
+    },
+    {
+      id: 'wechat_pay',
+      name: '微信支付',
+      enabled: true,
+      supportedCurrencies: ['CNY'],
+      accountInfo: {
+        accountName: '铺货系统收款账户',
+        accountNumber: 'wx_shopify_system',
+        qrCode: 'https://example.com/qr/wechat.png'
+      },
+      feeRate: 0.006,
+      minAmount: 100,
+      maxAmount: 50000,
+      processingTime: '实时到账',
+      description: '支持微信扫码支付和转账'
+    },
+    {
+      id: 'bank_transfer',
+      name: '银行转账',
+      enabled: true,
+      supportedCurrencies: ['USD', 'CNY', 'EUR'],
+      accountInfo: {
+        bankName: '中国银行',
+        accountName: 'Shopify Dropshipping System Ltd.',
+        accountNumber: '6217001234567890123',
+        swiftCode: 'BKCHCNBJ',
+        routingNumber: '026009593'
+      },
+      feeRate: 0.001,
+      minAmount: 1000,
+      maxAmount: 100000,
+      processingTime: '1-3个工作日',
+      description: '支持国内外银行转账'
+    },
+    {
+      id: 'paypal',
+      name: 'PayPal',
+      enabled: true,
+      supportedCurrencies: ['USD', 'EUR'],
+      accountInfo: {
+        accountName: 'Shopify Dropshipping System',
+        accountEmail: 'payments@shopify-dropshipping.com'
+      },
+      feeRate: 0.029,
+      minAmount: 10,
+      maxAmount: 10000,
+      processingTime: '实时到账',
+      description: '支持PayPal账户转账'
+    }
+  ],
+
+  // 审核规则
+  auditRules: {
+    autoApprovalEnabled: true,
+    autoApprovalLimit: {
+      USD: 1000,
+      CNY: 7000,
+      EUR: 900
+    },
+    manualReviewRequired: {
+      largeAmount: true,
+      newCustomer: true,
+      suspiciousActivity: true
+    },
+    reviewTimeLimit: 24, // 小时
+    escalationRules: {
+      enabled: true,
+      escalationTime: 48, // 小时
+      escalationTo: 'supervisor'
+    }
+  },
+
+  // 风控设置
+  riskControlSettings: {
+    dailyLimitEnabled: true,
+    monthlyLimitEnabled: true,
+    velocityCheckEnabled: true,
+    duplicateCheckEnabled: true,
+    blacklistCheckEnabled: true,
+    geoLocationCheckEnabled: false,
+    deviceFingerprintEnabled: false
+  },
+
+  // 通知设置
+  notificationSettings: {
+    emailNotification: true,
+    smsNotification: false,
+    webhookNotification: true,
+    webhookUrl: 'https://api.shopify-dropshipping.com/webhooks/recharge',
+    notificationEvents: [
+      'recharge_submitted',
+      'recharge_approved',
+      'recharge_rejected',
+      'recharge_completed'
+    ]
+  }
+}
+
+// 提现规则设置
+export const withdrawalSettings = {
+  // 支持的提现方式
+  withdrawalMethods: [
+    {
+      id: 'bank_transfer',
+      name: '银行转账',
+      enabled: true,
+      supportedCurrencies: ['USD', 'CNY', 'EUR'],
+      feeType: 'fixed', // fixed, percentage
+      feeAmount: {
+        USD: 15,
+        CNY: 25,
+        EUR: 12
+      },
+      minAmount: {
+        USD: 100,
+        CNY: 500,
+        EUR: 90
+      },
+      maxAmount: {
+        USD: 50000,
+        CNY: 300000,
+        EUR: 45000
+      },
+      processingTime: '1-3个工作日',
+      description: '支持国内外银行转账提现'
+    },
+    {
+      id: 'alipay',
+      name: '支付宝',
+      enabled: true,
+      supportedCurrencies: ['CNY'],
+      feeType: 'percentage',
+      feeRate: 0.005,
+      minAmount: {
+        CNY: 100
+      },
+      maxAmount: {
+        CNY: 50000
+      },
+      processingTime: '实时到账',
+      description: '支持支付宝账户提现'
+    },
+    {
+      id: 'wechat_pay',
+      name: '微信支付',
+      enabled: true,
+      supportedCurrencies: ['CNY'],
+      feeType: 'percentage',
+      feeRate: 0.005,
+      minAmount: {
+        CNY: 100
+      },
+      maxAmount: {
+        CNY: 50000
+      },
+      processingTime: '实时到账',
+      description: '支持微信账户提现'
+    },
+    {
+      id: 'paypal',
+      name: 'PayPal',
+      enabled: true,
+      supportedCurrencies: ['USD', 'EUR'],
+      feeType: 'percentage',
+      feeRate: 0.02,
+      minAmount: {
+        USD: 20,
+        EUR: 18
+      },
+      maxAmount: {
+        USD: 10000,
+        EUR: 9000
+      },
+      processingTime: '1-2个工作日',
+      description: '支持PayPal账户提现'
+    }
+  ],
+
+  // 提现限制
+  withdrawalLimits: {
+    dailyLimit: {
+      USD: 10000,
+      CNY: 70000,
+      EUR: 9000
+    },
+    monthlyLimit: {
+      USD: 100000,
+      CNY: 700000,
+      EUR: 90000
+    },
+    minimumBalance: {
+      USD: 10,
+      CNY: 70,
+      EUR: 9
+    }
+  },
+
+  // 审核规则
+  auditRules: {
+    autoApprovalEnabled: false,
+    manualReviewRequired: true,
+    reviewTimeLimit: 24, // 小时
+    escalationRules: {
+      enabled: true,
+      escalationTime: 48, // 小时
+      escalationTo: 'finance_manager'
+    },
+    additionalVerification: {
+      largeAmountThreshold: {
+        USD: 5000,
+        CNY: 35000,
+        EUR: 4500
+      },
+      requiresPhoneVerification: true,
+      requiresEmailVerification: true,
+      requiresIdentityVerification: false
+    }
+  },
+
+  // 工作时间设置
+  businessHours: {
+    enabled: true,
+    timezone: 'Asia/Shanghai',
+    workingDays: [1, 2, 3, 4, 5], // 周一到周五
+    workingHours: {
+      start: '09:00',
+      end: '18:00'
+    },
+    holidayProcessing: false
+  }
+}
+
+// 采购申请数据
+export const purchaseApplications = [
+  {
+    id: 'PA202312001',
+    merchant_id: 1,
+    merchant_name: '商家A',
+    type: 'existing',
+    product_name: '蓝牙耳机Pro',
+    product_image: 'https://picsum.photos/400/400?random=1001',
+    product_url: 'https://example.com/product/bluetooth-earphone-pro',
+    target_country: '美国',
+    target_price: 29.99,
+    daily_orders: 50,
+    accept_similar: true,
+    description: '高质量蓝牙耳机，支持降噪功能，续航时间长达8小时。适合运动和日常使用。',
+    remark: '希望能找到性价比高的供应商，有现货库存。',
+    status: 'pending',
+    created_at: '2023-12-15 10:30:00',
+    processed_at: null,
+    processor: null,
+    quoter_id: null,
+    quoter: null,
+    quoted_at: null,
+    final_quote: null,
+    reject_reason: null,
+    quote_document: null,
+    quote_remark: null
+  },
+  {
+    id: 'PA202312002',
+    merchant_id: 2,
+    merchant_name: '商家B',
+    type: 'external',
+    product_name: '智能手表',
+    product_image: 'https://picsum.photos/400/400?random=1002',
+    product_url: 'https://aliexpress.com/item/smart-watch-fitness',
+    target_country: '加拿大',
+    target_price: 89.99,
+    daily_orders: 30,
+    accept_similar: false,
+    description: '多功能智能手表，支持健康监测、运动追踪、消息提醒等功能。',
+    remark: '需要支持中文界面，电池续航至少3天。',
+    status: 'quotation_pending',
+    created_at: '2023-12-14 14:20:00',
+    processed_at: '2023-12-15 09:15:00',
+    processor: '管理员A',
+    quoter_id: 1,
+    quoter: '张三',
+    quoted_at: null,
+    final_quote: null,
+    reject_reason: null,
+    quote_document: null,
+    quote_remark: null
+  },
+  {
+    id: 'PA202312003',
+    merchant_id: 3,
+    merchant_name: '商家C',
+    type: 'existing',
+    product_name: '无线充电器',
+    product_image: 'https://picsum.photos/400/400?random=1003',
+    product_url: 'https://example.com/product/wireless-charger',
+    target_country: '英国',
+    target_price: 25.00,
+    daily_orders: 80,
+    accept_similar: true,
+    description: '15W快速无线充电器，支持多种设备，带LED指示灯。',
+    remark: '需要通过CE认证，包装要求精美。',
+    status: 'quotation_processing',
+    created_at: '2023-12-13 16:45:00',
+    processed_at: '2023-12-14 10:30:00',
+    processor: '管理员B',
+    quoter_id: 2,
+    quoter: '李四',
+    quoted_at: '2023-12-14 15:20:00',
+    final_quote: null,
+    reject_reason: null,
+    quote_document: 'quote_PA202312003.pdf',
+    quote_remark: '已联系3家供应商，正在对比价格和质量。'
+  },
+  {
+    id: 'PA202312004',
+    merchant_id: 4,
+    merchant_name: '商家D',
+    type: 'external',
+    product_name: '运动水杯',
+    product_image: 'https://picsum.photos/400/400?random=1004',
+    product_url: 'https://amazon.com/sports-water-bottle',
+    target_country: '澳大利亚',
+    target_price: 15.99,
+    daily_orders: 120,
+    accept_similar: true,
+    description: '不锈钢保温运动水杯，容量750ml，防漏设计。',
+    remark: '需要食品级材质，支持定制LOGO。',
+    status: 'quotation_success',
+    created_at: '2023-12-12 11:20:00',
+    processed_at: '2023-12-13 09:00:00',
+    processor: '管理员A',
+    quoter_id: 3,
+    quoter: '王五',
+    quoted_at: '2023-12-13 14:30:00',
+    final_quote: 12.50,
+    reject_reason: null,
+    quote_document: 'quote_PA202312004.pdf',
+    quote_remark: '找到优质供应商，价格合理，质量可靠。'
+  },
+  {
+    id: 'PA202312005',
+    merchant_id: 1,
+    merchant_name: '商家A',
+    type: 'external',
+    product_name: '手机支架',
+    product_image: 'https://picsum.photos/400/400?random=1005',
+    product_url: 'https://aliexpress.com/phone-stand-adjustable',
+    target_country: '德国',
+    target_price: 8.99,
+    daily_orders: 200,
+    accept_similar: false,
+    description: '可调节手机支架，适用于各种尺寸手机，铝合金材质。',
+    remark: '要求包装简洁环保，支持快速发货。',
+    status: 'quotation_failed',
+    created_at: '2023-12-11 09:15:00',
+    processed_at: '2023-12-12 10:45:00',
+    processor: '管理员B',
+    quoter_id: 4,
+    quoter: '赵六',
+    quoted_at: '2023-12-12 16:20:00',
+    final_quote: null,
+    reject_reason: '目标价格过低，无法找到符合质量要求的供应商。建议提高预算至12-15美元。',
+    quote_document: null,
+    quote_remark: '联系了5家供应商，最低报价11.5美元，无法满足目标价格。'
+  },
+  {
+    id: 'PA202312006',
+    merchant_id: 2,
+    merchant_name: '商家B',
+    type: 'existing',
+    product_name: 'USB数据线',
+    product_image: 'https://picsum.photos/400/400?random=1006',
+    product_url: 'https://example.com/product/usb-cable',
+    target_country: '法国',
+    target_price: 5.99,
+    daily_orders: 300,
+    accept_similar: true,
+    description: '高速USB-C数据线，支持快充和数据传输，长度1米。',
+    remark: '需要通过MFi认证，包装要求多语言标签。',
+    status: 'rejected',
+    created_at: '2023-12-10 13:30:00',
+    processed_at: '2023-12-11 08:20:00',
+    processor: '管理员A',
+    quoter_id: null,
+    quoter: null,
+    quoted_at: null,
+    final_quote: null,
+    reject_reason: '商品描述不够详细，缺少技术规格参数，请补充完整信息后重新提交。',
+    quote_document: null,
+    quote_remark: null
+  }
+]
+
+// 采购订单数据
+export const purchaseOrders = [
+  {
+    id: 'PO202312001',
+    application_id: 'PA202312004',
+    customer_id: 4,
+    customer_name: '商家D',
+    status: 'paid',
+    payment_status: 'paid',
+    shipping_status: 'shipped',
+    items: [
+      {
+        id: 1,
+        product_name: '运动水杯',
+        product_image: 'https://picsum.photos/400/400?random=1004',
+        quantity: 100,
+        unit_price: 12.50,
+        total_price: 1250.00
+      }
+    ],
+    subtotal: 1250.00,
+    shipping_fee: 50.00,
+    total_amount: 1300.00,
+    currency: 'USD',
+    exchange_rate: 1.0,
+    usd_amount: 1300.00,
+    receiver_name: '李经理',
+    receiver_phone: '+61-400-123-456',
+    receiver_address: '123 Collins Street, Melbourne, VIC 3000, Australia',
+    tracking_number: 'TN202312001',
+    shipping_company: 'DHL Express',
+    shipped_at: '2023-12-16 10:30:00',
+    estimated_delivery: '2023-12-20',
+    remark: '客户要求加急处理，已安排快递发货。',
+    created_at: '2023-12-15 14:20:00',
+    paid_at: '2023-12-15 15:45:00'
+  },
+  {
+    id: 'PO202312002',
+    application_id: null,
+    customer_id: 1,
+    customer_name: '商家A',
+    status: 'pending_payment',
+    payment_status: 'pending',
+    shipping_status: 'pending',
+    items: [
+      {
+        id: 1,
+        product_name: '蓝牙耳机Pro',
+        product_image: 'https://picsum.photos/400/400?random=1001',
+        quantity: 50,
+        unit_price: 22.00,
+        total_price: 1100.00
+      },
+      {
+        id: 2,
+        product_name: '手机保护壳',
+        product_image: 'https://picsum.photos/400/400?random=1007',
+        quantity: 100,
+        unit_price: 8.50,
+        total_price: 850.00
+      }
+    ],
+    subtotal: 1950.00,
+    shipping_fee: 80.00,
+    total_amount: 2030.00,
+    currency: 'USD',
+    exchange_rate: 1.0,
+    usd_amount: 2030.00,
+    receiver_name: '张总',
+    receiver_phone: '+86-138-0013-8001',
+    receiver_address: '深圳市南山区科技园南区R2-A栋6楼',
+    tracking_number: null,
+    shipping_company: null,
+    shipped_at: null,
+    estimated_delivery: null,
+    remark: '批量采购，请确保质量一致性。',
+    created_at: '2023-12-16 09:15:00',
+    paid_at: null
+  }
+]
+
+// 生成客户余额数据
+export const generateMockCustomers = (count = 20) => {
+  const customers = []
+  const names = ['张三', '李四', '王五', '赵六', '钱七', '孙八', '周九', '吴十', '郑十一', '王十二', '冯十三', '陈十四', '褚十五', '卫十六', '蒋十七', '沈十八', '韩十九', '杨二十']
+  const domains = ['gmail.com', 'yahoo.com', 'hotmail.com', '163.com', 'qq.com']
+  
+  for (let i = 0; i < count; i++) {
+    const name = names[i % names.length] + (i > names.length - 1 ? (Math.floor(i / names.length) + 1) : '')
+    const email = `user${i + 1}@${domains[i % domains.length]}`
+    
+    customers.push({
+      id: i + 1,
+      name: name,
+      email: email,
+      currentBalance: Math.round((Math.random() * 5000 + 100) * 100) / 100,
+      totalRecharge: Math.round((Math.random() * 10000 + 500) * 100) / 100,
+      totalConsumption: Math.round((Math.random() * 8000 + 200) * 100) / 100,
+      lastActivity: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toLocaleDateString(),
+      balances: [
+        {
+          currency: 'USD',
+          amount: Math.round((Math.random() * 2000 + 50) * 100) / 100
+        },
+        {
+          currency: 'EUR',
+          amount: Math.round((Math.random() * 1500 + 30) * 100) / 100
+        }
+      ],
+      status: Math.random() > 0.1 ? 'active' : 'inactive',
+      registeredAt: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000).toLocaleDateString()
+    })
+  }
+  
+  return customers
+}
+
+// 生成充值记录数据
+export const generateMockRecharges = (count = 30) => {
+  const recharges = []
+  const customerNames = ['张三', '李四', '王五', '赵六', '钱七', '孙八', '周九', '吴十', '郑十一', '王十二']
+  const methods = ['银行转账', '支付宝', '微信支付', 'PayPal', '信用卡']
+  const statuses = ['pending', 'approved', 'rejected']
+  const currencies = ['USD', 'EUR', 'GBP']
+  const auditors = ['管理员A', '管理员B', '财务主管', '客服经理']
+  
+  for (let i = 0; i < count; i++) {
+    const status = statuses[Math.floor(Math.random() * statuses.length)]
+    const createdDate = new Date(Date.now() - Math.random() * 60 * 24 * 60 * 60 * 1000)
+    const auditDate = status !== 'pending' ? new Date(createdDate.getTime() + Math.random() * 24 * 60 * 60 * 1000) : null
+    
+    recharges.push({
+      id: `R${String(i + 1).padStart(6, '0')}`,
+      customerName: customerNames[Math.floor(Math.random() * customerNames.length)],
+      amount: Math.round((Math.random() * 2000 + 50) * 100) / 100,
+      currency: currencies[Math.floor(Math.random() * currencies.length)],
+      method: methods[Math.floor(Math.random() * methods.length)],
+      status: status,
+      createdAt: createdDate.toLocaleString(),
+      auditor: status !== 'pending' ? auditors[Math.floor(Math.random() * auditors.length)] : '',
+      auditTime: auditDate ? auditDate.toLocaleString() : '',
+      proofUrl: `https://example.com/proof/receipt_${i + 1}.jpg`,
+      remark: status === 'rejected' ? '凭证不清晰，请重新上传' : '',
+      transactionId: `TXN${Date.now()}${i}`
+    })
+  }
+  
+  return recharges.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+}
+
+// 生成充值方式数据
+export const generateMockPaymentMethods = () => {
+  return [
+    {
+      id: 'pm-1',
+      name: '银行转账',
+      accountName: '铺货系统有限公司',
+      accountInfo: '工商银行：6222 0202 0000 1234 567',
+      supportedCurrencies: ['USD', 'EUR'],
+      description: '支持美元和欧元转账，到账时间1-3个工作日',
+      enabled: true
+    },
+    {
+      id: 'pm-2',
+      name: 'PayPal',
+      accountName: 'payments@example.com',
+      accountInfo: 'PayPal商家账户：payments@example.com',
+      supportedCurrencies: ['USD', 'EUR', 'GBP'],
+      description: '支持多种货币，即时到账',
+      enabled: true
+    },
+    {
+      id: 'pm-3',
+      name: '支付宝',
+      accountName: '铺货系统',
+      accountInfo: '支付宝账号：13800138000',
+      supportedCurrencies: ['USD'],
+      description: '仅支持美元充值，需要汇率转换',
+      enabled: true
+    },
+    {
+      id: 'pm-4',
+      name: '微信支付',
+      accountName: '铺货系统',
+      accountInfo: '微信收款码：见二维码',
+      supportedCurrencies: ['USD'],
+      description: '扫码支付，快速便捷',
+      enabled: false
+    }
+  ]
+}
+
+// 生成推荐人数据
+export const generateMockReferrers = (count = 15) => {
+  const referrers = []
+  const names = ['张推荐', '李分享', '王介绍', '赵推广', '钱营销', '孙代理', '周经理', '吴总监', '郑主管', '王顾问', '冯专员', '陈助理', '褚代表', '卫经纪', '蒋中介']
+  const levels = ['普通推荐人', '银牌推荐人', '金牌推荐人', '钻石推荐人', '皇冠推荐人']
+  const statuses = ['active', 'inactive', 'suspended']
+  
+  for (let i = 0; i < count; i++) {
+    const joinDate = new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000)
+    const lastActiveDate = new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000)
+    
+    referrers.push({
+      id: i + 1,
+      name: names[i % names.length] + (i >= names.length ? (Math.floor(i / names.length) + 1) : ''),
+      email: `referrer${i + 1}@example.com`,
+      phone: `138${String(i + 1).padStart(8, '0')}`,
+      level: levels[Math.floor(Math.random() * levels.length)],
+      status: statuses[Math.floor(Math.random() * statuses.length)],
+      totalReferrals: Math.floor(Math.random() * 50) + 1,
+      activeReferrals: Math.floor(Math.random() * 30) + 1,
+      totalCommission: Math.round((Math.random() * 10000 + 500) * 100) / 100,
+      thisMonthCommission: Math.round((Math.random() * 2000 + 100) * 100) / 100,
+      commissionRate: (Math.random() * 0.1 + 0.05).toFixed(3), // 5%-15%
+      joinDate: joinDate.toLocaleDateString(),
+      lastActiveDate: lastActiveDate.toLocaleDateString(),
+      bankAccount: `622202${String(Math.floor(Math.random() * 1000000000)).padStart(10, '0')}`,
+      bankName: ['工商银行', '建设银行', '农业银行', '中国银行', '招商银行'][Math.floor(Math.random() * 5)],
+      accountHolder: names[i % names.length] + (i >= names.length ? (Math.floor(i / names.length) + 1) : ''),
+      remark: i % 3 === 0 ? '表现优秀的推荐人' : i % 3 === 1 ? '需要加强培训' : ''
+    })
+  }
+  
+  return referrers.sort((a, b) => b.totalCommission - a.totalCommission)
+}
+
+// 生成佣金结算记录数据
+export const generateMockCommissionSettlements = (count = 25) => {
+  const settlements = []
+  const referrerNames = ['张推荐', '李分享', '王介绍', '赵推广', '钱营销', '孙代理', '周经理', '吴总监', '郑主管', '王顾问']
+  const statuses = ['pending', 'processing', 'completed', 'failed']
+  const settlementTypes = ['monthly', 'weekly', 'manual']
+  
+  for (let i = 0; i < count; i++) {
+    const settlementDate = new Date(Date.now() - Math.random() * 90 * 24 * 60 * 60 * 1000)
+    const processDate = new Date(settlementDate.getTime() + Math.random() * 7 * 24 * 60 * 60 * 1000)
+    const status = statuses[Math.floor(Math.random() * statuses.length)]
+    
+    settlements.push({
+      id: `CS${String(i + 1).padStart(6, '0')}`,
+      referrerId: Math.floor(Math.random() * 15) + 1,
+      referrerName: referrerNames[Math.floor(Math.random() * referrerNames.length)],
+      settlementType: settlementTypes[Math.floor(Math.random() * settlementTypes.length)],
+      period: `${settlementDate.getFullYear()}-${String(settlementDate.getMonth() + 1).padStart(2, '0')}`,
+      totalAmount: Math.round((Math.random() * 5000 + 100) * 100) / 100,
+      commissionCount: Math.floor(Math.random() * 20) + 1,
+      status: status,
+      settlementDate: settlementDate.toLocaleDateString(),
+      processDate: status !== 'pending' ? processDate.toLocaleDateString() : '',
+      processor: status !== 'pending' ? '财务部-张三' : '',
+      bankAccount: `622202${String(Math.floor(Math.random() * 1000000000)).padStart(10, '0')}`,
+      bankName: ['工商银行', '建设银行', '农业银行', '中国银行', '招商银行'][Math.floor(Math.random() * 5)],
+      transactionId: status === 'completed' ? `TXN${Date.now()}${i}` : '',
+      remark: status === 'failed' ? '银行账户信息有误，请核实' : status === 'completed' ? '结算成功' : '',
+      createdAt: settlementDate.toLocaleString()
+    })
+  }
+  
+  return settlements.sort((a, b) => new Date(b.settlementDate) - new Date(a.settlementDate))
+}
+
+// 生成佣金规则数据
+export const generateMockCommissionRules = () => {
+  return [
+    {
+      id: 1,
+      name: '基础推荐佣金',
+      type: 'referral',
+      description: '推荐新客户注册并完成首次充值',
+      commissionRate: 0.05, // 5%
+      minAmount: 100,
+      maxAmount: 1000,
+      level: 1,
+      enabled: true,
+      conditions: [
+        '新客户必须完成实名认证',
+        '首次充值金额不少于100美元',
+        '推荐关系必须在30天内建立'
+      ],
+      createdAt: '2023-01-15 10:00:00',
+      updatedAt: '2023-12-01 14:30:00'
+    },
+    {
+      id: 2,
+      name: '二级推荐佣金',
+      type: 'sub_referral',
+      description: '下级推荐人产生的佣金分成',
+      commissionRate: 0.02, // 2%
+      minAmount: 50,
+      maxAmount: 500,
+      level: 2,
+      enabled: true,
+      conditions: [
+        '推荐人等级达到银牌以上',
+        '下级推荐人必须是活跃状态',
+        '分成比例根据推荐人等级调整'
+      ],
+      createdAt: '2023-02-01 09:00:00',
+      updatedAt: '2023-11-15 16:20:00'
+    },
+    {
+      id: 3,
+      name: '消费返佣',
+      type: 'consumption',
+      description: '推荐客户消费产生的返佣',
+      commissionRate: 0.01, // 1%
+      minAmount: 10,
+      maxAmount: 200,
+      level: 1,
+      enabled: true,
+      conditions: [
+        '客户消费金额不少于50美元',
+        '仅限于采购订单消费',
+        '每月返佣上限200美元'
+      ],
+      createdAt: '2023-03-01 11:00:00',
+      updatedAt: '2023-10-20 13:45:00'
+    },
+    {
+      id: 4,
+      name: '等级奖励佣金',
+      type: 'level_bonus',
+      description: '推荐人等级提升奖励',
+      commissionRate: 0, // 固定金额
+      minAmount: 500,
+      maxAmount: 5000,
+      level: 0,
+      enabled: true,
+      conditions: [
+        '推荐人等级提升时一次性奖励',
+        '银牌奖励500美元，金牌1000美元',
+        '钻石2000美元，皇冠5000美元'
+      ],
+      createdAt: '2023-04-01 15:00:00',
+      updatedAt: '2023-09-10 10:15:00'
+    },
+    {
+      id: 5,
+      name: '团队业绩佣金',
+      type: 'team_performance',
+      description: '团队整体业绩达标奖励',
+      commissionRate: 0.005, // 0.5%
+      minAmount: 100,
+      maxAmount: 2000,
+      level: 1,
+      enabled: false,
+      conditions: [
+        '团队月度业绩达到10万美元',
+        '团队成员不少于10人',
+        '团队活跃度不低于80%'
+      ],
+      createdAt: '2023-05-01 12:00:00',
+      updatedAt: '2023-12-15 09:30:00'
+    }
+  ]
+}
+
 // 生成实际的商品数据
 export const products = generateMockProducts(100) // 生成100个商品
 
@@ -517,10 +1855,24 @@ export default {
   productStatuses,
   commonTags,
   products,
+  purchaseApplicationStatuses,
+  quoters,
+  customers,
+  balanceTransactions,
+  rechargeApplications,
+  withdrawalApplications,
+  purchaseApplications,
+  purchaseOrders,
   generateMockProducts,
   generateAuditHistory,
   generateStockHistory,
   auditStatuses,
   generateAuditStats,
-  generateStockAdjustments
-} 
+  generateStockAdjustments,
+  generateMockCustomers,
+  generateMockRecharges,
+  generateMockPaymentMethods,
+  generateMockReferrers,
+  generateMockCommissionSettlements,
+  generateMockCommissionRules
+}
