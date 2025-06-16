@@ -83,12 +83,14 @@
                     placeholder="最低价" 
                     style="width: 50%" 
                     type="number"
+                    prefix="$"
                   />
                   <a-input 
                     v-model:value="queryParam.maxPrice" 
                     placeholder="最高价" 
                     style="width: 50%" 
                     type="number"
+                    prefix="$"
                   />
                 </a-input-group>
               </a-form-item>
@@ -104,7 +106,7 @@
                 <a-button style="margin-left: 8px" @click="resetSearch">重置</a-button>
                 <a-button type="default" style="margin-left: 8px" @click="exportData">
                   <template #icon><DownloadOutlined /></template>
-                  导出
+                  导出Excel
                 </a-button>
               </span>
             </a-col>
@@ -122,8 +124,7 @@
         >
           <template #action>
             <a-space>
-              <a-button size="small" @click="batchApprove">批量审核通过</a-button>
-              <a-button size="small" @click="batchReject">批量审核不通过</a-button>
+              <a-button size="small" @click="batchApprove">批量审核</a-button>
               <a-button size="small" danger @click="batchDelete">批量删除</a-button>
             </a-space>
           </template>
@@ -145,25 +146,46 @@
           })
         }"
         @change="handleTableChange"
-        :scroll="{ x: 1600 }"
+        :scroll="{ x: 1800 }"
       >
         <template #bodyCell="{ column, record }">
-          <!-- 商品图片和名称列 -->
-          <template v-if="column.key === 'product'">
-            <div class="product-info">
-              <a-image
-                :width="60"
-                :height="60"
-                :src="record.image"
-                :preview="false"
-                fallback="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjYwIiBmaWxsPSIjRjVGNUY1Ii8+CjxwYXRoIGQ9Ik0zMCAyMEM0NS41IDIwIDUwIDI1IDUwIDMwQzUwIDM1IDQ1LjUgNDAgMzAgNDBDMTQuNSA0MCA5IDM1IDkgMzBDOSAyNSAxNC41IDIwIDMwIDIwWiIgZmlsbD0iI0JGQkZCRiIvPgo8L3N2Zz4K"
-                class="product-image"
-              />
-              <div class="product-details">
-                <div class="product-name">{{ record.name }}</div>
-                <div class="product-code">编号: {{ record.code }}</div>
-              </div>
+          <!-- 商品图片列 -->
+          <template v-if="column.key === 'image'">
+            <a-image
+              :width="50"
+              :height="50"
+              :src="record.image"
+              :preview="true"
+              fallback="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjUwIiBoZWlnaHQ9IjUwIiBmaWxsPSIjRjVGNUY1Ii8+CjxwYXRoIGQ9Ik0yNSAxNUMzNy41IDE1IDQyIDIwIDQyIDI1QzQyIDMwIDM3LjUgMzUgMjUgMzVDMTIuNSAzNSA3IDMwIDcgMjVDNyAyMCAxMi41IDE1IDI1IDE1WiIgZmlsbD0iI0JGQkZCRiIvPgo8L3N2Zz4K"
+              class="product-image"
+            />
+          </template>
+
+          <!-- 商品名称列 -->
+          <template v-if="column.key === 'name'">
+            <div>
+              <a @click="viewProduct(record)" style="font-weight: 500;">{{ record.name }}</a>
             </div>
+          </template>
+
+          <!-- 商品编号列 -->
+          <template v-if="column.key === 'code'">
+            <a-typography-text copyable>{{ record.code }}</a-typography-text>
+          </template>
+
+          <!-- 商品价格列 -->
+          <template v-if="column.key === 'price'">
+            ${{ record.price?.toFixed(2) || '0.00' }}
+          </template>
+
+          <!-- 建议售价列 -->
+          <template v-if="column.key === 'suggestedPrice'">
+            ${{ record.suggestedPrice?.toFixed(2) || '0.00' }}
+          </template>
+
+          <!-- 采购成本列 -->
+          <template v-if="column.key === 'cost'">
+            ${{ record.cost?.toFixed(2) || '0.00' }}
           </template>
 
           <!-- 商品状态列 -->
@@ -171,21 +193,6 @@
             <a-tag :color="getStatusColor(record.status)">
               {{ getStatusText(record.status) }}
             </a-tag>
-          </template>
-
-          <!-- 价格列 -->
-          <template v-if="column.key === 'price'">
-            <div>
-              <div>售价: ${{ record.price.toFixed(2) }}</div>
-              <div style="color: #999; font-size: 12px;">
-                建议价: ${{ record.suggestedPrice.toFixed(2) }}
-              </div>
-            </div>
-          </template>
-
-          <!-- 成本列 -->
-          <template v-if="column.key === 'cost'">
-            ${{ record.cost.toFixed(2) }}
           </template>
 
           <!-- 库存列 -->
@@ -196,8 +203,13 @@
           </template>
 
           <!-- 销量列 -->
-          <template v-if="column.key === 'sales'">
+          <template v-if="column.key === 'totalSales'">
             {{ record.totalSales || 0 }}
+          </template>
+
+          <!-- 创建时间列 -->
+          <template v-if="column.key === 'createdAt'">
+            {{ formatDate(record.createdAt) }}
           </template>
 
           <!-- 操作列 -->
@@ -214,10 +226,10 @@
                 </a>
                 <template #overlay>
                   <a-menu>
-                    <a-menu-item v-if="record.status === 'pending'" @click="approveProduct(record)">
+                    <a-menu-item v-if="record.status === 'pending'" @click="auditProduct(record, 'approve')">
                       <CheckOutlined /> 审核通过
                     </a-menu-item>
-                    <a-menu-item v-if="record.status === 'pending'" @click="rejectProduct(record)">
+                    <a-menu-item v-if="record.status === 'pending'" @click="auditProduct(record, 'reject')">
                       <CloseOutlined /> 审核不通过
                     </a-menu-item>
                     <a-menu-item @click="copyProduct(record)">
@@ -238,39 +250,45 @@
     <!-- 商品审核弹窗 -->
     <a-modal
       v-model:visible="auditModalVisible"
-      :title="auditForm.type === 'approve' ? '商品审核通过' : '商品审核不通过'"
+      title="商品审核"
+      width="600px"
       @ok="handleAudit"
+      @cancel="cancelAudit"
     >
-      <div class="audit-content">
+      <div class="audit-content" v-if="auditForm.product">
+        <!-- 商品基本信息概要 -->
         <div class="product-preview">
           <a-image
             :width="80"
             :height="80"
-            :src="auditForm.product?.image"
+            :src="auditForm.product.image"
             :preview="false"
+            fallback="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIiBmaWxsPSIjRjVGNUY1Ii8+CjxwYXRoIGQ9Ik00MCAyNEM1NSAyNCA2MCAzMCA2MCA0MEM2MCA1MCA1NSA1NiA0MCA1NkMyNSA1NiAyMCA1MCAyMCA0MEMyMCAzMCAyNSAyNCA0MCAyNFoiIGZpbGw9IiNCRkJGQkYiLz4KPC9zdmc+Cg=="
           />
-          <div style="margin-left: 12px;">
-            <div><strong>{{ auditForm.product?.name }}</strong></div>
-            <div style="color: #666;">编号: {{ auditForm.product?.code }}</div>
-            <div style="color: #666;">分类: {{ auditForm.product?.categoryName }}</div>
+          <div style="margin-left: 12px; flex: 1;">
+            <div><strong>{{ auditForm.product.name }}</strong></div>
+            <div style="color: #666; margin-top: 4px;">编号: {{ auditForm.product.code }}</div>
+            <div style="color: #666; margin-top: 4px;">分类: {{ auditForm.product.categoryName }}</div>
+            <div style="color: #666; margin-top: 4px;">供应商: {{ auditForm.product.supplierName }}</div>
+            <div style="color: #666; margin-top: 4px;">价格: ${{ auditForm.product.price?.toFixed(2) }}</div>
           </div>
         </div>
         
-        <a-form :model="auditForm" :label-col="{ span: 4 }" style="margin-top: 16px;">
-          <a-form-item label="审核结果">
-            <a-radio-group v-model:value="auditForm.type">
-              <a-radio value="approve">审核通过</a-radio>
-              <a-radio value="reject">审核不通过</a-radio>
+        <!-- 审核操作区域 -->
+        <a-form ref="auditFormRef" :model="auditForm" :rules="auditRules" :label-col="{ span: 6 }" style="margin-top: 24px;">
+          <a-form-item label="审核结果" name="result">
+            <a-radio-group v-model:value="auditForm.result">
+              <a-radio value="approved">通过</a-radio>
+              <a-radio value="rejected">不通过</a-radio>
             </a-radio-group>
           </a-form-item>
-          <a-form-item 
-            label="审核备注" 
-            :rules="auditForm.type === 'reject' ? [{ required: true, message: '拒绝时必须填写原因' }] : []"
-          >
+          <a-form-item label="审核备注" name="remark">
             <a-textarea 
               v-model:value="auditForm.remark" 
-              :placeholder="auditForm.type === 'reject' ? '请输入拒绝原因' : '可填写审核备注(选填)'"
+              :placeholder="auditForm.result === 'rejected' ? '请输入拒绝原因（必填）' : '可填写审核备注（选填）'"
               :rows="3"
+              :maxlength="500"
+              show-count
             />
           </a-form-item>
         </a-form>
@@ -280,20 +298,27 @@
     <!-- 批量审核弹窗 -->
     <a-modal
       v-model:visible="batchAuditModalVisible"
-      :title="`批量${batchAuditForm.type === 'approve' ? '通过' : '拒绝'}审核`"
+      title="批量审核"
+      width="500px"
       @ok="handleBatchAudit"
+      @cancel="cancelBatchAudit"
     >
       <div>
-        <p>您确定要批量{{ batchAuditForm.type === 'approve' ? '通过' : '拒绝' }}以下 {{ selectedRowKeys.length }} 个商品的审核吗？</p>
-        <a-form :model="batchAuditForm" :label-col="{ span: 4 }">
-          <a-form-item 
-            label="审核备注"
-            :rules="batchAuditForm.type === 'reject' ? [{ required: true, message: '批量拒绝时必须填写原因' }] : []"
-          >
+        <p>您确定要批量审核以下 <strong>{{ selectedRowKeys.length }}</strong> 个商品吗？</p>
+        <a-form ref="batchAuditFormRef" :model="batchAuditForm" :rules="batchAuditRules" :label-col="{ span: 6 }">
+          <a-form-item label="审核结果" name="result">
+            <a-radio-group v-model:value="batchAuditForm.result">
+              <a-radio value="approved">通过</a-radio>
+              <a-radio value="rejected">不通过</a-radio>
+            </a-radio-group>
+          </a-form-item>
+          <a-form-item label="审核备注" name="remark">
             <a-textarea 
               v-model:value="batchAuditForm.remark" 
-              :placeholder="batchAuditForm.type === 'reject' ? '请输入拒绝原因' : '可填写审核备注(选填)'"
+              :placeholder="batchAuditForm.result === 'rejected' ? '请输入拒绝原因（必填）' : '可填写审核备注（选填）'"
               :rows="3"
+              :maxlength="500"
+              show-count
             />
           </a-form-item>
         </a-form>
@@ -316,6 +341,12 @@ import {
   CopyOutlined,
   DeleteOutlined
 } from '@ant-design/icons-vue'
+import { 
+  generateMockProducts, 
+  categories as mockCategories, 
+  suppliers as mockSuppliers, 
+  productStatuses 
+} from '@/data/mockData'
 
 const router = useRouter()
 const loading = ref(false)
@@ -349,44 +380,76 @@ const pagination = reactive({
 
 // 审核表单
 const auditForm = reactive({
-  type: 'approve',
   product: null,
+  result: 'approved',
   remark: ''
 })
 
 // 批量审核表单
 const batchAuditForm = reactive({
-  type: 'approve',
+  result: 'approved',
   remark: ''
 })
+
+// 审核表单验证规则
+const auditRules = {
+  result: [{ required: true, message: '请选择审核结果' }],
+  remark: [
+    {
+      validator: (rule, value) => {
+        if (auditForm.result === 'rejected' && !value?.trim()) {
+          return Promise.reject('审核不通过时必须填写拒绝原因')
+        }
+        return Promise.resolve()
+      },
+      trigger: 'blur'
+    }
+  ]
+}
+
+// 批量审核表单验证规则
+const batchAuditRules = {
+  result: [{ required: true, message: '请选择审核结果' }],
+  remark: [
+    {
+      validator: (rule, value) => {
+        if (batchAuditForm.result === 'rejected' && !value?.trim()) {
+          return Promise.reject('批量审核不通过时必须填写拒绝原因')
+        }
+        return Promise.resolve()
+      },
+      trigger: 'blur'
+    }
+  ]
+}
 
 // 商品列表数据
 const productList = ref([])
 
-// 分类列表
-const categories = ref([
-  { id: 1, name: '电子产品' },
-  { id: 2, name: '服装配饰' },
-  { id: 3, name: '家居用品' },
-  { id: 4, name: '运动户外' },
-  { id: 5, name: '美妆护肤' }
-])
+// 分类列表 - 使用mockData中的数据
+const categories = ref(mockCategories.map(cat => ({ id: cat.id, name: cat.name })))
 
-// 供应商列表
-const suppliers = ref([
-  { id: 1, name: '供应商A' },
-  { id: 2, name: '供应商B' },
-  { id: 3, name: '供应商C' },
-  { id: 4, name: '供应商D' }
-])
+// 供应商列表 - 使用mockData中的数据
+const suppliers = ref(mockSuppliers.map(sup => ({ id: sup.id, name: sup.name })))
 
-// 表格列配置
+// 表格列配置 - 按照产品文档要求
 const columns = [
   {
-    title: '商品信息',
-    key: 'product',
-    width: 280,
-    fixed: 'left'
+    title: '商品图片',
+    key: 'image',
+    width: 80,
+    align: 'center'
+  },
+  {
+    title: '商品名称',
+    key: 'name',
+    width: 200,
+    ellipsis: true
+  },
+  {
+    title: '商品编号',
+    key: 'code',
+    width: 120
   },
   {
     title: '商品分类',
@@ -395,92 +458,133 @@ const columns = [
     width: 120
   },
   {
-    title: '库存',
+    title: '商品库存',
     key: 'stock',
-    width: 80,
-    sorter: true
-  },
-  {
-    title: '价格信息',
-    key: 'price',
-    width: 140,
-    sorter: true
-  },
-  {
-    title: '采购成本',
-    key: 'cost',
     width: 100,
-    sorter: true
+    align: 'center'
+  },
+  {
+    title: '商品价格($)',
+    key: 'price',
+    width: 120,
+    align: 'right'
+  },
+  {
+    title: '建议售价($)',
+    key: 'suggestedPrice',
+    width: 130,
+    align: 'right'
+  },
+  {
+    title: '采购成本($)',
+    key: 'cost',
+    width: 130,
+    align: 'right'
+  },
+  {
+    title: '商品状态',
+    key: 'status',
+    width: 120,
+    align: 'center'
   },
   {
     title: '供应商',
     dataIndex: 'supplierName',
     key: 'supplierName',
-    width: 120
+    width: 150,
+    ellipsis: true
   },
   {
     title: '总销量',
-    key: 'sales',
-    width: 80,
-    sorter: true
-  },
-  {
-    title: '状态',
-    key: 'status',
-    width: 100
+    key: 'totalSales',
+    width: 100,
+    align: 'center'
   },
   {
     title: '创建时间',
-    dataIndex: 'createdAt',
     key: 'createdAt',
-    width: 120,
-    sorter: true
+    width: 120
   },
   {
     title: '操作',
     key: 'action',
-    width: 160,
+    width: 200,
     fixed: 'right'
   }
 ]
 
-// 初始化数据
-const initData = () => {
-  const mockProducts = []
-  for (let i = 1; i <= 50; i++) {
-    const status = ['pending', 'draft', 'published', 'rejected'][Math.floor(Math.random() * 4)]
-    const categoryId = Math.floor(Math.random() * 5) + 1
-    const supplierId = Math.floor(Math.random() * 4) + 1
+// 加载商品数据
+const loadProducts = async () => {
+  loading.value = true
+  try {
+    // 模拟API调用延迟
+    await new Promise(resolve => setTimeout(resolve, 500))
     
-    mockProducts.push({
-      id: i,
-      name: `商品名称 ${i} - 高品质产品`,
-      code: `PRD${String(i).padStart(6, '0')}`,
-      image: `https://picsum.photos/200/200?random=${i}`,
-      categoryId,
-      categoryName: categories.value.find(c => c.id === categoryId)?.name,
-      supplierId,
-      supplierName: suppliers.value.find(s => s.id === supplierId)?.name,
-      price: Math.floor(Math.random() * 500 + 50),
-      suggestedPrice: Math.floor(Math.random() * 800 + 100),
-      cost: Math.floor(Math.random() * 200 + 20),
-      stock: Math.floor(Math.random() * 1000 + 10),
-      totalSales: Math.floor(Math.random() * 500),
-      status,
-      createdAt: new Date(Date.now() - Math.random() * 10000000000).toLocaleDateString(),
-      updatedAt: new Date().toLocaleDateString()
+    // 使用mockData生成商品数据
+    const mockProducts = generateMockProducts(100) // 生成100个商品
+    
+    // 应用筛选条件
+    let filteredProducts = mockProducts.filter(product => {
+      // 关键词搜索
+      if (queryParam.keyword) {
+        const keyword = queryParam.keyword.toLowerCase()
+        if (!product.name.toLowerCase().includes(keyword) && 
+            !product.code.toLowerCase().includes(keyword) && 
+            !product.sku.toLowerCase().includes(keyword)) {
+          return false
+        }
+      }
+      
+      // 分类筛选
+      if (queryParam.categoryId && product.categoryId !== queryParam.categoryId) {
+        return false
+      }
+      
+      // 状态筛选
+      if (queryParam.status && product.status !== queryParam.status) {
+        return false
+      }
+      
+      // 供应商筛选
+      if (queryParam.supplierId && product.supplierId !== queryParam.supplierId) {
+        return false
+      }
+      
+      // 价格范围筛选
+      if (queryParam.minPrice && product.price < queryParam.minPrice) {
+        return false
+      }
+      if (queryParam.maxPrice && product.price > queryParam.maxPrice) {
+        return false
+      }
+      
+      return true
     })
+    
+    // 更新分页信息
+    pagination.total = filteredProducts.length
+    
+    // 分页处理
+    const startIndex = (pagination.current - 1) * pagination.pageSize
+    const endIndex = startIndex + pagination.pageSize
+    productList.value = filteredProducts.slice(startIndex, endIndex)
+    
+  } catch (error) {
+    message.error('加载商品数据失败')
+    console.error('Load products error:', error)
+  } finally {
+    loading.value = false
   }
-  return mockProducts
 }
+    
 
 // 获取状态颜色
 const getStatusColor = (status) => {
   const colors = {
-    pending: 'orange',
+    pending: 'processing',
     draft: 'default',
-    published: 'green',
-    rejected: 'red'
+    published: 'success',
+    rejected: 'error'
   }
   return colors[status] || 'default'
 }
@@ -496,52 +600,26 @@ const getStatusText = (status) => {
   return texts[status] || '未知'
 }
 
-// 加载商品列表
-const loadProducts = async () => {
-  loading.value = true
-  try {
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 500))
-    
-    const allProducts = initData()
-    let filteredProducts = [...allProducts]
-    
-    // 应用筛选条件
-    if (queryParam.keyword) {
-      filteredProducts = filteredProducts.filter(p => 
-        p.name.includes(queryParam.keyword) || 
-        p.code.includes(queryParam.keyword)
-      )
-    }
-    if (queryParam.categoryId) {
-      filteredProducts = filteredProducts.filter(p => p.categoryId == queryParam.categoryId)
-    }
-    if (queryParam.status) {
-      filteredProducts = filteredProducts.filter(p => p.status === queryParam.status)
-    }
-    if (queryParam.supplierId) {
-      filteredProducts = filteredProducts.filter(p => p.supplierId == queryParam.supplierId)
-    }
-    if (queryParam.minPrice) {
-      filteredProducts = filteredProducts.filter(p => p.price >= queryParam.minPrice)
-    }
-    if (queryParam.maxPrice) {
-      filteredProducts = filteredProducts.filter(p => p.price <= queryParam.maxPrice)
-    }
-    
-    pagination.total = filteredProducts.length
-    const start = (pagination.current - 1) * pagination.pageSize
-    const end = start + pagination.pageSize
-    productList.value = filteredProducts.slice(start, end)
-    
-  } catch (error) {
-    message.error('加载商品列表失败')
-  } finally {
-    loading.value = false
-  }
+// 格式化日期
+const formatDate = (dateStr) => {
+  if (!dateStr) return ''
+  const date = new Date(dateStr)
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
 }
 
-// 搜索
+// 表格选择变化
+const onSelectChange = (selectedKeys) => {
+  selectedRowKeys.value = selectedKeys
+}
+
+// 表格变化处理
+const handleTableChange = (pag, filters, sorter) => {
+  pagination.current = pag.current
+  pagination.pageSize = pag.pageSize
+  loadProducts()
+}
+
+// 搜索处理
 const handleSearch = () => {
   pagination.current = 1
   loadProducts()
@@ -556,27 +634,29 @@ const resetSearch = () => {
     supplierId: '',
     minPrice: '',
     maxPrice: '',
-    dateRange: []
+    dateRange: [],
+    pageSize: 10,
+    current: 1
   })
   pagination.current = 1
   loadProducts()
 }
 
-// 表格变化处理
-const handleTableChange = (pag, filters, sorter) => {
-  pagination.current = pag.current
-  pagination.pageSize = pag.pageSize
-  loadProducts()
+
+
+// 导出数据
+const exportData = () => {
+  message.success('导出功能开发中...')
 }
 
-// 选择变化
-const onSelectChange = (keys) => {
-  selectedRowKeys.value = keys
-}
-
-// 创建商品
+// 新增商品
 const createProduct = () => {
   router.push('/admin/products/create')
+}
+
+// 跳转到销量排名
+const goToRanking = () => {
+  router.push('/admin/product-ranking')
 }
 
 // 查看商品详情
@@ -586,71 +666,49 @@ const viewProduct = (record) => {
 
 // 编辑商品
 const editProduct = (record) => {
-  router.push(`/admin/products/edit/${record.id}`)
-}
-
-// 复制商品
-const copyProduct = (record) => {
-  Modal.confirm({
-    title: '复制商品',
-    content: `确定要复制商品 "${record.name}" 吗？`,
-    onOk: async () => {
-      try {
-        message.success('商品复制成功')
-        loadProducts()
-      } catch (error) {
-        message.error('复制失败')
-      }
-    }
-  })
-}
-
-// 删除商品
-const deleteProduct = (record) => {
-  Modal.confirm({
-    title: '删除商品',
-    content: `确定要删除商品 "${record.name}" 吗？此操作不可恢复。`,
-    onOk: async () => {
-      try {
-        message.success('商品删除成功')
-        loadProducts()
-      } catch (error) {
-        message.error('删除失败')
-      }
-    }
-  })
+  router.push(`/admin/products/${record.id}/edit`)
 }
 
 // 审核商品
-const approveProduct = (record) => {
-  auditForm.type = 'approve'
+const auditProduct = (record, type) => {
   auditForm.product = record
-  auditForm.remark = ''
-  auditModalVisible.value = true
-}
-
-const rejectProduct = (record) => {
-  auditForm.type = 'reject'
-  auditForm.product = record
+  auditForm.result = type === 'approve' ? 'approved' : 'rejected'
   auditForm.remark = ''
   auditModalVisible.value = true
 }
 
 // 处理审核
 const handleAudit = async () => {
-  if (auditForm.type === 'reject' && !auditForm.remark) {
-    message.error('审核不通过时必须填写拒绝原因')
-    return
-  }
-  
   try {
-    const action = auditForm.type === 'approve' ? '通过' : '拒绝'
-    message.success(`商品审核${action}成功`)
+    // 表单验证
+    if (auditForm.result === 'rejected' && !auditForm.remark?.trim()) {
+      message.error('审核不通过时必须填写拒绝原因')
+      return
+    }
+    
+    // 模拟API调用
+    await new Promise(resolve => setTimeout(resolve, 500))
+    
+    // 更新商品状态
+    const product = productList.value.find(p => p.id === auditForm.product.id)
+    if (product) {
+      product.status = auditForm.result === 'approved' ? 'published' : 'rejected'
+    }
+    
+    message.success(`商品审核${auditForm.result === 'approved' ? '通过' : '不通过'}`)
     auditModalVisible.value = false
-    loadProducts()
+    
   } catch (error) {
-    message.error('审核操作失败')
+    message.error('审核失败，请重试')
   }
+}
+
+// 取消审核
+const cancelAudit = () => {
+  auditForm.product = null
+  auditForm.result = 'approved'
+  auditForm.remark = ''
+  auditModalVisible.value = false
 }
 
 // 批量审核
@@ -659,37 +717,80 @@ const batchApprove = () => {
     message.warning('请先选择要审核的商品')
     return
   }
-  batchAuditForm.type = 'approve'
-  batchAuditForm.remark = ''
-  batchAuditModalVisible.value = true
-}
-
-const batchReject = () => {
-  if (selectedRowKeys.value.length === 0) {
-    message.warning('请先选择要审核的商品')
-    return
-  }
-  batchAuditForm.type = 'reject'
+  batchAuditForm.result = 'approved'
   batchAuditForm.remark = ''
   batchAuditModalVisible.value = true
 }
 
 // 处理批量审核
 const handleBatchAudit = async () => {
-  if (batchAuditForm.type === 'reject' && !batchAuditForm.remark) {
-    message.error('批量拒绝时必须填写原因')
-    return
-  }
-  
   try {
-    const action = batchAuditForm.type === 'approve' ? '通过' : '拒绝'
-    message.success(`批量审核${action}成功，共处理 ${selectedRowKeys.value.length} 个商品`)
+    // 表单验证
+    if (batchAuditForm.result === 'rejected' && !batchAuditForm.remark?.trim()) {
+      message.error('批量审核不通过时必须填写拒绝原因')
+      return
+    }
+    
+    // 模拟API调用
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    
+    // 更新选中商品的状态
+    selectedRowKeys.value.forEach(id => {
+      const product = productList.value.find(p => p.id === id)
+      if (product) {
+        product.status = batchAuditForm.result === 'approved' ? 'published' : 'rejected'
+      }
+    })
+    
+    message.success(`批量审核${batchAuditForm.result === 'approved' ? '通过' : '不通过'} ${selectedRowKeys.value.length} 个商品`)
     batchAuditModalVisible.value = false
     selectedRowKeys.value = []
-    loadProducts()
+    
   } catch (error) {
-    message.error('批量审核操作失败')
+    message.error('批量审核失败，请重试')
   }
+}
+
+// 取消批量审核
+const cancelBatchAudit = () => {
+  batchAuditForm.result = 'approved'
+  batchAuditForm.remark = ''
+  batchAuditModalVisible.value = false
+}
+
+// 复制商品
+const copyProduct = (record) => {
+  Modal.confirm({
+    title: '确认复制商品',
+    content: `确定要复制商品"${record.name}"吗？`,
+    onOk: async () => {
+      try {
+        await new Promise(resolve => setTimeout(resolve, 500))
+        message.success('商品复制成功')
+        loadProducts()
+      } catch (error) {
+        message.error('复制失败，请重试')
+      }
+    }
+  })
+}
+
+// 删除商品
+const deleteProduct = (record) => {
+  Modal.confirm({
+    title: '确认删除商品',
+    content: `确定要删除商品"${record.name}"吗？此操作不可恢复。`,
+    okType: 'danger',
+    onOk: async () => {
+      try {
+        await new Promise(resolve => setTimeout(resolve, 500))
+        productList.value = productList.value.filter(p => p.id !== record.id)
+        message.success('商品删除成功')
+      } catch (error) {
+        message.error('删除失败，请重试')
+      }
+    }
+  })
 }
 
 // 批量删除
@@ -700,28 +801,20 @@ const batchDelete = () => {
   }
   
   Modal.confirm({
-    title: '批量删除商品',
+    title: '确认批量删除',
     content: `确定要删除选中的 ${selectedRowKeys.value.length} 个商品吗？此操作不可恢复。`,
+    okType: 'danger',
     onOk: async () => {
       try {
-        message.success(`批量删除成功，共删除 ${selectedRowKeys.value.length} 个商品`)
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        productList.value = productList.value.filter(p => !selectedRowKeys.value.includes(p.id))
+        message.success(`批量删除 ${selectedRowKeys.value.length} 个商品成功`)
         selectedRowKeys.value = []
-        loadProducts()
       } catch (error) {
-        message.error('批量删除失败')
+        message.error('批量删除失败，请重试')
       }
     }
   })
-}
-
-// 导出数据
-const exportData = () => {
-  message.success('导出功能开发中...')
-}
-
-// 前往销量排名
-const goToRanking = () => {
-  router.push('/admin/product-ranking')
 }
 
 // 组件挂载时加载数据
@@ -739,54 +832,28 @@ onMounted(() => {
 
 .products-card {
   .table-page-search-wrapper {
-    .ant-form-inline .ant-form-item {
-      display: flex;
-      margin-bottom: 16px;
-    }
+    margin-bottom: 24px;
+    
     .table-page-search-submitButtons {
-      display: block;
-      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
+  }
+  
+  .batch-operation-bar {
+    margin-bottom: 16px;
   }
 }
 
-.batch-operation-bar {
-  margin-bottom: 16px;
-}
-
-.product-info {
-  display: flex;
-  align-items: center;
-  
-  .product-image {
-    border-radius: 6px;
-    object-fit: cover;
-  }
-  
-  .product-details {
-    margin-left: 12px;
-    flex: 1;
-    
-    .product-name {
-      font-weight: 500;
-      color: #262626;
-      margin-bottom: 4px;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
-    
-    .product-code {
-      font-size: 12px;
-      color: #8c8c8c;
-    }
-  }
+.product-image {
+  border-radius: 4px;
+  object-fit: cover;
 }
 
 .low-stock {
   color: #ff4d4f;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .audit-content {
@@ -796,11 +863,33 @@ onMounted(() => {
     padding: 16px;
     background: #fafafa;
     border-radius: 6px;
-    margin-bottom: 16px;
+    border: 1px solid #f0f0f0;
   }
 }
 
-.ant-tag {
+:deep(.ant-table) {
+  .ant-table-thead > tr > th {
+    background: #fafafa;
+    font-weight: 600;
+  }
+  
+  .ant-table-tbody > tr:hover > td {
+    background: #f5f5f5;
+  }
+}
+
+:deep(.ant-tag) {
+  margin: 0;
+  font-size: 12px;
+  padding: 2px 8px;
+}
+
+:deep(.ant-image) {
   border-radius: 4px;
+  overflow: hidden;
+}
+
+:deep(.ant-typography) {
+  margin-bottom: 0;
 }
 </style> 

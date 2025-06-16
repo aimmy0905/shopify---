@@ -6,6 +6,32 @@
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
     <link rel="icon" href="<%= BASE_URL %>favicon.ico">
     <title><%= htmlWebpackPlugin.options.title %></title>
+    
+    <!-- 修复 ResizeObserver 错误 -->
+    <script>
+      // 捕获并忽略 ResizeObserver 错误
+      window.addEventListener('error', function(e) {
+        if (e.message && e.message.includes('ResizeObserver loop completed with undelivered notifications')) {
+          e.stopImmediatePropagation();
+          return false;
+        }
+      });
+      
+      // 重写 ResizeObserver 以防止循环错误
+      if (typeof ResizeObserver !== 'undefined') {
+        const OriginalResizeObserver = ResizeObserver;
+        window.ResizeObserver = class extends OriginalResizeObserver {
+          constructor(callback) {
+            const wrappedCallback = (entries, observer) => {
+              window.requestAnimationFrame(() => {
+                callback(entries, observer);
+              });
+            };
+            super(wrappedCallback);
+          }
+        };
+      }
+    </script>
   </head>
   <body>
     <noscript>

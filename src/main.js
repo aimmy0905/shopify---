@@ -2,6 +2,23 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
 
+// 修复 ResizeObserver 错误
+const debounce = (fn, delay) => {
+  let timeoutId
+  return (...args) => {
+    clearTimeout(timeoutId)
+    timeoutId = setTimeout(() => fn.apply(null, args), delay)
+  }
+}
+
+const _ResizeObserver = window.ResizeObserver
+window.ResizeObserver = class ResizeObserver extends _ResizeObserver {
+  constructor(callback) {
+    callback = debounce(callback, 20)
+    super(callback)
+  }
+}
+
 // Element Plus
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
@@ -36,5 +53,23 @@ app.use(ElementPlus, {
 
 // 使用 Ant Design Vue
 app.use(Antd)
+
+// 全局错误处理
+app.config.errorHandler = (err, vm, info) => {
+  // 忽略 ResizeObserver 相关错误
+  if (err.message && err.message.includes('ResizeObserver')) {
+    return
+  }
+  console.error('Global error:', err, info)
+}
+
+// 处理未捕获的Promise错误
+window.addEventListener('unhandledrejection', event => {
+  if (event.reason && event.reason.message && event.reason.message.includes('ResizeObserver')) {
+    event.preventDefault()
+    return
+  }
+  console.error('Unhandled promise rejection:', event.reason)
+})
 
 app.mount('#app')

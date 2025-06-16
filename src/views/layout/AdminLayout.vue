@@ -42,15 +42,35 @@
           <span>商家管理</span>
         </el-menu-item>
         
-        <el-menu-item index="/admin/products">
-          <el-icon><Goods /></el-icon>
-          <span>商品管理</span>
-        </el-menu-item>
+        <el-sub-menu index="products">
+          <template #title>
+            <el-icon><Goods /></el-icon>
+            <span>商品管理</span>
+          </template>
+          <el-menu-item index="/admin/products">商品列表</el-menu-item>
+          <el-menu-item index="/admin/product-categories">商品分类管理</el-menu-item>
+          <el-menu-item index="/admin/product-audit">商品审核管理</el-menu-item>
+          <el-menu-item index="/admin/product-ranking">销量排名</el-menu-item>
+        </el-sub-menu>
         
-        <el-menu-item index="/admin/orders">
-          <el-icon><DocumentChecked /></el-icon>
-          <span>订单管理</span>
-        </el-menu-item>
+        <el-sub-menu index="orders">
+          <template #title>
+            <el-icon><DocumentChecked /></el-icon>
+            <span>订单管理</span>
+          </template>
+          <el-menu-item index="/admin/orders/store">店铺订单</el-menu-item>
+          <el-menu-item index="/admin/orders/purchase">采购订单</el-menu-item>
+        </el-sub-menu>
+        
+        <el-sub-menu index="purchase">
+          <template #title>
+            <el-icon><ShoppingCart /></el-icon>
+            <span>采购管理</span>
+          </template>
+          <el-menu-item index="/admin/purchase-applications">采购申请</el-menu-item>
+          <el-menu-item index="/admin/purchase-orders">采购订单</el-menu-item>
+          <el-menu-item index="/admin/shipping-records">发货记录</el-menu-item>
+        </el-sub-menu>
         
         <el-menu-item index="/admin/balance">
           <el-icon><Wallet /></el-icon>
@@ -141,7 +161,8 @@ import {
   User,
   ArrowDown,
   SwitchButton,
-  Shop
+  Shop,
+  ShoppingCart
 } from '@element-plus/icons-vue'
 
 const route = useRoute()
@@ -157,8 +178,15 @@ const pageNames = {
   '/admin/users': '管理员用户',
   '/admin/roles': '角色管理',
   '/admin/merchants': '商家管理',
-  '/admin/products': '商品管理',
-  '/admin/orders': '订单管理',
+  '/admin/products': '商品列表',
+  '/admin/product-categories': '商品分类管理',
+  '/admin/product-audit': '商品审核管理',
+  '/admin/product-ranking': '销量排名',
+  '/admin/orders/store': '店铺订单',
+  '/admin/orders/purchase': '采购订单',
+  '/admin/purchase-applications': '采购申请管理',
+  '/admin/purchase-orders': '采购订单管理',
+  '/admin/shipping-records': '发货记录管理',
   '/admin/balance': '余额管理',
   '/admin/commission': '分佣管理',
   '/admin/invoices': 'Invoice管理',

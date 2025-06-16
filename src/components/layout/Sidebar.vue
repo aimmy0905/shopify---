@@ -352,16 +352,22 @@ const adminMenuItems = [
         route: '/admin/products'
       },
       {
+        key: 'admin-product-categories',
+        title: '商品分类管理',
+        icon: Management,
+        route: '/admin/product-categories'
+      },
+      {
+        key: 'admin-product-audit',
+        title: '商品审核管理',
+        icon: DocumentChecked,
+        route: '/admin/product-audit'
+      },
+      {
         key: 'admin-products-ranking',
         title: '销量排名',
         icon: DataAnalysis,
-        route: '/admin/products/ranking'
-      },
-      {
-        key: 'admin-product-categories',
-        title: '分类管理',
-        icon: Management,
-        route: '/admin/product-categories'
+        route: '/admin/product-ranking'
       }
     ]
   },

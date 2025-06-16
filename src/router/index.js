@@ -474,12 +474,76 @@ const routes = [
           activeMenu: '/admin/merchants'
         }
       },
+      // 商品管理路由
       {
         path: 'products',
         name: 'AdminProducts',
         component: () => import('@/views/admin/Products.vue'),
         meta: {
           title: '商品管理 - Shopify铺货系统',
+          requiresAuth: true,
+          requiresAdmin: true
+        }
+      },
+      {
+        path: 'products/create',
+        name: 'AdminProductCreate',
+        component: () => import('@/views/admin/products/Create.vue'),
+        meta: {
+          title: '新增商品 - Shopify铺货系统',
+          requiresAuth: true,
+          requiresAdmin: true
+        }
+      },
+      {
+        path: 'products/:id',
+        name: 'AdminProductDetail',
+        component: () => import('@/views/admin/products/Detail.vue'),
+        meta: {
+          title: '商品详情 - Shopify铺货系统',
+          requiresAuth: true,
+          requiresAdmin: true
+        }
+      },
+      {
+        path: 'products/:id/edit',
+        name: 'AdminProductEdit',
+        component: () => import('@/views/admin/products/Edit.vue'),
+        meta: {
+          title: '编辑商品 - Shopify铺货系统',
+          requiresAuth: true,
+          requiresAdmin: true
+        }
+      },
+      // 商品分类管理路由
+      {
+        path: 'product-categories',
+        name: 'AdminProductCategories',
+        component: () => import('@/views/admin/ProductCategories.vue'),
+        meta: {
+          title: '商品分类管理 - Shopify铺货系统',
+          requiresAuth: true,
+          requiresAdmin: true
+        }
+      },
+      // 商品审核管理路由
+      {
+        path: 'product-audit',
+        name: 'AdminProductAudit',
+        component: () => import('@/views/admin/ProductAudit.vue'),
+        meta: {
+          title: '商品审核管理 - Shopify铺货系统',
+          requiresAuth: true,
+          requiresAdmin: true
+        }
+      },
+      // 销量排名路由
+      {
+        path: 'product-ranking',
+        name: 'AdminProductRanking',
+        component: () => import('@/views/admin/ProductRanking.vue'),
+        meta: {
+          title: '销量排名 - Shopify铺货系统',
           requiresAuth: true,
           requiresAdmin: true
         }

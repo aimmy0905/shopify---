@@ -31,7 +31,13 @@ module.exports = defineConfig({
     client: {
       overlay: {
         warnings: false,
-        errors: true
+        errors: (error) => {
+          // 过滤掉 ResizeObserver 相关错误
+          if (error.message && error.message.includes('ResizeObserver')) {
+            return false
+          }
+          return true
+        }
       }
     },
     historyApiFallback: {

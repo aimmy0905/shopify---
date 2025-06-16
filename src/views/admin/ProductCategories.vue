@@ -265,6 +265,7 @@ import {
   DragOutlined,
   DeleteOutlined
 } from '@ant-design/icons-vue'
+import { categories as mockCategories } from '@/data/mockData'
 
 const router = useRouter()
 const loading = ref(false)
@@ -367,133 +368,25 @@ const parentCategoryOptions = computed(() => {
   return buildTreeOptions(categoryList.value)
 })
 
-// 初始化模拟数据
+// 初始化分类数据 - 使用mockData并转换为表格需要的格式
 const initCategoryData = () => {
-  return [
-    {
-      id: 1,
-      code: 'CAT001',
-      name: '电子产品',
-      icon: 'https://picsum.photos/40/40?random=1',
-      level: 1,
-      sort: 1,
-      productCount: 156,
-      isActive: true,
-      createdAt: '2023-01-15',
-      children: [
-        {
-          id: 11,
-          code: 'CAT011',
-          name: '手机配件',
-          icon: 'https://picsum.photos/40/40?random=11',
-          level: 2,
-          sort: 1,
-          productCount: 89,
-          isActive: true,
-          createdAt: '2023-01-16',
-          children: [
-            {
-              id: 111,
-              code: 'CAT111',
-              name: '手机壳',
-              level: 3,
-              sort: 1,
-              productCount: 45,
-              isActive: true,
-              createdAt: '2023-01-17'
-            },
-            {
-              id: 112,
-              code: 'CAT112',
-              name: '充电器',
-              level: 3,
-              sort: 2,
-              productCount: 34,
-              isActive: true,
-              createdAt: '2023-01-18'
-            }
-          ]
-        },
-        {
-          id: 12,
-          code: 'CAT012',
-          name: '数码相机',
-          icon: 'https://picsum.photos/40/40?random=12',
-          level: 2,
-          sort: 2,
-          productCount: 67,
-          isActive: true,
-          createdAt: '2023-01-19'
-        }
-      ]
-    },
-    {
-      id: 2,
-      code: 'CAT002',
-      name: '服装配饰',
-      icon: 'https://picsum.photos/40/40?random=2',
-      level: 1,
-      sort: 2,
-      productCount: 203,
-      isActive: true,
-      createdAt: '2023-01-20',
-      children: [
-        {
-          id: 21,
-          code: 'CAT021',
-          name: '男装',
-          level: 2,
-          sort: 1,
-          productCount: 98,
-          isActive: true,
-          createdAt: '2023-01-21'
-        },
-        {
-          id: 22,
-          code: 'CAT022',
-          name: '女装',
-          level: 2,
-          sort: 2,
-          productCount: 105,
-          isActive: true,
-          createdAt: '2023-01-22'
-        }
-      ]
-    },
-    {
-      id: 3,
-      code: 'CAT003',
-      name: '家居用品',
-      icon: 'https://picsum.photos/40/40?random=3',
-      level: 1,
-      sort: 3,
-      productCount: 134,
-      isActive: false,
-      createdAt: '2023-01-23'
-    },
-    {
-      id: 4,
-      code: 'CAT004',
-      name: '运动户外',
-      icon: 'https://picsum.photos/40/40?random=4',
-      level: 1,
-      sort: 4,
-      productCount: 78,
-      isActive: true,
-      createdAt: '2023-01-24'
-    },
-    {
-      id: 5,
-      code: 'CAT005',
-      name: '美妆护肤',
-      icon: 'https://picsum.photos/40/40?random=5',
-      level: 1,
-      sort: 5,
-      productCount: 92,
-      isActive: true,
-      createdAt: '2023-01-25'
-    }
-  ]
+  const convertToTableFormat = (categories, level = 1) => {
+    return categories.map(cat => ({
+      id: cat.id,
+      code: `CAT${String(cat.id).padStart(3, '0')}`,
+      name: cat.name,
+      icon: cat.icon ? `https://picsum.photos/40/40?random=${cat.id}` : null,
+      level,
+      sort: cat.sortOrder || 0,
+      productCount: cat.productCount || 0,
+      isActive: cat.isVisible !== false,
+      description: cat.description || '',
+      createdAt: new Date().toISOString().split('T')[0],
+      children: cat.children ? convertToTableFormat(cat.children, level + 1) : undefined
+    }))
+  }
+  
+  return convertToTableFormat(mockCategories)
 }
 
 // 获取层级颜色
