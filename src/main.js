@@ -13,6 +13,10 @@ import zhCn from 'element-plus/es/locale/lang/zh-cn'
 // Element Plus 图标
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 
+// Ant Design Vue
+import Antd from 'ant-design-vue'
+import 'ant-design-vue/dist/reset.css'
+
 // 全局样式已在 vue.config.js 中配置
 
 const app = createApp(App)
@@ -29,5 +33,8 @@ app.use(router)
 app.use(ElementPlus, {
   locale: zhCn,
 })
+
+// 使用 Ant Design Vue
+app.use(Antd)
 
 app.mount('#app')

@@ -35,8 +35,12 @@
           </template>
           <el-menu-item index="/admin/users">管理员用户</el-menu-item>
           <el-menu-item index="/admin/roles">角色管理</el-menu-item>
-          <el-menu-item index="/admin/merchants">商家管理</el-menu-item>
         </el-sub-menu>
+        
+        <el-menu-item index="/admin/merchants">
+          <el-icon><Shop /></el-icon>
+          <span>商家管理</span>
+        </el-menu-item>
         
         <el-menu-item index="/admin/products">
           <el-icon><Goods /></el-icon>
@@ -136,7 +140,8 @@ import {
   Tools,
   User,
   ArrowDown,
-  SwitchButton
+  SwitchButton,
+  Shop
 } from '@element-plus/icons-vue'
 
 const route = useRoute()

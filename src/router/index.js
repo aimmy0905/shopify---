@@ -361,11 +361,61 @@ const routes = [
         }
       },
       {
+        path: 'users/create',
+        name: 'CreateAdminUser',
+        component: () => import('@/views/admin/users/Create.vue'),
+        meta: {
+          title: '添加管理员 - Shopify铺货系统',
+          requiresAuth: true,
+          requiresAdmin: true
+        }
+      },
+      {
+        path: 'users/edit/:id',
+        name: 'EditAdminUser',
+        component: () => import('@/views/admin/users/Edit.vue'),
+        meta: {
+          title: '编辑管理员 - Shopify铺货系统',
+          requiresAuth: true,
+          requiresAdmin: true
+        }
+      },
+      {
+        path: 'users/:id',
+        name: 'AdminUserDetail',
+        component: () => import('@/views/admin/users/Detail.vue'),
+        meta: {
+          title: '管理员详情 - Shopify铺货系统',
+          requiresAuth: true,
+          requiresAdmin: true
+        }
+      },
+      {
         path: 'roles',
         name: 'Roles',
         component: () => import('@/views/admin/Roles.vue'),
         meta: {
           title: '角色管理 - Shopify铺货系统',
+          requiresAuth: true,
+          requiresAdmin: true
+        }
+      },
+      {
+        path: 'roles/create',
+        name: 'CreateRole',
+        component: () => import('@/views/admin/roles/Create.vue'),
+        meta: {
+          title: '创建角色 - Shopify铺货系统',
+          requiresAuth: true,
+          requiresAdmin: true
+        }
+      },
+      {
+        path: 'roles/edit/:id',
+        name: 'EditRole',
+        component: () => import('@/views/admin/roles/Edit.vue'),
+        meta: {
+          title: '编辑角色 - Shopify铺货系统',
           requiresAuth: true,
           requiresAdmin: true
         }
@@ -378,6 +428,50 @@ const routes = [
           title: '商家管理 - Shopify铺货系统',
           requiresAuth: true,
           requiresAdmin: true
+        }
+      },
+      {
+        path: 'merchants/:id',
+        name: 'MerchantDetail',
+        component: () => import('@/views/admin/MerchantDetail.vue'),
+        meta: {
+          title: '商家详情 - Shopify铺货系统',
+          requiresAuth: true,
+          requiresAdmin: true,
+          activeMenu: '/admin/merchants'
+        }
+      },
+      {
+        path: 'merchants/:id/commission',
+        name: 'MerchantCommission',
+        component: () => import('@/views/admin/MerchantCommission.vue'),
+        meta: {
+          title: '商家佣金明细 - Shopify铺货系统',
+          requiresAuth: true,
+          requiresAdmin: true,
+          activeMenu: '/admin/merchants'
+        }
+      },
+      {
+        path: 'merchants/:id/balance',
+        name: 'MerchantBalance',
+        component: () => import('@/views/admin/MerchantBalance.vue'),
+        meta: {
+          title: '商家余额明细 - Shopify铺货系统',
+          requiresAuth: true,
+          requiresAdmin: true,
+          activeMenu: '/admin/merchants'
+        }
+      },
+      {
+        path: 'merchants/:id/referrals',
+        name: 'MerchantReferrals',
+        component: () => import('@/views/admin/MerchantReferrals.vue'),
+        meta: {
+          title: '商家下级用户 - Shopify铺货系统',
+          requiresAuth: true,
+          requiresAdmin: true,
+          activeMenu: '/admin/merchants'
         }
       },
       {
