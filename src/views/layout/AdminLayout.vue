@@ -94,9 +94,9 @@
           <span>Invoice申请管理</span>
         </el-menu-item>
         
-        <el-menu-item index="/admin/shipping">
+        <el-menu-item index="/admin/shipping-templates">
           <el-icon><Van /></el-icon>
-          <span>运费模板</span>
+          <span>运费模板管理</span>
         </el-menu-item>
         
         <el-menu-item index="/admin/settings">
@@ -200,7 +200,7 @@ const pageNames = {
   '/admin/recharge-settings': '余额充值规则设置',
   '/admin/commission': '分佣管理',
   '/admin/invoice-applications': 'Invoice申请管理',
-  '/admin/shipping': '运费模板',
+  '/admin/shipping-templates': '运费模板管理',
   '/admin/settings': '系统设置'
 }
 

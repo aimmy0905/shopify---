@@ -799,6 +799,46 @@ const routes = [
         }
       },
       {
+        path: 'shipping-templates',
+        name: 'ShippingTemplates',
+        component: () => import('@/views/admin/ShippingTemplates.vue'),
+        meta: {
+          title: '运费模板管理 - Shopify铺货系统',
+          requiresAuth: true,
+          requiresAdmin: true
+        }
+      },
+      {
+        path: 'shipping-templates/create',
+        name: 'ShippingTemplateCreate',
+        component: () => import('@/views/admin/ShippingTemplateForm.vue'),
+        meta: {
+          title: '新增运费模板 - Shopify铺货系统',
+          requiresAuth: true,
+          requiresAdmin: true
+        }
+      },
+      {
+        path: 'shipping-templates/edit/:id',
+        name: 'ShippingTemplateEdit',
+        component: () => import('@/views/admin/ShippingTemplateForm.vue'),
+        meta: {
+          title: '编辑运费模板 - Shopify铺货系统',
+          requiresAuth: true,
+          requiresAdmin: true
+        }
+      },
+      {
+        path: 'shipping-templates/:id',
+        name: 'ShippingTemplateDetail',
+        component: () => import('@/views/admin/ShippingTemplateDetail.vue'),
+        meta: {
+          title: '运费模板详情 - Shopify铺货系统',
+          requiresAuth: true,
+          requiresAdmin: true
+        }
+      },
+      {
         path: 'settings',
         name: 'Settings',
         component: () => import('@/views/admin/Settings.vue'),
