@@ -170,11 +170,12 @@
           <template #default="scope">
             <div class="action-buttons">
               <el-button 
-                type="primary" 
+                type="success" 
                 size="small"
                 :icon="Shop"
                 @click="deployToStore(scope.row)"
                 :disabled="scope.row.isDeployed"
+                class="deploy-button"
               >
                 铺货到店铺
               </el-button>
@@ -220,12 +221,12 @@
     </div>
 
     <!-- 铺货到店铺弹窗 -->
-    <!-- <DeployToStoreDialog
+    <DeployToStoreDialog
       v-model="showDeployDialog"
       :product="selectedProduct"
       :products="selectedProducts.length > 1 ? selectedForDeploy : []"
       @success="handleDeploySuccess"
-    /> -->
+    />
 
     <!-- 商品编辑弹窗 -->
     <!-- <ProductEditDialog
@@ -248,7 +249,7 @@ import {
   View, 
   Picture 
 } from '@element-plus/icons-vue'
-// import DeployToStoreDialog from './components/DeployToStoreDialog.vue'
+import DeployToStoreDialog from './components/DeployToStoreDialog.vue'
 // import ProductEditDialog from './components/ProductEditDialog.vue'
 
 const router = useRouter()
@@ -515,12 +516,12 @@ const goToAllProducts = () => {
   router.push('/merchant/products/all')
 }
 
-// 铺货成功处理 - 当对话框被启用时使用
-// const handleDeploySuccess = () => {
-//   showDeployDialog.value = false
-//   selectedProducts.value = []
-//   loadProducts()
-// }
+// 铺货成功处理
+const handleDeploySuccess = () => {
+  showDeployDialog.value = false
+  selectedProducts.value = []
+  loadProducts()
+}
 
 // 编辑成功处理 - 当对话框被启用时使用
 // const handleEditSuccess = () => {
@@ -684,6 +685,28 @@ onMounted(() => {
 
       .el-button {
         min-width: auto;
+      }
+
+      .deploy-button {
+        background: #10b981 !important;
+        border-color: #10b981 !important;
+        color: white !important;
+        font-weight: 600;
+        box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+        
+        &:hover:not(:disabled) {
+          background: #059669 !important;
+          border-color: #059669 !important;
+          box-shadow: 0 4px 8px rgba(16, 185, 129, 0.4);
+          transform: translateY(-1px);
+        }
+
+        &:disabled {
+          background: #d1d5db !important;
+          border-color: #d1d5db !important;
+          color: #9ca3af !important;
+          box-shadow: none;
+        }
       }
     }
   }

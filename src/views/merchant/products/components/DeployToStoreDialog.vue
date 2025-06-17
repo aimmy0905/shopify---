@@ -1,8 +1,8 @@
 <template>
   <el-dialog
     v-model="dialogVisible"
-    :title="dialogTitle"
-    width="800px"
+    title="铺货到Shopify店铺"
+    width="900px"
     :close-on-click-modal="false"
     @close="handleClose"
   >
@@ -10,7 +10,7 @@
     <div class="steps-wrapper">
       <el-steps :active="currentStep" align-center>
         <el-step title="选择店铺" />
-        <el-step title="设置详情" />
+        <el-step title="设置商品SKU" />
         <el-step title="完成" />
       </el-steps>
     </div>
@@ -67,69 +67,114 @@
       </el-empty>
     </div>
 
-    <!-- 步骤2：设置详情 -->
+    <!-- 步骤2：设置商品SKU -->
     <div v-if="currentStep === 1" class="step-content">
-      <h3>设置商品详情</h3>
-      <p class="tip">为选中的商品设置价格和库存信息</p>
+      <h3>线上商品SKU列表</h3>
+      <p class="tip">为选中的商品分别设置售价与库存</p>
 
       <!-- 单个商品 -->
       <div v-if="!isBatchMode" class="single-product-form">
-        <div class="product-preview">
-          <el-image
-            :src="product?.image"
-            style="width: 100px; height: 100px; border-radius: 8px;"
-            fit="cover"
-          />
-          <div class="product-info">
-            <h4>{{ product?.name }}</h4>
-            <p>编号: {{ product?.code }}</p>
-            <p>建议售价: ${{ product?.suggestedPrice }}</p>
-          </div>
+        <!-- SKU运送地区选择 -->
+        <div class="shipping-region-selector">
+          <span class="required-mark">*</span>
+          <span class="label">运送到</span>
+          <el-select
+            v-model="selectedRegion"
+            placeholder="选择运送地区"
+            style="width: 200px; margin-left: 12px;"
+          >
+            <el-option
+              v-for="region in shippingRegions"
+              :key="region.value"
+              :label="region.label"
+              :value="region.value"
+            >
+              <span class="region-option">
+                <span class="flag">{{ region.flag }}</span>
+                <span>{{ region.label }}</span>
+              </span>
+            </el-option>
+          </el-select>
         </div>
 
-        <el-form :model="productForm" label-width="120px" class="detail-form">
-          <el-form-item label="销售价格" required>
-            <el-input-number
-              v-model="productForm.salePrice"
-              :min="0"
-              :precision="2"
-              placeholder="请输入销售价格"
-              style="width: 200px;"
-            />
-            <span class="unit">美元</span>
-          </el-form-item>
+        <!-- SKU列表表格 -->
+        <div class="sku-table-container">
+          <el-table
+            :data="productSkus"
+            style="width: 100%"
+            border
+            class="sku-table"
+          >
+            <el-table-column label="颜色" width="120">
+              <template #default="scope">
+                {{ scope.row.color }}
+              </template>
+            </el-table-column>
 
-          <el-form-item label="库存设置">
-            <el-radio-group v-model="productForm.stockSync">
-              <el-radio :label="true">与平台同步</el-radio>
-              <el-radio :label="false">手动设置</el-radio>
-            </el-radio-group>
-          </el-form-item>
+            <el-table-column label="发货地" width="100">
+              <template #default="scope">
+                {{ scope.row.origin }}
+              </template>
+            </el-table-column>
 
-          <el-form-item v-if="!productForm.stockSync" label="库存数量">
-            <el-input-number
-              v-model="productForm.stock"
-              :min="0"
-              placeholder="请输入库存数量"
-              style="width: 200px;"
-            />
-          </el-form-item>
+            <el-table-column label="图像" width="80">
+              <template #default="scope">
+                <el-image
+                  :src="scope.row.image"
+                  style="width: 50px; height: 50px; border-radius: 4px;"
+                  fit="cover"
+                />
+              </template>
+            </el-table-column>
 
-          <el-form-item label="商品分类">
-            <el-select
-              v-model="productForm.categoryId"
-              placeholder="选择店铺分类"
-              style="width: 300px;"
-            >
-              <el-option
-                v-for="category in shopifyCategories"
-                :key="category.id"
-                :label="category.name"
-                :value="category.id"
-              />
-            </el-select>
-          </el-form-item>
-        </el-form>
+            <el-table-column label="GSR价格" width="120">
+              <template #default="scope">
+                <span class="price-text">{{ scope.row.gsrPrice }} 美元</span>
+              </template>
+            </el-table-column>
+
+            <el-table-column label="运费" width="120">
+              <template #default="scope">
+                <span class="price-text">{{ scope.row.shipping }} 美元</span>
+              </template>
+            </el-table-column>
+
+            <el-table-column label="直销总成本" width="140">
+              <template #default="scope">
+                <span class="cost-text">{{ scope.row.totalCost }} 美元</span>
+              </template>
+            </el-table-column>
+
+            <el-table-column label="您的价格" width="150">
+              <template #default="scope">
+                <el-input-number
+                  v-model="scope.row.yourPrice"
+                  :min="scope.row.totalCost"
+                  :precision="2"
+                  size="small"
+                  style="width: 120px;"
+                />
+              </template>
+            </el-table-column>
+
+            <el-table-column label="库存" width="120">
+              <template #default="scope">
+                <el-input-number
+                  v-model="scope.row.stock"
+                  :min="0"
+                  size="small"
+                  style="width: 100px;"
+                />
+              </template>
+            </el-table-column>
+          </el-table>
+        </div>
+
+        <!-- 价格相同提示 -->
+        <div class="price-note">
+          <el-icon class="info-icon"><InfoFilled /></el-icon>
+          <span>价格相同</span>
+        </div>
       </div>
 
       <!-- 批量商品 -->
@@ -249,6 +294,11 @@
     <!-- 底部按钮 -->
     <template #footer>
       <div class="dialog-footer">
+        <!-- 调试信息 -->
+        <div style="margin-bottom: 10px; font-size: 12px; color: #666; padding: 8px; background: #f9fafb; border-radius: 4px;">
+          🔍 调试信息: 当前步骤: {{ currentStep }}, 选中店铺数: {{ selectedStores.length }}
+        </div>
+        
         <el-button 
           v-if="currentStep > 0 && currentStep < 2" 
           @click="prevStep"
@@ -256,7 +306,7 @@
           上一步
         </el-button>
         <el-button 
-          v-if="currentStep < 1"
+          v-if="currentStep === 0"
           type="primary" 
           @click="nextStep"
           :disabled="selectedStores.length === 0"
@@ -269,7 +319,7 @@
           @click="submitDeploy"
           :loading="deploying"
         >
-          确认铺货
+          完成
         </el-button>
         <el-button @click="handleClose">
           {{ currentStep === 2 ? '关闭' : '取消' }}
@@ -283,6 +333,7 @@
 import { ref, reactive, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { InfoFilled } from '@element-plus/icons-vue'
 
 const router = useRouter()
 
@@ -309,7 +360,42 @@ const storesLoading = ref(false)
 const deploying = ref(false)
 
 const selectedStores = ref([])
-const stores = ref([])
+const stores = ref([
+  {
+    id: 1,
+    name: '我的主店铺',
+    url: 'my-main-store.myshopify.com',
+    status: 'active',
+    productCount: 156,
+    orderCount: 89
+  },
+  {
+    id: 2,
+    name: '美国专营店',
+    url: 'us-specialty-store.myshopify.com',
+    status: 'active',
+    productCount: 203,
+    orderCount: 145
+  },
+  {
+    id: 3,
+    name: '欧洲店铺',
+    url: 'europe-store.myshopify.com',
+    status: 'active',
+    productCount: 78,
+    orderCount: 34
+  },
+  {
+    id: 4,
+    name: '测试店铺',
+    url: 'test-store.myshopify.com',
+    status: 'inactive',
+    productCount: 0,
+    orderCount: 0
+  }
+])
+const selectedRegion = ref('美国tates')
+const productSkus = ref([])
 
 // 单个商品表单
 const productForm = reactive({
@@ -327,6 +413,14 @@ const batchForm = reactive({
 })
 
 const productForms = ref([])
+
+const shippingRegions = ref([
+  { value: '美国tates', label: '美国tates', flag: '🇺🇸' },
+  { value: '加拿大', label: '加拿大', flag: '🇨🇦' },
+  { value: '英国', label: '英国', flag: '🇬🇧' },
+  { value: '澳大利亚', label: '澳大利亚', flag: '🇦🇺' },
+  { value: '德国', label: '德国', flag: '🇩🇪' }
+])
 
 const shopifyCategories = ref([
   { id: 1, name: 'Electronics' },
@@ -379,6 +473,40 @@ const initializeForms = () => {
     productForm.stockSync = true
     productForm.stock = props.product.stock || 0
     productForm.categoryId = ''
+    
+    // 初始化产品SKU数据
+    productSkus.value = [
+      {
+        color: '青色',
+        origin: '中国',
+        image: 'https://picsum.photos/100/100?random=1',
+        gsrPrice: 0.48,
+        shipping: 5.72,
+        totalCost: 6.20,
+        yourPrice: 6.20,
+        stock: 100
+      },
+      {
+        color: '紫色的',
+        origin: '中国',
+        image: 'https://picsum.photos/100/100?random=2',
+        gsrPrice: 0.48,
+        shipping: 5.72,
+        totalCost: 6.20,
+        yourPrice: 6.20,
+        stock: 100
+      },
+      {
+        color: '黄色的',
+        origin: '中国',
+        image: 'https://picsum.photos/100/100?random=3',
+        gsrPrice: 0.48,
+        shipping: 5.72,
+        totalCost: 6.20,
+        yourPrice: 6.20,
+        stock: 100
+      }
+    ]
   }
   
   if (isBatchMode.value) {
@@ -397,43 +525,9 @@ const initializeForms = () => {
 const loadStores = async () => {
   storesLoading.value = true
   try {
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    stores.value = [
-      {
-        id: 1,
-        name: '我的主店铺',
-        url: 'my-main-store.myshopify.com',
-        status: 'active',
-        productCount: 156,
-        orderCount: 89
-      },
-      {
-        id: 2,
-        name: '美国专营店',
-        url: 'us-specialty-store.myshopify.com',
-        status: 'active',
-        productCount: 203,
-        orderCount: 145
-      },
-      {
-        id: 3,
-        name: '欧洲店铺',
-        url: 'europe-store.myshopify.com',
-        status: 'active',
-        productCount: 78,
-        orderCount: 34
-      },
-      {
-        id: 4,
-        name: '测试店铺',
-        url: 'test-store.myshopify.com',
-        status: 'inactive',
-        productCount: 0,
-        orderCount: 0
-      }
-    ]
+    // 模拟API调用 - 简化版本，数据已经在初始化时设置
+    await new Promise(resolve => setTimeout(resolve, 500))
+    console.log('店铺数据加载完成:', stores.value)
   } catch (error) {
     ElMessage.error('加载店铺列表失败')
   } finally {
@@ -450,6 +544,8 @@ const toggleStoreSelection = (store) => {
   } else {
     selectedStores.value.push(store.id)
   }
+  
+  console.log('选中的店铺:', selectedStores.value)
 }
 
 const nextStep = () => {
@@ -611,35 +707,65 @@ const handleClose = () => {
 }
 
 .single-product-form {
-  .product-preview {
+  .shipping-region-selector {
+    margin-bottom: 24px;
+    padding: 16px;
+    background: #f8fafc;
+    border-radius: 8px;
     display: flex;
     align-items: center;
-    gap: 16px;
-    padding: 20px;
-    background: #f9fafb;
-    border-radius: 8px;
-    margin-bottom: 24px;
     
-    .product-info {
-      h4 {
-        margin: 0 0 4px 0;
-        font-size: 16px;
-        color: #1f2937;
-      }
+    .required-mark {
+      color: #ef4444;
+      font-weight: bold;
+      margin-right: 4px;
+    }
+    
+    .label {
+      font-weight: 500;
+      color: #374151;
+    }
+    
+    .region-option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
       
-      p {
-        margin: 0 0 2px 0;
-        font-size: 12px;
-        color: #6b7280;
+      .flag {
+        font-size: 16px;
       }
     }
   }
   
-  .detail-form {
-    .unit {
-      margin-left: 8px;
-      color: #6b7280;
-      font-size: 14px;
+  .sku-table-container {
+    margin-bottom: 16px;
+    
+    .sku-table {
+      .price-text {
+        color: #059669;
+        font-weight: 500;
+      }
+      
+      .cost-text {
+        color: #dc2626;
+        font-weight: 500;
+      }
+    }
+  }
+  
+  .price-note {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background: #dbeafe;
+    border: 1px solid #93c5fd;
+    border-radius: 6px;
+    color: #1e40af;
+    font-size: 14px;
+    
+    .info-icon {
+      color: #3b82f6;
     }
   }
 }
@@ -716,11 +842,75 @@ const handleClose = () => {
 .success-content {
   text-align: center;
   padding: 32px 0;
+  
+  .el-button {
+    min-width: 100px;
+    font-weight: 500;
+    
+    &.el-button--primary {
+      background: #1f2937 !important;
+      border-color: #1f2937 !important;
+      color: white !important;
+      
+      &:hover {
+        background: #374151 !important;
+        border-color: #374151 !important;
+      }
+    }
+    
+    &:not(.el-button--primary) {
+      background: #f3f4f6 !important;
+      border-color: #d1d5db !important;
+      color: #374151 !important;
+      
+      &:hover {
+        background: #e5e7eb !important;
+        border-color: #9ca3af !important;
+        color: #1f2937 !important;
+      }
+    }
+  }
 }
 
 .dialog-footer {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
+  
+  .el-button {
+    min-width: 80px;
+    font-weight: 500;
+    
+    // 主要按钮样式（下一步、完成）
+    &.el-button--primary {
+      background: #1f2937 !important;
+      border-color: #1f2937 !important;
+      color: white !important;
+      
+      &:hover:not(:disabled) {
+        background: #374151 !important;
+        border-color: #374151 !important;
+      }
+      
+      &:disabled {
+        background: #9ca3af !important;
+        border-color: #9ca3af !important;
+        color: #f3f4f6 !important;
+      }
+    }
+    
+    // 普通按钮样式（上一步、取消）
+    &:not(.el-button--primary) {
+      background: #f3f4f6 !important;
+      border-color: #d1d5db !important;
+      color: #374151 !important;
+      
+      &:hover {
+        background: #e5e7eb !important;
+        border-color: #9ca3af !important;
+        color: #1f2937 !important;
+      }
+    }
+  }
 }
 </style> 
