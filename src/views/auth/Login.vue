@@ -241,7 +241,25 @@ const handleSubmit = async () => {
         const authToken = 'mock_auth_token_' + Date.now()
         localStorage.setItem('auth_token', authToken)
         localStorage.setItem('token', authToken)
+
+        // 根据用户类型保存对应的token
+        const currentRoute = router.currentRoute.value
+        let userType = 'merchant' // 默认值
+        if (currentRoute.path.startsWith('/admin')) {
+          userType = 'admin'
+          localStorage.setItem('admin_token', authToken)
+        } else if (currentRoute.path.startsWith('/merchant')) {
+          userType = 'merchant'
+        } else if (currentRoute.meta?.userType) {
+          userType = currentRoute.meta.userType
+          if (userType === 'admin') {
+            localStorage.setItem('admin_token', authToken)
+          }
+        }
+
+        localStorage.setItem('userType', userType)
         console.log('保存认证token:', authToken)
+        console.log('检测到的用户类型:', userType)
         
         // 根据记住我选项处理登录状态
         if (loginForm.rememberMe) {
@@ -258,25 +276,7 @@ const handleSubmit = async () => {
         console.log('保存用户信息:', userInfo)
         
         loading.value = false
-        
-        // 根据当前路由的meta信息确定用户类型
-        const currentRoute = router.currentRoute.value
-        console.log('当前路由:', currentRoute.path)
-        console.log('路由meta:', currentRoute.meta)
-        
-        // 从路由路径中确定用户类型（更可靠的方法）
-        let userType = 'merchant' // 默认值
-        if (currentRoute.path.startsWith('/admin')) {
-          userType = 'admin'
-        } else if (currentRoute.path.startsWith('/merchant')) {
-          userType = 'merchant'
-        } else if (currentRoute.meta?.userType) {
-          userType = currentRoute.meta.userType
-        }
-        
-        localStorage.setItem('userType', userType)
-        console.log('检测到的用户类型:', userType)
-        
+
         // 根据用户类型跳转到对应的dashboard
         const dashboardPath = userType === 'admin' ? '/admin/dashboard' : '/merchant/dashboard'
         console.log('即将跳转到:', dashboardPath)

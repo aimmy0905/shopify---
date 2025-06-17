@@ -153,6 +153,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   Setting,
   Odometer,
@@ -219,12 +220,31 @@ const goToProfile = () => {
   router.push('/admin/profile')
 }
 
-const logout = () => {
-  // 清除登录状态
-  localStorage.removeItem('admin_token')
-  localStorage.removeItem('rememberMe')
-  // 跳转到登录页
-  router.push('/admin/login')
+const logout = async () => {
+  try {
+    await ElMessageBox.confirm(
+      '确定要退出登录吗？',
+      '退出确认',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+
+    // 清除登录状态
+    localStorage.removeItem('admin_token')
+    localStorage.removeItem('admin_user')
+    localStorage.removeItem('rememberMe')
+
+    // 显示退出成功提示
+    ElMessage.success('退出登录成功')
+
+    // 跳转到管理员登录页
+    router.push('/admin/login')
+  } catch {
+    // 用户取消退出
+  }
 }
 </script>
 

@@ -970,14 +970,15 @@ router.beforeEach((to, from, next) => {
 
 // 检查用户认证状态
 function checkAuthStatus() {
-  const token = localStorage.getItem('token')
-  return !!token
+  const merchantToken = localStorage.getItem('token')
+  const adminToken = localStorage.getItem('admin_token')
+  return !!(merchantToken || adminToken)
 }
 
 // 检查管理员状态
 function checkAdminStatus() {
-  const userType = localStorage.getItem('userType')
-  return userType === 'admin'
+  const adminToken = localStorage.getItem('admin_token')
+  return !!adminToken
 }
 
 // 获取当前用户类型
