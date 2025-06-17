@@ -35,6 +35,7 @@
           </template>
           <el-menu-item index="/admin/users">管理员用户</el-menu-item>
           <el-menu-item index="/admin/roles">角色管理</el-menu-item>
+          <el-menu-item index="/admin/commission-management">佣金管理</el-menu-item>
         </el-sub-menu>
         
         <el-menu-item index="/admin/merchants">
@@ -88,9 +89,9 @@
           <span>分佣管理</span>
         </el-menu-item>
         
-        <el-menu-item index="/admin/invoices">
+        <el-menu-item index="/admin/invoice-applications">
           <el-icon><Document /></el-icon>
-          <span>Invoice管理</span>
+          <span>Invoice申请管理</span>
         </el-menu-item>
         
         <el-menu-item index="/admin/shipping">
@@ -198,7 +199,7 @@ const pageNames = {
   '/admin/withdrawal-management': '余额提现管理',
   '/admin/recharge-settings': '余额充值规则设置',
   '/admin/commission': '分佣管理',
-  '/admin/invoices': 'Invoice管理',
+  '/admin/invoice-applications': 'Invoice申请管理',
   '/admin/shipping': '运费模板',
   '/admin/settings': '系统设置'
 }

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试登录</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .button {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            background: #409eff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            text-decoration: none;
+            text-align: center;
+        }
+        .button:hover {
+            background: #337ecc;
+        }
+        .button.admin {
+            background: #67c23a;
+        }
+        .button.admin:hover {
+            background: #529b2e;
+        }
+        .button.logout {
+            background: #f56c6c;
+        }
+        .button.logout:hover {
+            background: #dd6161;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .status.success {
+            background: #f0f9ff;
+            color: #67c23a;
+            border: 1px solid #b3d8ff;
+        }
+        .status.info {
+            background: #f4f4f5;
+            color: #909399;
+            border: 1px solid #d3d4d6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>测试登录状态设置</h1>
+        
+        <div id="status" class="status info">
+            当前未登录
+        </div>
+        
+        <button class="button admin" onclick="loginAsAdmin()">
+            登录为管理员
+        </button>
+        
+        <button class="button" onclick="loginAsMerchant()">
+            登录为商户
+        </button>
+        
+        <button class="button logout" onclick="logout()">
+            退出登录
+        </button>
+        
+        <a href="/admin/commission-management" class="button" style="margin-top: 20px;">
+            访问佣金管理页面
+        </a>
+        
+        <a href="/admin/dashboard" class="button">
+            访问管理后台首页
+        </a>
+        
+        <a href="/merchant/dashboard" class="button">
+            访问商户后台首页
+        </a>
+    </div>
+
+    <script>
+        function updateStatus() {
+            const token = localStorage.getItem('token');
+            const userType = localStorage.getItem('userType');
+            const statusEl = document.getElementById('status');
+            
+            if (token && userType) {
+                statusEl.className = 'status success';
+                statusEl.textContent = `已登录为: ${userType === 'admin' ? '管理员' : '商户'}`;
+            } else {
+                statusEl.className = 'status info';
+                statusEl.textContent = '当前未登录';
+            }
+        }
+        
+        function loginAsAdmin() {
+            localStorage.setItem('token', 'admin-test-token-' + Date.now());
+            localStorage.setItem('userType', 'admin');
+            localStorage.setItem('user', JSON.stringify({
+                id: 1,
+                name: '测试管理员',
+                email: 'admin@test.com',
+                role: 'admin'
+            }));
+            updateStatus();
+            alert('已设置管理员登录状态');
+        }
+        
+        function loginAsMerchant() {
+            localStorage.setItem('token', 'merchant-test-token-' + Date.now());
+            localStorage.setItem('userType', 'merchant');
+            localStorage.setItem('user', JSON.stringify({
+                id: 1,
+                name: '测试商户',
+                email: 'merchant@test.com',
+                role: 'merchant'
+            }));
+            updateStatus();
+            alert('已设置商户登录状态');
+        }
+        
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('userType');
+            localStorage.removeItem('user');
+            updateStatus();
+            alert('已退出登录');
+        }
+        
+        // 页面加载时更新状态
+        updateStatus();
+    </script>
+</body>
+</html>

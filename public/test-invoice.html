@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice管理测试页面</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f7fa;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1f2937;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+        }
+        .test-section h2 {
+            color: #374151;
+            margin-bottom: 15px;
+        }
+        .test-link {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #3b82f6;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            margin: 5px;
+            transition: background-color 0.2s;
+        }
+        .test-link:hover {
+            background-color: #2563eb;
+        }
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+        .feature-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .feature-list li:before {
+            content: "✓";
+            color: #10b981;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .status.success {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        .status.warning {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📋 Invoice管理模块测试页面</h1>
+        
+        <div class="test-section">
+            <h2>🎯 功能概述</h2>
+            <p>管理端Invoice申请管理模块已成功创建，包含以下功能：</p>
+            <ul class="feature-list">
+                <li>Invoice申请列表展示和筛选</li>
+                <li>申请详情查看</li>
+                <li>Invoice上传和管理</li>
+                <li>订单关联查看</li>
+                <li>批量操作和导出</li>
+                <li>状态管理和审核流程</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h2>🔗 快速访问</h2>
+            <p>点击以下链接访问不同的页面：</p>
+            <a href="/#/admin/login" class="test-link">管理员登录</a>
+            <a href="/#/admin/invoice-applications" class="test-link">Invoice管理</a>
+            <a href="/#/admin/dashboard" class="test-link">管理后台</a>
+        </div>
+
+        <div class="test-section">
+            <h2>📊 模拟数据</h2>
+            <p>系统已预置了以下测试数据：</p>
+            <div style="margin: 15px 0;">
+                <strong>张三商家</strong> 
+                <span class="status warning">待开票</span>
+                <span style="margin-left: 10px;">$15,680.50 (8个订单)</span>
+            </div>
+            <div style="margin: 15px 0;">
+                <strong>李四贸易</strong> 
+                <span class="status success">已开票</span>
+                <span style="margin-left: 10px;">$28,900.00 (12个订单)</span>
+            </div>
+            <div style="margin: 15px 0;">
+                <strong>王五电商</strong> 
+                <span class="status warning">待开票</span>
+                <span style="margin-left: 10px;">$8,750.25 (5个订单)</span>
+            </div>
+            <div style="margin: 15px 0;">
+                <strong>赵六进出口</strong> 
+                <span class="status success">已开票</span>
+                <span style="margin-left: 10px;">$45,200.80 (20个订单)</span>
+            </div>
+            <div style="margin: 15px 0;">
+                <strong>孙七科技</strong> 
+                <span class="status warning">待开票</span>
+                <span style="margin-left: 10px;">$12,300.00 (7个订单)</span>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🛠️ 测试功能</h2>
+            <p>在Invoice管理页面中，您可以测试以下功能：</p>
+            <ul class="feature-list">
+                <li>搜索和筛选Invoice申请</li>
+                <li>查看申请详情和订单信息</li>
+                <li>上传Invoice文件（支持PDF格式）</li>
+                <li>批量选择和导出操作</li>
+                <li>状态切换和处理流程</li>
+                <li>响应式设计适配</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h2>📝 使用说明</h2>
+            <ol>
+                <li>首先访问管理员登录页面</li>
+                <li>登录后进入管理后台</li>
+                <li>在侧边栏点击"Invoice申请管理"</li>
+                <li>浏览申请列表，使用筛选功能</li>
+                <li>点击"查看详情"查看完整信息</li>
+                <li>对于待开票状态的申请，点击"开票"上传Invoice</li>
+                <li>测试各种交互功能和响应式布局</li>
+            </ol>
+        </div>
+
+        <div class="test-section">
+            <h2>✅ 开发状态</h2>
+            <p>
+                <span class="status success">已完成</span> 
+                根据产品设计文档完整实现了管理端Invoice申请管理模块，包含所有必要的功能和交互。
+            </p>
+            <p style="margin-top: 15px; color: #6b7280; font-size: 14px;">
+                页面已添加到侧边栏导航，路由配置正确，可以正常访问和使用。
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // 简单的页面交互
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Invoice管理测试页面已加载');
+            
+            // 添加点击统计
+            const links = document.querySelectorAll('.test-link');
+            links.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    console.log('访问链接:', this.href);
+                });
+            });
+        });
+    </script>
+</body>
+</html> 

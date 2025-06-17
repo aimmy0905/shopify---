@@ -3,17 +3,21 @@
     <!-- 页面头部 -->
     <div class="page-header">
       <div class="header-left">
-        <h1 class="page-title">分佣管理总览</h1>
-        <p class="page-description">平台分佣体系数据总览和管理入口</p>
+        <h1 class="page-title">分佣总览</h1>
+        <p class="page-description">平台分佣体系数据总览和趋势分析</p>
       </div>
       <div class="header-right">
-        <el-button type="primary" @click="goToReferralTree">
-          <el-icon><Connection /></el-icon>
-          查看推荐关系树
-        </el-button>
-        <el-button type="success" @click="goToSettlements">
-          <el-icon><Money /></el-icon>
-          结算管理
+        <el-date-picker
+          v-model="dateRange"
+          type="daterange"
+          range-separator="至"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
+          @change="loadOverviewData"
+        />
+        <el-button type="primary" @click="exportReport">
+          <el-icon><Download /></el-icon>
+          导出报告
         </el-button>
       </div>
     </div>
@@ -85,61 +89,53 @@
       </el-card>
     </div>
 
-    <!-- 功能模块导航 -->
-    <div class="modules-section">
+    <!-- 图表区域 -->
+    <div class="charts-section">
       <el-row :gutter="20">
-        <el-col :span="8">
-          <el-card class="module-card" @click="goToReferralTree">
-            <div class="module-content">
-              <div class="module-icon tree">
-                <el-icon><Connection /></el-icon>
+        <!-- 佣金趋势图 -->
+        <el-col :span="12">
+          <el-card class="chart-card">
+            <template #header>
+              <div class="chart-header">
+                <span class="chart-title">佣金趋势</span>
+                <el-radio-group v-model="trendPeriod" size="small">
+                  <el-radio-button label="7d">7天</el-radio-button>
+                  <el-radio-button label="30d">30天</el-radio-button>
+                  <el-radio-button label="90d">90天</el-radio-button>
+                </el-radio-group>
               </div>
-              <div class="module-info">
-                <h3>推荐关系树</h3>
-                <p>查看清晰的上下级分佣关系</p>
-                <ul>
-                  <li>树形可视化展示</li>
-                  <li>层级关系清晰</li>
-                  <li>佣金统计实时</li>
-                </ul>
-              </div>
-            </div>
-          </el-card>
-        </el-col>
-
-        <el-col :span="8">
-          <el-card class="module-card" @click="goToRecords">
-            <div class="module-content">
-              <div class="module-icon records">
-                <el-icon><List /></el-icon>
-              </div>
-              <div class="module-info">
-                <h3>佣金明细</h3>
-                <p>查看详细的佣金记录</p>
-                <ul>
-                  <li>完整交易记录</li>
-                  <li>多维度筛选</li>
-                  <li>批量操作支持</li>
-                </ul>
+            </template>
+            <div class="chart-container">
+              <div class="chart-placeholder">
+                <el-icon size="48"><TrendCharts /></el-icon>
+                <p>佣金趋势图表</p>
               </div>
             </div>
           </el-card>
         </el-col>
 
-        <el-col :span="8">
-          <el-card class="module-card" @click="goToRules">
-            <div class="module-content">
-              <div class="module-icon rules">
-                <el-icon><Setting /></el-icon>
-              </div>
-              <div class="module-info">
-                <h3>分佣规则</h3>
-                <p>配置分佣比例和规则</p>
-                <ul>
-                  <li>灵活比例设置</li>
-                  <li>自动结算配置</li>
-                  <li>规则预览功能</li>
-                </ul>
+        <!-- 推荐层级分布 -->
+        <el-col :span="12">
+          <el-card class="chart-card">
+            <template #header>
+              <span class="chart-title">推荐层级分布</span>
+            </template>
+            <div class="chart-container">
+              <div class="level-distribution">
+                <div v-for="level in levelDistribution" :key="level.level" class="level-item">
+                  <div class="level-info">
+                    <span class="level-name">{{ level.name }}</span>
+                    <span class="level-count">{{ level.count }}人</span>
+                  </div>
+                  <div class="level-bar">
+                    <div 
+                      class="level-progress" 
+                      :style="{ width: level.percentage + '%' }"
+                      :class="`level-${level.level}`"
+                    ></div>
+                  </div>
+                  <span class="level-percentage">{{ level.percentage }}%</span>
+                </div>
               </div>
             </div>
           </el-card>
@@ -147,7 +143,7 @@
       </el-row>
     </div>
 
-    <!-- 最新动态和排行榜 -->
+    <!-- 排行榜和详细数据 -->
     <div class="data-section">
       <el-row :gutter="20">
         <!-- 顶级推荐人排行 -->
@@ -156,7 +152,7 @@
             <template #header>
               <div class="card-header">
                 <span class="card-title">顶级推荐人排行</span>
-                <el-button size="small" @click="goToReferralTree">查看全部</el-button>
+                <el-button size="small" @click="viewAllReferrers">查看全部</el-button>
               </div>
             </template>
             <div class="ranking-list">
@@ -215,6 +211,33 @@
         </el-col>
       </el-row>
     </div>
+
+    <!-- 快速操作 -->
+    <div class="quick-actions">
+      <el-card>
+        <template #header>
+          <span class="card-title">快速操作</span>
+        </template>
+        <div class="actions-grid">
+          <el-button type="primary" @click="goToReferralTree">
+            <el-icon><Connection /></el-icon>
+            查看推荐关系树
+          </el-button>
+          <el-button type="success" @click="goToSettlements">
+            <el-icon><Money /></el-icon>
+            批量结算佣金
+          </el-button>
+          <el-button type="warning" @click="goToRules">
+            <el-icon><Setting /></el-icon>
+            配置分佣规则
+          </el-button>
+          <el-button type="info" @click="goToRecords">
+            <el-icon><List /></el-icon>
+            查看佣金明细
+          </el-button>
+        </div>
+      </el-card>
+    </div>
   </div>
 </template>
 
@@ -222,12 +245,13 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import {
-  UserFilled,
-  Money,
-  Connection,
-  PieChart,
-  TrendCharts,
+import { 
+  Download, 
+  UserFilled, 
+  Money, 
+  Connection, 
+  PieChart, 
+  TrendCharts, 
   Refresh,
   Setting,
   List,
@@ -239,6 +263,9 @@ import {
 const router = useRouter()
 
 // 响应式数据
+const dateRange = ref([])
+const trendPeriod = ref('30d')
+
 const overviewData = reactive({
   totalUsers: 15420,
   userGrowth: 12.5,
@@ -249,6 +276,13 @@ const overviewData = reactive({
   avgCommission: 185.2,
   avgGrowth: 5.2
 })
+
+const levelDistribution = ref([
+  { level: 0, name: '顶级用户', count: 1250, percentage: 8.1 },
+  { level: 1, name: '一级推荐', count: 5680, percentage: 36.8 },
+  { level: 2, name: '二级推荐', count: 6420, percentage: 41.6 },
+  { level: 3, name: '三级推荐', count: 2070, percentage: 13.4 }
+])
 
 const topReferrers = ref([
   { id: 1, name: 'John Smith', referrals: 156, commission: 8520.50, avatar: '' },
@@ -266,6 +300,19 @@ const recentActivities = ref([
 ])
 
 // 方法
+const loadOverviewData = () => {
+  // 模拟加载数据
+  ElMessage.success('数据已更新')
+}
+
+const exportReport = () => {
+  ElMessage.success('报告导出功能开发中...')
+}
+
+const viewAllReferrers = () => {
+  router.push('/admin/referral-tree')
+}
+
 const refreshActivities = () => {
   ElMessage.success('动态已刷新')
 }
@@ -308,7 +355,7 @@ const goToRecords = () => {
 
 // 生命周期
 onMounted(() => {
-  console.log('分佣管理总览页面已加载')
+  loadOverviewData()
 })
 </script>
 
@@ -363,12 +410,6 @@ onMounted(() => {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   border-radius: 12px;
   overflow: hidden;
-  cursor: pointer;
-  transition: transform 0.3s ease;
-}
-
-.metric-card:hover {
-  transform: translateY(-4px);
 }
 
 .metric-content {
@@ -434,89 +475,105 @@ onMounted(() => {
   color: #67c23a;
 }
 
-/* 功能模块 */
-.modules-section {
+/* 图表区域 */
+.charts-section {
   margin-bottom: 32px;
 }
 
-.module-card {
+.chart-card {
   border: none;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  height: 100%;
 }
 
-.module-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-}
-
-.module-content {
+.chart-header {
   display: flex;
-  flex-direction: column;
+  justify-content: space-between;
   align-items: center;
-  text-align: center;
-  padding: 20px;
 }
 
-.module-icon {
-  width: 80px;
-  height: 80px;
-  border-radius: 20px;
+.chart-title {
+  font-weight: 600;
+  color: #303133;
+  font-size: 18px;
+}
+
+.chart-container {
+  height: 300px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 40px;
-  color: white;
-  margin-bottom: 20px;
 }
 
-.module-icon.tree {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-.module-icon.records {
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-}
-
-.module-icon.rules {
-  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-}
-
-.module-info h3 {
-  margin: 0 0 12px 0;
-  color: #303133;
-  font-size: 20px;
-  font-weight: 600;
-}
-
-.module-info p {
-  margin: 0 0 16px 0;
-  color: #606266;
-  font-size: 14px;
-}
-
-.module-info ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.module-info li {
+.chart-placeholder {
+  text-align: center;
   color: #909399;
-  font-size: 12px;
-  margin-bottom: 4px;
-  position: relative;
-  padding-left: 16px;
 }
 
-.module-info li::before {
-  content: '•';
-  color: #409eff;
-  position: absolute;
-  left: 0;
+/* 层级分布 */
+.level-distribution {
+  padding: 20px;
+}
+
+.level-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.level-info {
+  min-width: 120px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.level-name {
+  font-weight: 500;
+  color: #303133;
+}
+
+.level-count {
+  font-size: 12px;
+  color: #909399;
+}
+
+.level-bar {
+  flex: 1;
+  height: 8px;
+  background: #f5f7fa;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.level-progress {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.level-progress.level-0 {
+  background: linear-gradient(90deg, #409eff 0%, #66b3ff 100%);
+}
+
+.level-progress.level-1 {
+  background: linear-gradient(90deg, #67c23a 0%, #85ce61 100%);
+}
+
+.level-progress.level-2 {
+  background: linear-gradient(90deg, #e6a23c 0%, #ebb563 100%);
+}
+
+.level-progress.level-3 {
+  background: linear-gradient(90deg, #f56c6c 0%, #f78989 100%);
+}
+
+.level-percentage {
+  min-width: 50px;
+  text-align: right;
+  font-weight: 500;
+  color: #303133;
 }
 
 /* 数据区域 */
@@ -669,38 +726,53 @@ onMounted(() => {
   color: #67c23a;
 }
 
+/* 快速操作 */
+.quick-actions {
+  margin-bottom: 32px;
+}
+
+.quick-actions .el-card {
+  border: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+}
+
+.actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
 /* 响应式设计 */
 @media (max-width: 768px) {
   .commission-overview-page {
     padding: 12px;
   }
-
+  
   .page-header {
     flex-direction: column;
     gap: 16px;
     align-items: stretch;
   }
-
+  
   .header-right {
     justify-content: center;
   }
-
+  
   .metrics-grid {
     grid-template-columns: 1fr;
   }
-
+  
+  .charts-section .el-row {
+    flex-direction: column;
+  }
+  
   .data-section .el-row {
     flex-direction: column;
   }
-
-  .module-content {
-    padding: 16px;
-  }
-
-  .module-icon {
-    width: 60px;
-    height: 60px;
-    font-size: 30px;
+  
+  .actions-grid {
+    grid-template-columns: 1fr;
   }
 }
 </style>

@@ -1848,6 +1848,95 @@ export const generateMockCommissionRules = () => {
 // 生成实际的商品数据
 export const products = generateMockProducts(100) // 生成100个商品
 
+// 佣金管理相关数据
+export const commissionData = {
+  // 推荐人列表
+  referrers: [
+    {
+      id: 1,
+      name: 'John Smith',
+      email: 'john.smith@example.com',
+      inviteCode: 'JS001',
+      totalReferrals: 25,
+      totalCommission: 2580.50,
+      settledCommission: 1850.30,
+      pendingCommission: 730.20,
+      status: 'active',
+      joinTime: '2023-01-15 10:30:00'
+    },
+    {
+      id: 2,
+      name: 'Sarah Johnson',
+      email: 'sarah.j@example.com',
+      inviteCode: 'SJ002',
+      totalReferrals: 18,
+      totalCommission: 1920.75,
+      settledCommission: 1200.50,
+      pendingCommission: 720.25,
+      status: 'active',
+      joinTime: '2023-02-20 14:15:00'
+    },
+    {
+      id: 3,
+      name: 'Mike Wilson',
+      email: 'mike.w@example.com',
+      inviteCode: 'MW003',
+      totalReferrals: 32,
+      totalCommission: 3250.80,
+      settledCommission: 2100.60,
+      pendingCommission: 1150.20,
+      status: 'active',
+      joinTime: '2023-01-08 09:45:00'
+    }
+  ],
+
+  // 结算记录
+  settlements: [
+    {
+      id: 'ST001',
+      userId: 1,
+      userName: 'John Smith',
+      userEmail: 'john.smith@example.com',
+      settlementTime: '2023-12-01 10:00:00',
+      settlementPeriod: '2023年11月',
+      amount: 850.30,
+      balanceBefore: 1200.50,
+      balanceAfter: 2050.80,
+      remark: '月度自动结算',
+      status: 'completed'
+    },
+    {
+      id: 'ST002',
+      userId: 2,
+      userName: 'Sarah Johnson',
+      userEmail: 'sarah.j@example.com',
+      settlementTime: '2023-12-01 10:05:00',
+      settlementPeriod: '2023年11月',
+      amount: 620.75,
+      balanceBefore: 980.25,
+      balanceAfter: 1601.00,
+      remark: '月度自动结算',
+      status: 'completed'
+    }
+  ],
+
+  // 佣金规则配置
+  commissionRules: {
+    firstLevelRate: 5.0,
+    secondLevelRate: 2.0,
+    minSettlementAmount: 10.00,
+    autoSettlementEnabled: true,
+    settlementCycle: 'monthly',
+    settlementDay: 1,
+    emailNotificationEnabled: true,
+    systemNotificationEnabled: true,
+    smsNotificationEnabled: false,
+    commissionValidDays: 365,
+    maxReferralLevels: 2,
+    newUserProtectionDays: 30
+  }
+}
+
 export default {
   categories,
   suppliers,
@@ -1874,5 +1963,6 @@ export default {
   generateMockPaymentMethods,
   generateMockReferrers,
   generateMockCommissionSettlements,
-  generateMockCommissionRules
+  generateMockCommissionRules,
+  commissionData
 }

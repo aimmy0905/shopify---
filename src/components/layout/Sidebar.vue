@@ -109,9 +109,9 @@
 import { ref, computed, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { 
-  Fold, 
-  Expand, 
+import {
+  Fold,
+  Expand,
   SwitchButton,
   Monitor,
   Shop,
@@ -132,7 +132,11 @@ import {
   DocumentChecked,
   CreditCard,
   PieChart,
-  Files
+  Files,
+  // 分佣管理图标
+  DataBoard,
+  Connection,
+  List
 } from '@element-plus/icons-vue'
 
 const props = defineProps({
@@ -446,16 +450,34 @@ const adminMenuItems = [
     icon: PieChart,
     children: [
       {
-        key: 'referrers',
-        title: '推荐人管理',
-        icon: User,
-        route: '/admin/referrers'
+        key: 'commission-overview',
+        title: '分佣总览',
+        icon: DataBoard,
+        route: '/admin/commission-overview'
+      },
+      {
+        key: 'referral-tree',
+        title: '推荐关系树',
+        icon: Connection,
+        route: '/admin/referral-tree'
+      },
+      {
+        key: 'commission-records',
+        title: '佣金明细',
+        icon: List,
+        route: '/admin/commission-records'
       },
       {
         key: 'commission-settlements',
-        title: '结算记录',
+        title: '结算管理',
         icon: Money,
         route: '/admin/commission-settlements'
+      },
+      {
+        key: 'commission-rules',
+        title: '分佣规则',
+        icon: Setting,
+        route: '/admin/commission-rules'
       }
     ]
   },

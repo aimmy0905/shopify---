@@ -401,6 +401,16 @@ const routes = [
         }
       },
       {
+        path: 'commission-management',
+        name: 'CommissionManagement',
+        component: () => import('@/views/admin/CommissionManagement.vue'),
+        meta: {
+          title: '佣金管理 - Shopify铺货系统',
+          requiresAuth: true,
+          requiresAdmin: true
+        }
+      },
+      {
         path: 'roles/create',
         name: 'CreateRole',
         component: () => import('@/views/admin/roles/Create.vue'),
@@ -689,9 +699,59 @@ const routes = [
         }
       },
       {
-        path: 'invoices',
-        name: 'AdminInvoices',
-        component: () => import('@/views/admin/Invoices.vue'),
+        path: 'commission-overview',
+        name: 'CommissionOverview',
+        component: () => import('@/views/admin/CommissionOverview.vue'),
+        meta: {
+          title: '分佣总览 - Shopify铺货系统',
+          requiresAuth: true,
+          requiresAdmin: true
+        }
+      },
+      {
+        path: 'referral-tree',
+        name: 'ReferralTree',
+        component: () => import('@/views/admin/ReferralTree.vue'),
+        meta: {
+          title: '推荐关系树 - Shopify铺货系统',
+          requiresAuth: true,
+          requiresAdmin: true
+        }
+      },
+      {
+        path: 'commission-records',
+        name: 'CommissionRecords',
+        component: () => import('@/views/admin/CommissionRecords.vue'),
+        meta: {
+          title: '佣金明细 - Shopify铺货系统',
+          requiresAuth: true,
+          requiresAdmin: true
+        }
+      },
+      {
+        path: 'commission-settlements',
+        name: 'CommissionSettlements',
+        component: () => import('@/views/admin/CommissionSettlements.vue'),
+        meta: {
+          title: '结算管理 - Shopify铺货系统',
+          requiresAuth: true,
+          requiresAdmin: true
+        }
+      },
+      {
+        path: 'commission-rules',
+        name: 'CommissionRulesPage',
+        component: () => import('@/views/admin/CommissionRulesPage.vue'),
+        meta: {
+          title: '分佣规则 - Shopify铺货系统',
+          requiresAuth: true,
+          requiresAdmin: true
+        }
+      },
+      {
+        path: 'invoice-applications',
+        name: 'AdminInvoiceApplications',
+        component: () => import('@/views/admin/InvoiceApplications.vue'),
         meta: {
           title: 'Invoice申请管理 - Shopify铺货系统',
           requiresAuth: true,
