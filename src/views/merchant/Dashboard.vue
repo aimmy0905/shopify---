@@ -18,12 +18,18 @@
         <el-link @click="goToBalance" type="primary">查看详情</el-link>
       </div>
       <div class="balance-amount">
-        <span class="currency">¥</span>
-        <span class="amount">{{ accountBalance.toLocaleString() }}</span>
+        <span class="currency">$</span>
+        <span class="amount">{{ accountBalance.toFixed(2) }}</span>
       </div>
       <div class="balance-actions">
-        <el-button type="primary" @click="handleRecharge">充值</el-button>
-        <el-button @click="handleWithdraw">提现</el-button>
+        <el-button type="primary" @click="handleRecharge">
+          <el-icon><CreditCard /></el-icon>
+          余额充值
+        </el-button>
+        <el-button @click="handleWithdraw">
+          <el-icon><Money /></el-icon>
+          余额提现
+        </el-button>
       </div>
     </div>
 
@@ -31,13 +37,19 @@
     <div class="data-overview">
       <div class="overview-header">
         <h3>数据概览</h3>
-        <el-select v-model="overviewTimeRange" placeholder="选择时间范围" size="small">
-          <el-option label="今天" value="today"></el-option>
-          <el-option label="最近7天" value="7days"></el-option>
-          <el-option label="最近30天" value="30days"></el-option>
-          <el-option label="最近90天" value="90days"></el-option>
-          <el-option label="最近1年" value="1year"></el-option>
-        </el-select>
+        <div class="time-filter-buttons">
+          <el-button-group>
+            <el-button
+              v-for="option in timeRangeOptions"
+              :key="option.value"
+              :type="overviewTimeRange === option.value ? 'primary' : 'default'"
+              @click="overviewTimeRange = option.value"
+              size="small"
+            >
+              {{ option.label }}
+            </el-button>
+          </el-button-group>
+        </div>
       </div>
       <div class="overview-cards">
         <div class="overview-card" v-for="item in overviewData" :key="item.title">
@@ -57,16 +69,34 @@
       <div class="ranking-header">
         <h3>产品销售排行</h3>
         <div class="ranking-filters">
-          <el-select v-model="rankingTimeRange" placeholder="时间范围" size="small">
-            <el-option label="最近3天" value="3days"></el-option>
-            <el-option label="最近15天" value="15days"></el-option>
-            <el-option label="最近30天" value="30days"></el-option>
-          </el-select>
-          <el-select v-model="selectedStore" placeholder="选择店铺" size="small">
-            <el-option label="全部店铺" value="all"></el-option>
-            <el-option label="Shopify店铺A" value="shopify-a"></el-option>
-            <el-option label="Shopify店铺B" value="shopify-b"></el-option>
-          </el-select>
+          <div class="filter-group">
+            <span class="filter-label">时间范围：</span>
+            <el-button-group>
+              <el-button
+                v-for="option in rankingTimeOptions"
+                :key="option.value"
+                :type="rankingTimeRange === option.value ? 'primary' : 'default'"
+                @click="rankingTimeRange = option.value"
+                size="small"
+              >
+                {{ option.label }}
+              </el-button>
+            </el-button-group>
+          </div>
+          <div class="filter-group">
+            <span class="filter-label">店铺：</span>
+            <el-button-group>
+              <el-button
+                v-for="option in storeOptions"
+                :key="option.value"
+                :type="selectedStore === option.value ? 'primary' : 'default'"
+                @click="selectedStore = option.value"
+                size="small"
+              >
+                {{ option.label }}
+              </el-button>
+            </el-button-group>
+          </div>
         </div>
       </div>
       <div class="ranking-table">
@@ -104,6 +134,33 @@
     <div class="chart-section">
       <div class="chart-header">
         <h3>订单统计</h3>
+        <div class="chart-filters">
+          <div class="chart-time-filter">
+            <el-button-group>
+              <el-button
+                v-for="option in chartTimeOptions"
+                :key="option.value"
+                :type="chartTimeRange === option.value ? 'primary' : 'default'"
+                @click="handleChartTimeChange(option.value)"
+                size="small"
+              >
+                {{ option.label }}
+              </el-button>
+            </el-button-group>
+          </div>
+          <div class="custom-date-picker" v-if="chartTimeRange === 'custom'">
+            <el-date-picker
+              v-model="customChartDateRange"
+              type="daterange"
+              range-separator="至"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+              size="small"
+              @change="handleCustomDateChange"
+              style="margin-left: 12px;"
+            />
+          </div>
+        </div>
       </div>
       <div class="chart-container">
         <svg 
@@ -240,6 +297,12 @@
         </div>
       </div>
     </div>
+
+    <!-- 充值弹窗 -->
+    <recharge-dialog v-model="showRechargeDialog" @success="handleRechargeSuccess" />
+
+    <!-- 提现弹窗 -->
+    <withdraw-dialog v-model="showWithdrawDialog" @success="handleWithdrawSuccess" />
   </div>
 </template>
 
@@ -248,12 +311,21 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 
 // Element Plus图标
-import { 
-  Sunny, DataAnalysis, ShoppingBag, UserFilled, Refresh, 
-  Coin, CirclePlus, DocumentAdd, View, ShoppingCartFull, 
-  CreditCard, BellFilled, WarningFilled, PieChart, 
-  TrendCharts, Goods, Ship, Service
+import {
+  Sunny, DataAnalysis, ShoppingBag, UserFilled, Refresh,
+  Coin, CirclePlus, DocumentAdd, View, ShoppingCartFull,
+  CreditCard, BellFilled, WarningFilled, PieChart,
+  TrendCharts, Goods, Ship, Service, Money,
+  // 新增更好看的图标
+  WalletFilled, Wallet, Plus, ShoppingCart,
+  Management, InfoFilled, Bell, SuccessFilled,
+  CircleCheckFilled, CircleCloseFilled, Timer,
+  Notification, Warning
 } from '@element-plus/icons-vue'
+
+// 导入充值和提现弹窗组件
+import RechargeDialog from './components/RechargeDialog.vue'
+import WithdrawDialog from './components/WithdrawDialog.vue'
 
 export default {
   name: 'Dashboard',
@@ -261,25 +333,70 @@ export default {
     Sunny, DataAnalysis, ShoppingBag, UserFilled, Refresh,
     Coin, CirclePlus, DocumentAdd, View, ShoppingCartFull,
     CreditCard, BellFilled, WarningFilled, PieChart,
-    TrendCharts, Goods, Ship, Service
+    TrendCharts, Goods, Ship, Service, Money,
+    // 新增图标组件
+    WalletFilled, Wallet, Plus, ShoppingCart,
+    Management, InfoFilled, Bell, SuccessFilled,
+    CircleCheckFilled, CircleCloseFilled, Timer,
+    Notification, Warning,
+    RechargeDialog, WithdrawDialog
   },
   setup() {
     const router = useRouter()
     
     // 响应式数据
     const currentDate = ref('')
-    const accountBalance = ref(128569.88)
+    const accountBalance = ref(1285.69)
     const overviewTimeRange = ref('7days')
     const rankingTimeRange = ref('30days')
     const selectedStore = ref('all')
-    
+    const chartTimeRange = ref('7days')
+    const customChartDateRange = ref([])
+
+    // 弹窗状态
+    const showRechargeDialog = ref(false)
+    const showWithdrawDialog = ref(false)
+
+    // 时间范围选项
+    const timeRangeOptions = reactive([
+      { label: '今日', value: 'today' },
+      { label: '近七日', value: '7days' },
+      { label: '近30天', value: '30days' },
+      { label: '近60天', value: '60days' },
+      { label: '近1年', value: '1year' },
+      { label: '自定义', value: 'custom' }
+    ])
+
+    // 产品排行时间选项
+    const rankingTimeOptions = reactive([
+      { label: '最近3天', value: '3days' },
+      { label: '最近15天', value: '15days' },
+      { label: '最近30天', value: '30days' }
+    ])
+
+    // 店铺选项
+    const storeOptions = reactive([
+      { label: '全部店铺', value: 'all' },
+      { label: 'Shopify店铺A', value: 'shopify-a' },
+      { label: 'Shopify店铺B', value: 'shopify-b' }
+    ])
+
+    // 图表时间选项
+    const chartTimeOptions = reactive([
+      { label: '近7天', value: '7days' },
+      { label: '本周', value: 'thisWeek' },
+      { label: '本月', value: 'thisMonth' },
+      { label: '近30天', value: '30days' },
+      { label: '自定义', value: 'custom' }
+    ])
+
     // 图表相关
     const showTooltip = ref(false)
     const tooltipX = ref(0)
     const tooltipY = ref(0)
     const tooltipData = ref({})
     
-    // 数据概览
+    // 数据概览（移除利润卡片，保留5个）
     const overviewData = reactive([
       {
         title: '销售额',
@@ -310,12 +427,6 @@ export default {
         value: '8',
         color: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
         icon: 'DocumentAdd'
-      },
-      {
-        title: '利润',
-        value: '¥12,450',
-        color: 'linear-gradient(135deg, #96fbc4 0%, #f9f047 100%)',
-        icon: 'TrendCharts'
       }
     ])
     
@@ -428,28 +539,28 @@ export default {
         key: 'add-product',
         title: '上架产品',
         description: '添加新产品到店铺',
-        icon: 'CirclePlus',
+        icon: 'Plus',
         color: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
       },
       {
         key: 'view-orders',
         title: '查看订单',
         description: '管理所有订单',
-        icon: 'Goods',
+        icon: 'ShoppingCart',
         color: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
       },
       {
         key: 'procurement',
         title: '采购管理',
         description: '处理采购订单',
-        icon: 'Ship',
+        icon: 'Management',
         color: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)'
       },
       {
         key: 'commission',
         title: '佣金管理',
         description: '查看佣金收益',
-        icon: 'PieChart',
+        icon: 'WalletFilled',
         color: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)'
       }
     ])
@@ -470,9 +581,15 @@ export default {
       },
       {
         id: 3,
-        type: 'warning',
-        title: '订单异常提醒',
+        type: 'success',
+        title: '订单处理完成',
         time: '5小时前'
+      },
+      {
+        id: 4,
+        type: 'info',
+        title: '新功能上线通知',
+        time: '1天前'
       }
     ])
     
@@ -558,11 +675,17 @@ export default {
     }
     
     const getTransactionIcon = (type) => {
-      return type === 'income' ? 'CirclePlus' : 'Coin'
+      return type === 'income' ? 'CircleCheckFilled' : 'CircleCloseFilled'
     }
     
     const getNotificationIcon = (type) => {
-      return type === 'warning' ? 'WarningFilled' : 'BellFilled'
+      const iconMap = {
+        'warning': 'Warning',
+        'notice': 'Notification',
+        'info': 'InfoFilled',
+        'success': 'SuccessFilled'
+      }
+      return iconMap[type] || 'Bell'
     }
     
     const goToBalance = () => {
@@ -570,11 +693,22 @@ export default {
     }
     
     const handleRecharge = () => {
-      router.push('/merchant/balance?action=recharge')
+      showRechargeDialog.value = true
     }
-    
+
     const handleWithdraw = () => {
-      router.push('/merchant/balance?action=withdraw')
+      showWithdrawDialog.value = true
+    }
+
+    const handleRechargeSuccess = (data) => {
+      console.log('充值成功:', data)
+      // 这里可以刷新余额数据
+      // accountBalance.value += parseFloat(data.amount)
+    }
+
+    const handleWithdrawSuccess = (data) => {
+      console.log('提现申请成功:', data)
+      // 这里可以处理提现成功后的逻辑
     }
     
     const handleQuickAction = (key) => {
@@ -596,10 +730,143 @@ export default {
         router.push('/merchant/balance')
       }
     }
-    
+
+    // 图表时间处理方法
+    const handleChartTimeChange = (timeRange) => {
+      chartTimeRange.value = timeRange
+      if (timeRange !== 'custom') {
+        customChartDateRange.value = []
+      }
+      updateChartData(timeRange)
+    }
+
+    const handleCustomDateChange = (dateRange) => {
+      if (dateRange && dateRange.length === 2) {
+        updateChartData('custom', dateRange)
+      }
+    }
+
+    const updateChartData = (timeRange, customRange = null) => {
+      console.log('更新图表数据:', timeRange, customRange)
+
+      // 根据时间范围生成不同的数据
+      let newData = []
+      const today = new Date()
+
+      switch (timeRange) {
+        case '7days':
+          newData = generateChartData(7, '近7天')
+          break
+        case 'thisWeek':
+          newData = generateWeekData()
+          break
+        case 'thisMonth':
+          newData = generateMonthData()
+          break
+        case '30days':
+          newData = generateChartData(30, '近30天')
+          break
+        case 'custom':
+          if (customRange) {
+            newData = generateCustomData(customRange)
+          }
+          break
+        default:
+          newData = generateChartData(7, '近7天')
+      }
+
+      // 更新图表数据
+      chartData.splice(0, chartData.length, ...newData)
+    }
+
+    const generateChartData = (days, label) => {
+      const data = []
+      for (let i = days - 1; i >= 0; i--) {
+        const date = new Date()
+        date.setDate(date.getDate() - i)
+        const dateStr = `${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+
+        data.push({
+          date: dateStr,
+          orders: Math.floor(Math.random() * 50) + 30,
+          sales: Math.floor(Math.random() * 15000) + 8000
+        })
+      }
+      return data
+    }
+
+    const generateWeekData = () => {
+      const data = []
+      const today = new Date()
+      const currentDay = today.getDay()
+      const startOfWeek = new Date(today)
+      startOfWeek.setDate(today.getDate() - currentDay + 1) // 本周一
+
+      for (let i = 0; i < 7; i++) {
+        const date = new Date(startOfWeek)
+        date.setDate(startOfWeek.getDate() + i)
+        const dateStr = `${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+
+        data.push({
+          date: dateStr,
+          orders: Math.floor(Math.random() * 60) + 25,
+          sales: Math.floor(Math.random() * 18000) + 10000
+        })
+      }
+      return data
+    }
+
+    const generateMonthData = () => {
+      const data = []
+      const today = new Date()
+      const year = today.getFullYear()
+      const month = today.getMonth()
+      const daysInMonth = new Date(year, month + 1, 0).getDate()
+
+      // 生成本月每天的数据（最多显示30个点，如果天数太多则按周聚合）
+      const step = daysInMonth > 30 ? Math.ceil(daysInMonth / 30) : 1
+
+      for (let i = 1; i <= daysInMonth; i += step) {
+        const date = new Date(year, month, i)
+        const dateStr = `${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+
+        data.push({
+          date: dateStr,
+          orders: Math.floor(Math.random() * 80) + 40,
+          sales: Math.floor(Math.random() * 25000) + 15000
+        })
+      }
+      return data
+    }
+
+    const generateCustomData = (dateRange) => {
+      const data = []
+      const startDate = new Date(dateRange[0])
+      const endDate = new Date(dateRange[1])
+      const diffTime = Math.abs(endDate - startDate)
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+
+      // 如果天数太多，按周或月聚合
+      const step = diffDays > 30 ? Math.ceil(diffDays / 30) : 1
+
+      for (let i = 0; i <= diffDays; i += step) {
+        const date = new Date(startDate)
+        date.setDate(startDate.getDate() + i)
+        const dateStr = `${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+
+        data.push({
+          date: dateStr,
+          orders: Math.floor(Math.random() * 70) + 20,
+          sales: Math.floor(Math.random() * 20000) + 8000
+        })
+      }
+      return data
+    }
+
     // 生命周期
     onMounted(() => {
       updateCurrentDate()
+      updateChartData('7days') // 初始化图表数据
     })
     
     return {
@@ -608,6 +875,12 @@ export default {
       overviewTimeRange,
       rankingTimeRange,
       selectedStore,
+      chartTimeRange,
+      customChartDateRange,
+      timeRangeOptions,
+      rankingTimeOptions,
+      storeOptions,
+      chartTimeOptions,
       overviewData,
       topProducts,
       chartData,
@@ -620,6 +893,8 @@ export default {
       tooltipData,
       orderLinePoints,
       salesLinePoints,
+      showRechargeDialog,
+      showWithdrawDialog,
       getXPosition,
       getOrderYPosition,
       getSalesYPosition,
@@ -632,8 +907,13 @@ export default {
       goToBalance,
       handleRecharge,
       handleWithdraw,
+      handleRechargeSuccess,
+      handleWithdrawSuccess,
       handleQuickAction,
-      viewTransactionDetail
+      viewTransactionDetail,
+      handleChartTimeChange,
+      handleCustomDateChange,
+      updateChartData
     }
   }
 }
@@ -754,6 +1034,31 @@ export default {
   color: #333;
 }
 
+.time-filter-buttons {
+  display: flex;
+  align-items: center;
+}
+
+.time-filter-buttons .el-button-group {
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.time-filter-buttons .el-button {
+  border-radius: 0;
+  transition: all 0.3s ease;
+}
+
+.time-filter-buttons .el-button:first-child {
+  border-top-left-radius: 6px;
+  border-bottom-left-radius: 6px;
+}
+
+.time-filter-buttons .el-button:last-child {
+  border-top-right-radius: 6px;
+  border-bottom-right-radius: 6px;
+}
+
 .overview-cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -828,7 +1133,65 @@ export default {
 
 .ranking-filters {
   display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
   gap: 12px;
+}
+
+.filter-label {
+  font-size: 14px;
+  color: #666;
+  font-weight: 500;
+  min-width: 60px;
+}
+
+.filter-group .el-button-group {
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.filter-group .el-button {
+  border-radius: 0;
+  transition: all 0.3s ease;
+  font-size: 12px;
+  padding: 6px 12px;
+}
+
+.filter-group .el-button:first-child {
+  border-top-left-radius: 6px;
+  border-bottom-left-radius: 6px;
+}
+
+.filter-group .el-button:last-child {
+  border-top-right-radius: 6px;
+  border-bottom-right-radius: 6px;
+}
+
+.filter-group .el-button--primary {
+  background-color: #409eff;
+  border-color: #409eff;
+  color: white;
+  box-shadow: 0 2px 4px rgba(64, 158, 255, 0.3);
+}
+
+.filter-group .el-button--default:hover {
+  background-color: #ecf5ff;
+  border-color: #b3d8ff;
+  color: #409eff;
+}
+
+/* 响应式设计 */
+@media (min-width: 768px) {
+  .ranking-filters {
+    flex-direction: row;
+    align-items: center;
+    gap: 24px;
+  }
 }
 
 .ranking-table {
@@ -905,9 +1268,78 @@ export default {
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
 }
 
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
 .chart-header h3 {
-  margin: 0 0 20px 0;
+  margin: 0;
   color: #333;
+}
+
+.chart-filters {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.chart-time-filter .el-button-group {
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.chart-time-filter .el-button {
+  border-radius: 0;
+  transition: all 0.3s ease;
+  font-size: 12px;
+  padding: 6px 12px;
+}
+
+.chart-time-filter .el-button:first-child {
+  border-top-left-radius: 6px;
+  border-bottom-left-radius: 6px;
+}
+
+.chart-time-filter .el-button:last-child {
+  border-top-right-radius: 6px;
+  border-bottom-right-radius: 6px;
+}
+
+.chart-time-filter .el-button--primary {
+  background-color: #409eff;
+  border-color: #409eff;
+  color: white;
+  box-shadow: 0 2px 4px rgba(64, 158, 255, 0.3);
+}
+
+.chart-time-filter .el-button--default:hover {
+  background-color: #ecf5ff;
+  border-color: #b3d8ff;
+  color: #409eff;
+}
+
+.custom-date-picker {
+  display: flex;
+  align-items: center;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .chart-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .chart-filters {
+    width: 100%;
+    justify-content: flex-start;
+  }
 }
 
 .chart-container {
@@ -986,14 +1418,21 @@ export default {
   margin-right: 16px;
   font-size: 16px;
   color: white;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .record-icon.income {
-  background-color: #67c23a;
+  background: linear-gradient(135deg, #67c23a 0%, #27ae60 100%);
 }
 
 .record-icon.expense {
-  background-color: #f56c6c;
+  background: linear-gradient(135deg, #f56c6c 0%, #e74c3c 100%);
+}
+
+.record-item:hover .record-icon {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
 }
 
 .record-content {
@@ -1138,6 +1577,14 @@ export default {
 
 .notification-icon.notice {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.notification-icon.success {
+  background: linear-gradient(135deg, #67c23a 0%, #27ae60 100%);
+}
+
+.notification-icon.info {
+  background: linear-gradient(135deg, #909399 0%, #7f8c8d 100%);
 }
 
 .notification-icon:hover {

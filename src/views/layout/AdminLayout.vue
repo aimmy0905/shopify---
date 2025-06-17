@@ -232,16 +232,19 @@ const logout = async () => {
       }
     )
 
-    // 清除登录状态
+    // 清除所有登录状态
     localStorage.removeItem('admin_token')
-    localStorage.removeItem('admin_user')
+    localStorage.removeItem('auth_token')
+    localStorage.removeItem('token')
+    localStorage.removeItem('userType')
+    localStorage.removeItem('userInfo')
     localStorage.removeItem('rememberMe')
 
     // 显示退出成功提示
     ElMessage.success('退出登录成功')
 
-    // 跳转到管理员登录页
-    router.push('/admin/login')
+    // 跳转到角色选择页面
+    router.push('/')
   } catch {
     // 用户取消退出
   }

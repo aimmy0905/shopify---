@@ -331,10 +331,17 @@ const loadProducts = async () => {
     // 模拟API调用
     await new Promise(resolve => setTimeout(resolve, 800))
     
+    // 从本地存储获取用户添加的商品
+    const importListFromStorage = JSON.parse(localStorage.getItem('importProductList') || '[]')
+    
+    // 生成模拟数据并合并用户添加的商品
     const mockData = generateMockImportProducts()
     
+    // 将用户添加的商品合并到模拟数据中（用户添加的商品显示在前面）
+    const allData = [...importListFromStorage, ...mockData]
+    
     // 应用筛选和搜索
-    let filteredData = mockData
+    let filteredData = allData
     
     if (searchQuery.value) {
       filteredData = filteredData.filter(product => 
@@ -442,11 +449,12 @@ const removeFromList = async (product) => {
     // 模拟API调用
     await new Promise(resolve => setTimeout(resolve, 500))
     
-    ElMessage.success('商品已移除')
+    // 从本地存储中移除商品
+    const importList = JSON.parse(localStorage.getItem('importProductList') || '[]')
+    const updatedList = importList.filter(item => item.id !== product.id)
+    localStorage.setItem('importProductList', JSON.stringify(updatedList))
     
-    // 更新导入列表数量
-    const currentCount = parseInt(localStorage.getItem('importListCount') || '0')
-    localStorage.setItem('importListCount', String(Math.max(0, currentCount - 1)))
+    ElMessage.success('商品已移除')
     
     loadProducts()
     
@@ -477,11 +485,13 @@ const batchRemoveFromList = async () => {
     // 模拟批量API调用
     await new Promise(resolve => setTimeout(resolve, 1500))
     
-    ElMessage.success(`成功移除 ${selectedProducts.value.length} 件商品`)
+    // 从本地存储中批量移除商品
+    const importList = JSON.parse(localStorage.getItem('importProductList') || '[]')
+    const selectedIds = selectedProducts.value.map(product => product.id)
+    const updatedList = importList.filter(item => !selectedIds.includes(item.id))
+    localStorage.setItem('importProductList', JSON.stringify(updatedList))
     
-    // 更新导入列表数量
-    const currentCount = parseInt(localStorage.getItem('importListCount') || '0')
-    localStorage.setItem('importListCount', String(Math.max(0, currentCount - selectedProducts.value.length)))
+    ElMessage.success(`成功移除 ${selectedProducts.value.length} 件商品`)
     
     selectedProducts.value = []
     loadProducts()

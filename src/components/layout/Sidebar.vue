@@ -543,14 +543,17 @@ const handleLogout = async () => {
         type: 'warning'
       }
     )
-    
-    // 清除本地存储
+
+    // 清除所有本地存储
     localStorage.removeItem('auth_token')
-    localStorage.removeItem('rememberMe')
+    localStorage.removeItem('admin_token')
+    localStorage.removeItem('token')
+    localStorage.removeItem('userType')
     localStorage.removeItem('userInfo')
-    
+    localStorage.removeItem('rememberMe')
+
     ElMessage.success('退出登录成功')
-    router.push('/login')
+    router.push('/')
   } catch {
     // 用户取消退出
   }

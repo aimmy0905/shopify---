@@ -201,7 +201,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, onMounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { 
@@ -240,11 +240,14 @@ const pagination = reactive({
   total: 0
 })
 
-// 计算属性
-const importListCount = computed(() => {
-  // 从localStorage或状态管理中获取导入列表数量
-  return parseInt(localStorage.getItem('importListCount') || '0')
-})
+// 响应式数据 - 导入列表数量
+const importListCount = ref(0)
+
+// 更新导入列表数量的函数
+const updateImportListCount = () => {
+  const importList = JSON.parse(localStorage.getItem('importProductList') || '[]')
+  importListCount.value = importList.length
+}
 
 // 模拟商品数据
 const generateMockProducts = () => {
@@ -374,12 +377,38 @@ const addToImportList = async (product) => {
     // 模拟API调用
     await new Promise(resolve => setTimeout(resolve, 1000))
     
-    product.inImportList = true
-    ElMessage.success(`${product.name} 已添加到导入列表`)
+    // 添加到本地存储
+    const importList = JSON.parse(localStorage.getItem('importProductList') || '[]')
     
-    // 更新导入列表数量
-    const currentCount = parseInt(localStorage.getItem('importListCount') || '0')
-    localStorage.setItem('importListCount', String(currentCount + 1))
+    // 检查是否已经存在
+    const existingIndex = importList.findIndex(item => item.id === product.id)
+    
+    if (existingIndex === -1) {
+      // 添加商品信息到导入列表
+      const importProduct = {
+        id: product.id,
+        name: product.name,
+        code: product.code,
+        image: product.image,
+        price: product.price,
+        suggestedPrice: product.suggestedPrice,
+        salePrice: product.suggestedPrice,
+        stock: product.stock,
+        categoryName: product.categoryName,
+        addedAt: new Date().toISOString(),
+        isDeployed: false,
+        deployedStores: []
+      }
+      
+      importList.push(importProduct)
+      localStorage.setItem('importProductList', JSON.stringify(importList))
+      
+      product.inImportList = true
+      updateImportListCount() // 更新计数
+      ElMessage.success(`${product.name} 已添加到导入列表`)
+    } else {
+      ElMessage.warning('该商品已在导入列表中')
+    }
     
   } catch (error) {
     ElMessage.error('添加失败，请重试')
@@ -408,18 +437,53 @@ const batchAddToImportList = async () => {
     // 模拟批量API调用
     await new Promise(resolve => setTimeout(resolve, 2000))
     
-    // 更新商品状态
+    // 获取现有的导入列表
+    const importList = JSON.parse(localStorage.getItem('importProductList') || '[]')
+    let addedCount = 0
+    
+    // 批量添加商品
     products.value.forEach(product => {
       if (selectedProducts.value.includes(product.id)) {
-        product.inImportList = true
+        // 检查是否已经存在
+        const existingIndex = importList.findIndex(item => item.id === product.id)
+        
+        if (existingIndex === -1) {
+          // 添加商品信息到导入列表
+          const importProduct = {
+            id: product.id,
+            name: product.name,
+            code: product.code,
+            image: product.image,
+            price: product.price,
+            suggestedPrice: product.suggestedPrice,
+            salePrice: product.suggestedPrice,
+            stock: product.stock,
+            categoryName: product.categoryName,
+            addedAt: new Date().toISOString(),
+            isDeployed: false,
+            deployedStores: []
+          }
+          
+          importList.push(importProduct)
+          product.inImportList = true
+          addedCount++
+        } else {
+          product.inImportList = true
+        }
       }
     })
     
-    ElMessage.success(`成功添加 ${selectedProducts.value.length} 件商品到导入列表`)
+    // 保存到本地存储
+    localStorage.setItem('importProductList', JSON.stringify(importList))
+    updateImportListCount() // 更新计数
     
-    // 更新导入列表数量
-    const currentCount = parseInt(localStorage.getItem('importListCount') || '0')
-    localStorage.setItem('importListCount', String(currentCount + selectedProducts.value.length))
+    if (addedCount > 0) {
+      ElMessage.success(`成功添加 ${addedCount} 件商品到导入列表`)
+    }
+    
+    if (addedCount < selectedProducts.value.length) {
+      ElMessage.warning(`${selectedProducts.value.length - addedCount} 件商品已在导入列表中`)
+    }
     
     // 清除选择
     selectedProducts.value = []
@@ -435,7 +499,10 @@ const batchAddToImportList = async () => {
 
 // 查看商品详情
 const viewProductDetail = (product) => {
-  router.push(`/merchant/products/${product.id}`)
+  router.push({
+    path: `/merchant/products/${product.id}`,
+    query: { from: 'platform' }
+  })
 }
 
 // 查看导入列表
@@ -459,6 +526,7 @@ function debounce(func, wait) {
 // 生命周期
 onMounted(() => {
   loadProducts()
+  updateImportListCount() // 初始化导入列表数量
 })
 </script>
 

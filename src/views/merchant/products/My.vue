@@ -185,11 +185,7 @@
             </template>
           </el-table-column>
 
-          <el-table-column label="累计销量" width="100">
-            <template #default="scope">
-              <span class="sales-count">{{ scope.row.totalSales }}</span>
-            </template>
-          </el-table-column>
+
 
           <el-table-column label="操作" width="300" fixed="right">
             <template #default="scope">
@@ -274,17 +270,7 @@
             </template>
           </el-table-column>
 
-          <el-table-column label="销量" width="120">
-            <template #default="scope">
-              <span class="sales-number">{{ scope.row.periodSales }}</span>
-            </template>
-          </el-table-column>
 
-          <el-table-column label="销售额" width="150">
-            <template #default="scope">
-              <span class="revenue">${{ scope.row.periodRevenue }}</span>
-            </template>
-          </el-table-column>
 
           <el-table-column label="所属店铺" width="200">
             <template #default="scope">
@@ -450,8 +436,7 @@ const generateMyProducts = () => {
   for (let i = 0; i < 50; i++) {
     const price = (Math.random() * 200 + 10).toFixed(2)
     const salePrice = (parseFloat(price) * (1.3 + Math.random() * 0.5)).toFixed(2)
-    const totalSales = Math.floor(Math.random() * 500)
-    const periodSales = Math.floor(totalSales * (0.1 + Math.random() * 0.3))
+
     
     const productStores = stores.value.slice(0, Math.floor(Math.random() * 3) + 1)
     
@@ -466,11 +451,7 @@ const generateMyProducts = () => {
       salePrice: parseFloat(salePrice),
       stock: Math.floor(Math.random() * 500) + 10,
       status: Math.random() > 0.2 ? 'active' : 'inactive',
-      stores: productStores,
-      totalSales,
-      periodSales,
-      periodRevenue: (periodSales * parseFloat(salePrice)).toFixed(2),
-      trend: Math.floor(Math.random() * 21) - 10 // -10 到 +10
+      stores: productStores
     })
   }
   
@@ -515,7 +496,6 @@ const loadProducts = async () => {
     
     // 排序处理（销量排名视图）
     if (viewMode.value === 'ranking') {
-      filteredData.sort((a, b) => b.periodSales - a.periodSales)
       rankingProducts.value = filteredData.slice(0, pagination.size)
     } else {
       // 分页处理
@@ -752,10 +732,7 @@ watch(viewMode, () => {
         }
       }
 
-      .sales-count {
-        font-weight: 600;
-        color: #3b82f6;
-      }
+
 
       .action-buttons {
         display: flex;
@@ -797,17 +774,7 @@ watch(viewMode, () => {
       }
     }
 
-    .sales-number {
-      font-size: 16px;
-      font-weight: 600;
-      color: #3b82f6;
-    }
 
-    .revenue {
-      font-size: 14px;
-      font-weight: 600;
-      color: #059669;
-    }
 
     .trend-indicator {
       display: flex;

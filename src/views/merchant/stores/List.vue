@@ -3,10 +3,16 @@
     <!-- 页面标题栏 -->
     <div class="page-header">
       <h1>我的店铺</h1>
-      <el-button type="primary" @click="handleAddStore">
-        <el-icon><Plus /></el-icon>
-        添加店铺
-      </el-button>
+      <div class="header-actions">
+        <el-button type="success" @click="handleAuthorizeStore">
+          <el-icon><Key /></el-icon>
+          授权新店铺
+        </el-button>
+        <el-button type="primary" @click="handleAddStore">
+          <el-icon><Plus /></el-icon>
+          添加店铺
+        </el-button>
+      </div>
     </div>
 
     <!-- 搜索区域 -->
@@ -128,7 +134,8 @@ import {
   Plus,
   Search,
   Calendar,
-  ArrowDown
+  ArrowDown,
+  Key
 } from '@element-plus/icons-vue'
 
 const router = useRouter()
@@ -188,6 +195,10 @@ const displayStores = computed(() => {
 // 方法
 const handleAddStore = () => {
   router.push('/merchant/stores/add')
+}
+
+const handleAuthorizeStore = () => {
+  router.push('/merchant/stores/authorize')
 }
 
 const viewStoreDetail = (storeId) => {
@@ -267,6 +278,11 @@ onMounted(() => {
       font-size: 24px;
       font-weight: 600;
       color: #1f2937;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 12px;
     }
   }
 

@@ -116,6 +116,24 @@ const routes = [
         }
       },
       {
+        path: 'stores/authorize',
+        name: 'AuthorizeStore',
+        component: () => import('@/views/merchant/stores/Authorize.vue'),
+        meta: {
+          title: '授权店铺 - Shopify铺货系统',
+          requiresAuth: true
+        }
+      },
+      {
+        path: 'stores/auth-callback',
+        name: 'AuthCallback',
+        component: () => import('@/views/merchant/stores/AuthCallback.vue'),
+        meta: {
+          title: '授权回调 - Shopify铺货系统',
+          requiresAuth: true
+        }
+      },
+      {
         path: 'stores/:id',
         name: 'StoreDetail',
         component: () => import('@/views/merchant/stores/Detail.vue'),

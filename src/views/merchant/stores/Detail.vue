@@ -145,21 +145,7 @@
           </div>
         </div>
 
-        <div class="overview-card profit-card">
-          <div class="card-header">
-            <div class="card-icon">
-              <el-icon size="24"><TrendCharts /></el-icon>
-            </div>
-            <div class="card-title">今日利润</div>
-          </div>
-          <div class="card-content">
-            <div class="main-value">${{ todayStats.profit }}</div>
-            <div class="sub-info">
-              <span class="sub-value">{{ todayStats.profitGrowth }}%</span>
-              <span class="sub-label">较昨日</span>
-            </div>
-          </div>
-        </div>
+
       </div>
     </div>
 
@@ -488,7 +474,6 @@ import {
   Goods,
   DocumentChecked,
   Money,
-  TrendCharts,
   Plus,
   RefreshLeft,
   Warning
@@ -536,9 +521,7 @@ const todayStats = ref({
   aftersaleAmount: 234.56,
   aftersaleAmountGrowth: 4.5,
   aftersaleCount: 12,
-  aftersaleCountGrowth: 2.5,
-  profit: 1000.00,
-  profitGrowth: 3.0
+  aftersaleCountGrowth: 2.5
 })
 
 // 图表数据
@@ -1113,9 +1096,7 @@ onMounted(() => {
           background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
         }
 
-        &.profit-card .card-icon {
-          background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-        }
+
       }
     }
   }

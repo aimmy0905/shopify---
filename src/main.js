@@ -60,6 +60,14 @@ app.config.errorHandler = (err, vm, info) => {
   if (err.message && err.message.includes('ResizeObserver')) {
     return
   }
+  // 忽略 Element Plus getComputedStyle 相关错误
+  if (err.message && err.message.includes('getComputedStyle')) {
+    return
+  }
+  // 忽略 Element Plus parameter 1 is not of type 'Element' 错误
+  if (err.message && err.message.includes("parameter 1 is not of type 'Element'")) {
+    return
+  }
   console.error('Global error:', err, info)
 }
 
@@ -69,7 +77,27 @@ window.addEventListener('unhandledrejection', event => {
     event.preventDefault()
     return
   }
+  if (event.reason && event.reason.message && event.reason.message.includes('getComputedStyle')) {
+    event.preventDefault()
+    return
+  }
+  if (event.reason && event.reason.message && event.reason.message.includes("parameter 1 is not of type 'Element'")) {
+    event.preventDefault()
+    return
+  }
   console.error('Unhandled promise rejection:', event.reason)
+})
+
+// 处理window错误
+window.addEventListener('error', event => {
+  if (event.message && event.message.includes('getComputedStyle')) {
+    event.preventDefault()
+    return
+  }
+  if (event.message && event.message.includes("parameter 1 is not of type 'Element'")) {
+    event.preventDefault()
+    return
+  }
 })
 
 app.mount('#app')
