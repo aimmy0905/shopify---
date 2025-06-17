@@ -693,7 +693,37 @@ const routes = [
         name: 'AdminCommission',
         component: () => import('@/views/admin/Commission.vue'),
         meta: {
-          title: '分佣管理 - Shopify铺货系统',
+          title: '推荐人列表 - Shopify铺货系统',
+          requiresAuth: true,
+          requiresAdmin: true
+        }
+      },
+      {
+        path: 'referrers/:id',
+        name: 'ReferrerDetail',
+        component: () => import('@/views/admin/ReferrerDetail.vue'),
+        meta: {
+          title: '推荐人详情 - Shopify铺货系统',
+          requiresAuth: true,
+          requiresAdmin: true
+        }
+      },
+      {
+        path: 'commission-settlements',
+        name: 'CommissionSettlements',
+        component: () => import('@/views/admin/CommissionSettlements.vue'),
+        meta: {
+          title: '佣金结算记录 - Shopify铺货系统',
+          requiresAuth: true,
+          requiresAdmin: true
+        }
+      },
+      {
+        path: 'commission-settings',
+        name: 'CommissionSettings',
+        component: () => import('@/views/admin/CommissionRulesPage.vue'),
+        meta: {
+          title: '分佣结算规则设置 - Shopify铺货系统',
           requiresAuth: true,
           requiresAdmin: true
         }

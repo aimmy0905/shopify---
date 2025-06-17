@@ -1,319 +1,302 @@
 <template>
-  <div class="commission-overview-page">
+  <div class="referrers-page">
     <!-- 页面头部 -->
     <div class="page-header">
-      <div class="header-left">
-        <h1 class="page-title">分佣管理总览</h1>
-        <p class="page-description">平台分佣体系数据总览和管理入口</p>
-      </div>
-      <div class="header-right">
-        <el-button type="primary" @click="goToReferralTree">
-          <el-icon><Connection /></el-icon>
-          查看推荐关系树
-        </el-button>
-        <el-button type="success" @click="goToSettlements">
-          <el-icon><Money /></el-icon>
-          结算管理
-        </el-button>
-      </div>
+      <h1 class="page-title">推荐人列表</h1>
     </div>
 
-    <!-- 核心指标卡片 -->
-    <div class="metrics-grid">
-      <el-card class="metric-card total-users">
-        <div class="metric-content">
-          <div class="metric-icon">
-            <el-icon><UserFilled /></el-icon>
-          </div>
-          <div class="metric-info">
-            <div class="metric-value">{{ overviewData.totalUsers.toLocaleString() }}</div>
-            <div class="metric-label">总用户数</div>
-            <div class="metric-change positive">
-              <el-icon><TrendCharts /></el-icon>
-              +{{ overviewData.userGrowth }}% 本月
-            </div>
-          </div>
-        </div>
-      </el-card>
-
-      <el-card class="metric-card total-commission">
-        <div class="metric-content">
-          <div class="metric-icon">
-            <el-icon><Money /></el-icon>
-          </div>
-          <div class="metric-info">
-            <div class="metric-value">${{ overviewData.totalCommission.toLocaleString() }}</div>
-            <div class="metric-label">累计佣金</div>
-            <div class="metric-change positive">
-              <el-icon><TrendCharts /></el-icon>
-              +{{ overviewData.commissionGrowth }}% 本月
-            </div>
-          </div>
-        </div>
-      </el-card>
-
-      <el-card class="metric-card active-referrers">
-        <div class="metric-content">
-          <div class="metric-icon">
-            <el-icon><Connection /></el-icon>
-          </div>
-          <div class="metric-info">
-            <div class="metric-value">{{ overviewData.activeReferrers.toLocaleString() }}</div>
-            <div class="metric-label">活跃推荐人</div>
-            <div class="metric-change positive">
-              <el-icon><TrendCharts /></el-icon>
-              +{{ overviewData.referrerGrowth }}% 本月
-            </div>
-          </div>
-        </div>
-      </el-card>
-
-      <el-card class="metric-card avg-commission">
-        <div class="metric-content">
-          <div class="metric-icon">
-            <el-icon><PieChart /></el-icon>
-          </div>
-          <div class="metric-info">
-            <div class="metric-value">${{ overviewData.avgCommission.toFixed(2) }}</div>
-            <div class="metric-label">人均佣金</div>
-            <div class="metric-change positive">
-              <el-icon><TrendCharts /></el-icon>
-              +{{ overviewData.avgGrowth }}% 本月
-            </div>
-          </div>
-        </div>
-      </el-card>
-    </div>
-
-    <!-- 功能模块导航 -->
-    <div class="modules-section">
-      <el-row :gutter="20">
-        <el-col :span="8">
-          <el-card class="module-card" @click="goToReferralTree">
-            <div class="module-content">
-              <div class="module-icon tree">
-                <el-icon><Connection /></el-icon>
-              </div>
-              <div class="module-info">
-                <h3>推荐关系树</h3>
-                <p>查看清晰的上下级分佣关系</p>
-                <ul>
-                  <li>树形可视化展示</li>
-                  <li>层级关系清晰</li>
-                  <li>佣金统计实时</li>
-                </ul>
-              </div>
-            </div>
-          </el-card>
-        </el-col>
-
-        <el-col :span="8">
-          <el-card class="module-card" @click="goToRecords">
-            <div class="module-content">
-              <div class="module-icon records">
-                <el-icon><List /></el-icon>
-              </div>
-              <div class="module-info">
-                <h3>佣金明细</h3>
-                <p>查看详细的佣金记录</p>
-                <ul>
-                  <li>完整交易记录</li>
-                  <li>多维度筛选</li>
-                  <li>批量操作支持</li>
-                </ul>
-              </div>
-            </div>
-          </el-card>
-        </el-col>
-
-        <el-col :span="8">
-          <el-card class="module-card" @click="goToRules">
-            <div class="module-content">
-              <div class="module-icon rules">
-                <el-icon><Setting /></el-icon>
-              </div>
-              <div class="module-info">
-                <h3>分佣规则</h3>
-                <p>配置分佣比例和规则</p>
-                <ul>
-                  <li>灵活比例设置</li>
-                  <li>自动结算配置</li>
-                  <li>规则预览功能</li>
-                </ul>
-              </div>
-            </div>
-          </el-card>
-        </el-col>
-      </el-row>
-    </div>
-
-    <!-- 最新动态和排行榜 -->
-    <div class="data-section">
-      <el-row :gutter="20">
-        <!-- 顶级推荐人排行 -->
-        <el-col :span="12">
-          <el-card class="ranking-card">
-            <template #header>
-              <div class="card-header">
-                <span class="card-title">顶级推荐人排行</span>
-                <el-button size="small" @click="goToReferralTree">查看全部</el-button>
-              </div>
+    <!-- 搜索区域 -->
+    <el-card class="search-card">
+      <el-form :model="searchForm" inline>
+        <el-form-item>
+          <el-input
+            v-model="searchForm.keyword"
+            placeholder="支持按推荐人名称、账号搜索"
+            clearable
+            style="width: 300px"
+          >
+            <template #prefix>
+              <el-icon><Search /></el-icon>
             </template>
-            <div class="ranking-list">
-              <div v-for="(referrer, index) in topReferrers" :key="referrer.id" class="ranking-item">
-                <div class="rank-number" :class="`rank-${index + 1}`">{{ index + 1 }}</div>
-                <div class="referrer-avatar">
-                  <el-avatar :size="40" :src="referrer.avatar">
-                    {{ referrer.name.charAt(0) }}
-                  </el-avatar>
-                </div>
-                <div class="referrer-info">
-                  <div class="referrer-name">{{ referrer.name }}</div>
-                  <div class="referrer-stats">
-                    <span class="stat-item">{{ referrer.referrals }}推荐</span>
-                    <span class="stat-item">${{ referrer.commission.toFixed(2) }}佣金</span>
-                  </div>
-                </div>
-                <div class="referrer-badge">
-                  <el-tag :type="getReferrerBadgeType(index)" size="small">
-                    {{ getReferrerBadge(index) }}
-                  </el-tag>
-                </div>
-              </div>
-            </div>
-          </el-card>
-        </el-col>
+          </el-input>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="searchReferrers">搜索</el-button>
+          <el-button @click="resetSearch">重置</el-button>
+        </el-form-item>
+      </el-form>
+    </el-card>
 
-        <!-- 最新动态 -->
-        <el-col :span="12">
-          <el-card class="activity-card">
-            <template #header>
-              <div class="card-header">
-                <span class="card-title">最新动态</span>
-                <el-button size="small" @click="refreshActivities">
-                  <el-icon><Refresh /></el-icon>
-                </el-button>
-              </div>
-            </template>
-            <div class="activity-list">
-              <div v-for="activity in recentActivities" :key="activity.id" class="activity-item">
-                <div class="activity-icon" :class="activity.type">
-                  <el-icon>
-                    <component :is="getActivityIcon(activity.type)" />
-                  </el-icon>
-                </div>
-                <div class="activity-content">
-                  <div class="activity-text">{{ activity.text }}</div>
-                  <div class="activity-time">{{ activity.time }}</div>
-                </div>
-                <div class="activity-amount" v-if="activity.amount">
-                  +${{ activity.amount.toFixed(2) }}
-                </div>
-              </div>
+    <!-- 推荐人列表 -->
+    <el-card class="table-card">
+      <template #header>
+        <div class="table-header">
+          <span class="table-title">推荐人列表</span>
+          <div class="table-actions">
+            <el-button
+              type="success"
+              @click="batchSettlement"
+              :disabled="!selectedReferrers.length"
+            >
+              批量结算佣金 ({{ selectedReferrers.length }})
+            </el-button>
+            <el-button @click="exportReferrers">
+              <el-icon><Download /></el-icon>
+              导出推荐人列表为Excel
+            </el-button>
+          </div>
+        </div>
+      </template>
+
+      <el-table
+        v-loading="tableLoading"
+        :data="referrersList"
+        border
+        @selection-change="handleSelectionChange"
+      >
+        <el-table-column type="selection" width="55" />
+
+        <el-table-column label="推荐人名称" min-width="150">
+          <template #default="scope">
+            <div class="referrer-info">
+              <div class="referrer-name">{{ scope.row.name }}</div>
+              <div class="referrer-email">{{ scope.row.email }}</div>
             </div>
-          </el-card>
-        </el-col>
-      </el-row>
-    </div>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="邀请用户数量" width="120" align="center">
+          <template #default="scope">
+            <span class="count-text">{{ scope.row.inviteCount }}</span>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="佣金总金额" width="120" align="right">
+          <template #default="scope">
+            <span class="amount-text">${{ scope.row.totalCommission.toFixed(2) }}</span>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="已结算佣金" width="120" align="right">
+          <template #default="scope">
+            <span class="amount-text settled">${{ scope.row.settledCommission.toFixed(2) }}</span>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="待结算佣金" width="120" align="right">
+          <template #default="scope">
+            <span class="amount-text pending">${{ scope.row.pendingCommission.toFixed(2) }}</span>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="下级用户数量" width="120" align="center">
+          <template #default="scope">
+            <el-button
+              type="text"
+              @click="viewSubordinates(scope.row)"
+              class="link-button"
+            >
+              {{ scope.row.subordinateCount }}
+            </el-button>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="加入时间" width="180">
+          <template #default="scope">
+            {{ scope.row.joinTime }}
+          </template>
+        </el-table-column>
+
+        <el-table-column label="操作" width="280" fixed="right">
+          <template #default="scope">
+            <el-button size="small" @click="viewCommissionRecords(scope.row)">
+              查看佣金结算记录
+            </el-button>
+            <el-button
+              size="small"
+              type="primary"
+              @click="manualSettlement(scope.row)"
+              :disabled="scope.row.pendingCommission <= 0"
+            >
+              手动结算佣金
+            </el-button>
+            <el-button size="small" @click="viewDetail(scope.row)">
+              查看详情
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <!-- 分页 -->
+      <div class="pagination-wrapper">
+        <el-pagination
+          v-model:current-page="currentPage"
+          v-model:page-size="pageSize"
+          :total="totalReferrers"
+          :page-sizes="[10, 20, 50, 100]"
+          layout="total, sizes, prev, pager, next, jumper"
+          @size-change="loadReferrers"
+          @current-change="loadReferrers"
+        />
+      </div>
+    </el-card>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import {
-  UserFilled,
-  Money,
-  Connection,
-  PieChart,
-  TrendCharts,
-  Refresh,
-  Setting,
-  List,
-  User,
-  Plus,
-  Check
+  Search,
+  Download
 } from '@element-plus/icons-vue'
 
 const router = useRouter()
 
 // 响应式数据
-const overviewData = reactive({
-  totalUsers: 15420,
-  userGrowth: 12.5,
-  totalCommission: 285600,
-  commissionGrowth: 18.3,
-  activeReferrers: 3240,
-  referrerGrowth: 8.7,
-  avgCommission: 185.2,
-  avgGrowth: 5.2
+const tableLoading = ref(false)
+const selectedReferrers = ref([])
+const currentPage = ref(1)
+const pageSize = ref(20)
+const totalReferrers = ref(0)
+const referrersList = ref([])
+
+// 搜索表单
+const searchForm = reactive({
+  keyword: ''
 })
 
-const topReferrers = ref([
-  { id: 1, name: 'John Smith', referrals: 156, commission: 8520.50, avatar: '' },
-  { id: 2, name: 'Sarah Johnson', referrals: 142, commission: 7890.25, avatar: '' },
-  { id: 3, name: 'Mike Wilson', referrals: 128, commission: 7250.80, avatar: '' },
-  { id: 4, name: 'Emily Davis', referrals: 115, commission: 6580.30, avatar: '' },
-  { id: 5, name: 'David Brown', referrals: 98, commission: 5920.75, avatar: '' }
-])
-
-const recentActivities = ref([
-  { id: 1, type: 'referral', text: 'Alice Johnson 推荐了新用户 Bob Wilson', time: '2分钟前', amount: 25.50 },
-  { id: 2, type: 'settlement', text: '系统自动结算了 156 位用户的佣金', time: '15分钟前', amount: null },
-  { id: 3, type: 'bonus', text: 'John Smith 获得月度活跃奖励', time: '1小时前', amount: 100.00 },
-  { id: 4, type: 'referral', text: 'Sarah Johnson 推荐了新用户 Charlie Brown', time: '2小时前', amount: 30.25 }
-])
-
 // 方法
-const refreshActivities = () => {
-  ElMessage.success('动态已刷新')
-}
+const loadReferrers = async () => {
+  tableLoading.value = true
+  try {
+    // 模拟API调用
+    await new Promise(resolve => setTimeout(resolve, 1000))
 
-const getReferrerBadgeType = (index) => {
-  const types = ['danger', 'warning', 'success', 'info', 'info']
-  return types[index] || 'info'
-}
+    // 模拟推荐人数据
+    referrersList.value = [
+      {
+        id: 1,
+        name: 'John Smith',
+        email: 'john@example.com',
+        inviteCount: 25,
+        totalCommission: 1250.50,
+        settledCommission: 980.30,
+        pendingCommission: 270.20,
+        subordinateCount: 15,
+        joinTime: '2023-08-15 10:30:00'
+      },
+      {
+        id: 2,
+        name: 'Sarah Johnson',
+        email: 'sarah@example.com',
+        inviteCount: 18,
+        totalCommission: 890.75,
+        settledCommission: 650.25,
+        pendingCommission: 240.50,
+        subordinateCount: 12,
+        joinTime: '2023-09-02 14:20:00'
+      },
+      {
+        id: 3,
+        name: 'Mike Wilson',
+        email: 'mike@example.com',
+        inviteCount: 32,
+        totalCommission: 1580.90,
+        settledCommission: 1200.40,
+        pendingCommission: 380.50,
+        subordinateCount: 20,
+        joinTime: '2023-07-20 09:15:00'
+      }
+    ]
 
-const getReferrerBadge = (index) => {
-  const badges = ['冠军', '亚军', '季军', '优秀', '活跃']
-  return badges[index] || '活跃'
-}
-
-const getActivityIcon = (type) => {
-  const icons = {
-    referral: User,
-    settlement: Money,
-    bonus: Plus,
-    commission: Check
+    totalReferrers.value = 156
+  } catch (error) {
+    console.error('加载推荐人列表失败:', error)
+    ElMessage.error('加载推荐人列表失败')
+  } finally {
+    tableLoading.value = false
   }
-  return icons[type] || User
 }
 
-const goToReferralTree = () => {
-  router.push('/admin/referral-tree')
+const searchReferrers = () => {
+  currentPage.value = 1
+  loadReferrers()
 }
 
-const goToSettlements = () => {
-  router.push('/admin/commission-settlements')
+const resetSearch = () => {
+  searchForm.keyword = ''
+  searchReferrers()
 }
 
-const goToRules = () => {
-  router.push('/admin/commission-rules')
+const handleSelectionChange = (selection) => {
+  selectedReferrers.value = selection
 }
 
-const goToRecords = () => {
-  router.push('/admin/commission-records')
+const batchSettlement = async () => {
+  try {
+    await ElMessageBox.confirm(
+      `确定要为选中的 ${selectedReferrers.value.length} 个推荐人进行佣金结算吗？`,
+      '批量结算佣金确认',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+
+    ElMessage.success('批量结算已启动')
+    selectedReferrers.value = []
+    loadReferrers()
+  } catch {
+    // 用户取消
+  }
+}
+
+const exportReferrers = () => {
+  ElMessage.success('导出推荐人列表功能开发中...')
+}
+
+const viewSubordinates = (referrer) => {
+  router.push(`/admin/referrers/${referrer.id}`)
+}
+
+const viewCommissionRecords = (referrer) => {
+  router.push(`/admin/commission-settlements?referrer=${referrer.id}`)
+}
+
+const manualSettlement = async (referrer) => {
+  try {
+    await ElMessageBox.confirm(
+      `确定要为 ${referrer.name} 结算 $${referrer.pendingCommission.toFixed(2)} 的待结算佣金吗？`,
+      '手动结算佣金确认',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+
+    ElMessage.success('佣金结算成功')
+    loadReferrers()
+  } catch {
+    // 用户取消
+  }
+}
+
+const viewDetail = (referrer) => {
+  router.push(`/admin/referrers/${referrer.id}`)
 }
 
 // 生命周期
 onMounted(() => {
-  console.log('分佣管理总览页面已加载')
+  loadReferrers()
 })
 </script>
 
 <style scoped>
-.commission-overview-page {
+.referrers-page {
   padding: 20px;
   background: #f5f7fa;
   min-height: 100vh;
@@ -321,276 +304,49 @@ onMounted(() => {
 
 /* 页面头部 */
 .page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-  background: white;
-  padding: 24px;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.header-left .page-title {
-  margin: 0 0 8px 0;
-  color: #303133;
-  font-size: 28px;
-  font-weight: 700;
-}
-
-.header-left .page-description {
-  margin: 0;
-  color: #606266;
-  font-size: 16px;
-}
-
-.header-right {
-  display: flex;
-  gap: 16px;
-  align-items: center;
-}
-
-/* 指标网格 */
-.metrics-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 24px;
-  margin-bottom: 32px;
-}
-
-.metric-card {
-  border: none;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  border-radius: 12px;
-  overflow: hidden;
-  cursor: pointer;
-  transition: transform 0.3s ease;
-}
-
-.metric-card:hover {
-  transform: translateY(-4px);
-}
-
-.metric-content {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  padding: 8px;
-}
-
-.metric-icon {
-  width: 64px;
-  height: 64px;
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 32px;
-  color: white;
-}
-
-.total-users .metric-icon {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-.total-commission .metric-icon {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-}
-
-.active-referrers .metric-icon {
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-}
-
-.avg-commission .metric-icon {
-  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-}
-
-.metric-info {
-  flex: 1;
-}
-
-.metric-value {
-  font-size: 32px;
-  font-weight: 700;
-  color: #303133;
-  margin-bottom: 4px;
-}
-
-.metric-label {
-  font-size: 16px;
-  color: #606266;
-  margin-bottom: 8px;
-}
-
-.metric-change {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.metric-change.positive {
-  color: #67c23a;
-}
-
-/* 功能模块 */
-.modules-section {
-  margin-bottom: 32px;
-}
-
-.module-card {
-  border: none;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  height: 100%;
-}
-
-.module-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-}
-
-.module-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  padding: 20px;
-}
-
-.module-icon {
-  width: 80px;
-  height: 80px;
-  border-radius: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 40px;
-  color: white;
   margin-bottom: 20px;
 }
 
-.module-icon.tree {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-.module-icon.records {
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-}
-
-.module-icon.rules {
-  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-}
-
-.module-info h3 {
-  margin: 0 0 12px 0;
+.page-title {
+  margin: 0;
   color: #303133;
-  font-size: 20px;
+  font-size: 24px;
   font-weight: 600;
 }
 
-.module-info p {
-  margin: 0 0 16px 0;
-  color: #606266;
-  font-size: 14px;
-}
-
-.module-info ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.module-info li {
-  color: #909399;
-  font-size: 12px;
-  margin-bottom: 4px;
-  position: relative;
-  padding-left: 16px;
-}
-
-.module-info li::before {
-  content: '•';
-  color: #409eff;
-  position: absolute;
-  left: 0;
-}
-
-/* 数据区域 */
-.data-section {
-  margin-bottom: 32px;
-}
-
-.ranking-card,
-.activity-card {
+/* 搜索卡片 */
+.search-card {
+  margin-bottom: 20px;
   border: none;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.card-header {
+/* 表格卡片 */
+.table-card {
+  border: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.table-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-.card-title {
+.table-title {
   font-weight: 600;
   color: #303133;
   font-size: 18px;
 }
 
-/* 排行榜 */
-.ranking-list {
-  padding: 8px;
-}
-
-.ranking-item {
+.table-actions {
   display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 16px;
-  border-radius: 8px;
-  margin-bottom: 8px;
-  transition: background 0.3s ease;
+  gap: 12px;
 }
 
-.ranking-item:hover {
-  background: #f8f9fa;
-}
-
-.rank-number {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  color: white;
-}
-
-.rank-number.rank-1 {
-  background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
-}
-
-.rank-number.rank-2 {
-  background: linear-gradient(135deg, #c0c0c0 0%, #d4d4d4 100%);
-}
-
-.rank-number.rank-3 {
-  background: linear-gradient(135deg, #cd7f32 0%, #daa520 100%);
-}
-
-.rank-number:not(.rank-1):not(.rank-2):not(.rank-3) {
-  background: #909399;
-}
-
+/* 推荐人信息 */
 .referrer-info {
-  flex: 1;
+  line-height: 1.4;
 }
 
 .referrer-name {
@@ -599,108 +355,61 @@ onMounted(() => {
   margin-bottom: 4px;
 }
 
-.referrer-stats {
-  display: flex;
-  gap: 16px;
-}
-
-.stat-item {
-  font-size: 12px;
-  color: #606266;
-}
-
-/* 活动列表 */
-.activity-list {
-  padding: 8px;
-}
-
-.activity-item {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 16px;
-  border-radius: 8px;
-  margin-bottom: 8px;
-  transition: background 0.3s ease;
-}
-
-.activity-item:hover {
-  background: #f8f9fa;
-}
-
-.activity-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-}
-
-.activity-icon.referral {
-  background: #67c23a;
-}
-
-.activity-icon.settlement {
-  background: #409eff;
-}
-
-.activity-icon.bonus {
-  background: #e6a23c;
-}
-
-.activity-content {
-  flex: 1;
-}
-
-.activity-text {
-  color: #303133;
-  margin-bottom: 4px;
-}
-
-.activity-time {
+.referrer-email {
   font-size: 12px;
   color: #909399;
 }
 
-.activity-amount {
+/* 数量和金额显示 */
+.count-text {
+  font-weight: 500;
+  color: #409eff;
+}
+
+.amount-text {
   font-weight: 600;
+  color: #303133;
+}
+
+.amount-text.settled {
   color: #67c23a;
+}
+
+.amount-text.pending {
+  color: #e6a23c;
+}
+
+/* 链接按钮 */
+.link-button {
+  color: #409eff;
+  font-weight: 500;
+}
+
+.link-button:hover {
+  color: #66b1ff;
+}
+
+/* 分页 */
+.pagination-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
 }
 
 /* 响应式设计 */
 @media (max-width: 768px) {
-  .commission-overview-page {
+  .referrers-page {
     padding: 12px;
   }
 
-  .page-header {
+  .table-header {
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
     align-items: stretch;
   }
 
-  .header-right {
+  .table-actions {
     justify-content: center;
-  }
-
-  .metrics-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .data-section .el-row {
-    flex-direction: column;
-  }
-
-  .module-content {
-    padding: 16px;
-  }
-
-  .module-icon {
-    width: 60px;
-    height: 60px;
-    font-size: 30px;
   }
 }
 </style>
