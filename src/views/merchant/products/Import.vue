@@ -508,7 +508,7 @@ const batchRemoveFromList = async () => {
 
 // 查看详情
 const viewDetail = (product) => {
-  router.push(`/merchant/products/${product.id}`)
+  router.push(`/merchant/products/${product.id}?from=import`)
 }
 
 // 跳转到平台商品

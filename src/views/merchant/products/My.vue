@@ -587,7 +587,7 @@ const toggleStatus = async (product) => {
 
 // 查看详情
 const viewDetail = (product) => {
-  router.push(`/merchant/products/${product.id}`)
+  router.push(`/merchant/products/${product.id}?from=my-products`)
 }
 
 // 编辑成功处理 - 当对话框被启用时使用

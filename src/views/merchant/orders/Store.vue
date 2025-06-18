@@ -1,3 +1,4 @@
+
 <template>
   <div class="store-orders-page">
     <!-- 页面标题 -->
@@ -140,24 +141,44 @@
             </template>
           </el-table-column>
 
-          <el-table-column label="订单商品" width="250">
+          <el-table-column label="订单商品" width="450">
             <template #default="{ row }">
               <div class="order-products">
                 <div
-                  v-for="(product, index) in row.products.slice(0, 2)"
+                  v-for="(product, index) in row.products.slice(0, 3)"
                   :key="index"
-                  class="product-item"
+                  class="product-item-detailed"
                 >
-                  <el-image
-                    :src="product.image"
-                    fit="cover"
-                    class="product-image"
-                  />
-                  <span class="product-name">{{ product.name }} ×{{ product.quantity }}</span>
+                  <div class="product-basic-info">
+                    <el-image
+                      :src="product.image"
+                      fit="cover"
+                      class="product-image"
+                    />
+                    <div class="product-main-details">
+                      <div class="product-name">{{ product.name }}</div>
+                      <div class="product-specs">
+                        <span
+                          v-for="(value, key) in product.specifications"
+                          :key="key"
+                          class="spec-item"
+                        >
+                          {{ key }}: {{ value }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="product-pricing-info">
+                    <div class="pricing-row">
+                      <span class="unit-price">${{ product.unitPrice.toFixed(2) }}</span>
+                      <span class="quantity">×{{ product.quantity }}</span>
+                      <span class="line-total">${{ product.lineTotal.toFixed(2) }}</span>
+                    </div>
+                  </div>
                 </div>
-                <span v-if="row.products.length > 2" class="more-products">
-                  等{{ row.products.length }}件商品
-                </span>
+                <div v-if="row.products.length > 3" class="products-summary">
+                  <span class="total-items">+{{ row.products.length - 3 }}件更多商品</span>
+                </div>
               </div>
             </template>
           </el-table-column>
@@ -380,25 +401,40 @@ const loadOrderList = async () => {
           {
             name: '智能手表 Pro Max',
             image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=50&h=50&fit=crop',
-            quantity: 1
+            quantity: 1,
+            unitPrice: 299.99,
+            specifications: {
+              color: '深空黑',
+              size: '44mm',
+              storage: '32GB',
+              band: '运动型表带'
+            },
+            lineTotal: 299.99
           },
           {
             name: '无线充电器 15W',
             image: 'https://images.unsplash.com/photo-1586953208448-b95a79798f07?w=50&h=50&fit=crop',
-            quantity: 2
+            quantity: 2,
+            unitPrice: 15.00,
+            specifications: {
+              color: '白色',
+              power: '15W',
+              compatibility: 'iPhone/Android'
+            },
+            lineTotal: 30.00
           }
         ],
         customerName: 'John Doe',
-        productAmount: 299.99,
+        productAmount: 329.99,
         shippingAmount: 15.00,
-        totalAmount: 314.99,
+        totalAmount: 344.99,
         status: 'pending',
         settlementStatus: 'settled',
         storeName: 'TechStore Pro',
         settlementCurrency: 'EUR',
         settlementAmount: 280.50,
         exchangeRate: 1.12,
-        usdAmount: 314.16,
+        usdAmount: 344.99,
         createdAt: '2023-12-15 10:30:00',
         settlementTime: '2023-12-15 11:00:00'
       },
@@ -409,7 +445,14 @@ const loadOrderList = async () => {
           {
             name: '蓝牙耳机 AirPods Pro',
             image: 'https://images.unsplash.com/photo-1572569511254-d8f925fe2cbb?w=50&h=50&fit=crop',
-            quantity: 1
+            quantity: 1,
+            unitPrice: 89.99,
+            specifications: {
+              color: '白色',
+              model: 'AirPods Pro',
+              features: '主动降噪'
+            },
+            lineTotal: 89.99
           }
         ],
         customerName: 'Jane Smith',
@@ -433,12 +476,26 @@ const loadOrderList = async () => {
           {
             name: 'iPhone 15 Pro 手机壳',
             image: 'https://images.unsplash.com/photo-1601593346740-925612772716?w=50&h=50&fit=crop',
-            quantity: 3
+            quantity: 3,
+            unitPrice: 12.99,
+            specifications: {
+              color: '透明',
+              material: '硅胶',
+              compatibility: 'iPhone 15 Pro'
+            },
+            lineTotal: 38.97
           },
           {
             name: '钢化膜套装',
             image: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=50&h=50&fit=crop',
-            quantity: 2
+            quantity: 2,
+            unitPrice: 3.50,
+            specifications: {
+              type: '钢化玻璃',
+              thickness: '0.33mm',
+              compatibility: 'iPhone 15 Pro'
+            },
+            lineTotal: 7.00
           }
         ],
         customerName: 'Michael Johnson',
@@ -462,12 +519,26 @@ const loadOrderList = async () => {
           {
             name: '游戏机械键盘',
             image: 'https://images.unsplash.com/photo-1541140532154-b024d705b90a?w=50&h=50&fit=crop',
-            quantity: 1
+            quantity: 1,
+            unitPrice: 129.99,
+            specifications: {
+              switch: '青轴',
+              backlight: 'RGB',
+              layout: '87键'
+            },
+            lineTotal: 129.99
           },
           {
             name: '游戏鼠标 RGB',
             image: 'https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=50&h=50&fit=crop',
-            quantity: 1
+            quantity: 1,
+            unitPrice: 59.99,
+            specifications: {
+              dpi: '16000',
+              buttons: '7键',
+              lighting: 'RGB'
+            },
+            lineTotal: 59.99
           }
         ],
         customerName: 'Sarah Wilson',
@@ -491,7 +562,14 @@ const loadOrderList = async () => {
           {
             name: '智能家居摄像头',
             image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=50&h=50&fit=crop',
-            quantity: 2
+            quantity: 2,
+            unitPrice: 79.99,
+            specifications: {
+              resolution: '1080P',
+              connectivity: 'WiFi',
+              features: '夜视+双向语音'
+            },
+            lineTotal: 159.98
           }
         ],
         customerName: 'David Brown',
@@ -515,12 +593,26 @@ const loadOrderList = async () => {
           {
             name: '运动蓝牙耳机',
             image: 'https://images.unsplash.com/photo-1484704849700-f032a568e944?w=50&h=50&fit=crop',
-            quantity: 1
+            quantity: 1,
+            unitPrice: 59.99,
+            specifications: {
+              color: '黑色',
+              waterproof: 'IPX7',
+              battery: '8小时续航'
+            },
+            lineTotal: 59.99
           },
           {
             name: '运动臂带',
             image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=50&h=50&fit=crop',
-            quantity: 1
+            quantity: 1,
+            unitPrice: 19.99,
+            specifications: {
+              color: '黑色',
+              size: '可调节',
+              material: '透气网布'
+            },
+            lineTotal: 19.99
           }
         ],
         customerName: 'Emily Davis',
@@ -544,7 +636,14 @@ const loadOrderList = async () => {
           {
             name: '笔记本电脑支架',
             image: 'https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=50&h=50&fit=crop',
-            quantity: 1
+            quantity: 1,
+            unitPrice: 35.99,
+            specifications: {
+              material: '铝合金',
+              adjustable: '6档调节',
+              compatibility: '11-17英寸'
+            },
+            lineTotal: 35.99
           }
         ],
         customerName: 'Robert Taylor',
@@ -568,12 +667,26 @@ const loadOrderList = async () => {
           {
             name: 'USB-C 数据线',
             image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=50&h=50&fit=crop',
-            quantity: 5
+            quantity: 5,
+            unitPrice: 7.99,
+            specifications: {
+              length: '1米',
+              type: 'USB-C to USB-C',
+              speed: '快充支持'
+            },
+            lineTotal: 39.95
           },
           {
             name: '充电头 20W',
             image: 'https://images.unsplash.com/photo-1586953208448-b95a79798f07?w=50&h=50&fit=crop',
-            quantity: 2
+            quantity: 2,
+            unitPrice: 14.00,
+            specifications: {
+              power: '20W',
+              ports: 'USB-C',
+              compatibility: 'iPhone/Android'
+            },
+            lineTotal: 28.00
           }
         ],
         customerName: 'Lisa Anderson',
@@ -754,28 +867,95 @@ const formatDateTime = (dateTime) => {
 .order-products {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
 }
 
-.product-item {
+.product-item-detailed {
+  border: 1px solid #EBEEF5;
+  border-radius: 6px;
+  padding: 12px;
+  background-color: #FAFAFA;
+}
+
+.product-basic-info {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 8px;
 }
 
 .product-image {
-  width: 40px;
-  height: 40px;
-  border-radius: 4px;
+  width: 50px;
+  height: 50px;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.product-main-details {
+  flex: 1;
+  min-width: 0;
 }
 
 .product-name {
-  font-size: 12px;
-  color: #606266;
-  flex: 1;
+  font-size: 14px;
+  font-weight: 600;
+  color: #303133;
+  margin-bottom: 6px;
+  line-height: 1.4;
 }
 
-.more-products {
+.product-specs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.spec-item {
+  font-size: 12px;
+  color: #606266;
+  background-color: #F0F2F5;
+  padding: 2px 6px;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+.product-pricing-info {
+  border-top: 1px solid #E4E7ED;
+  padding-top: 8px;
+}
+
+.pricing-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+}
+
+.unit-price {
+  color: #606266;
+  font-weight: 500;
+}
+
+.quantity {
+  color: #909399;
+  margin: 0 8px;
+}
+
+.line-total {
+  color: #67C23A;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.products-summary {
+  text-align: center;
+  padding: 8px;
+  background-color: #F5F7FA;
+  border-radius: 4px;
+  margin-top: 8px;
+}
+
+.total-items {
   font-size: 12px;
   color: #909399;
 }

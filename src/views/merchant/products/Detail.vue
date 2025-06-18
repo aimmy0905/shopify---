@@ -51,9 +51,53 @@
 
           <!-- 价格信息 -->
           <div class="price-info">
-            <div class="price-row">
-              <span class="label">Product Price</span>
-              <span class="product-price">${{ currentProductPrice.toFixed(2) }}</span>
+            <!-- 平台商品和导入商品：显示产品价格 -->
+            <template v-if="isFromPlatform || isFromImport">
+              <div class="price-row">
+                <span class="label">Product Price</span>
+                <span class="product-price">${{ currentProductPrice.toFixed(2) }}</span>
+              </div>
+            </template>
+
+            <!-- 我的商品：显示平台价格和销售价格对比 -->
+            <template v-else>
+              <div class="price-row">
+                <span class="label">平台价格</span>
+                <span class="platform-price">${{ product.price.toFixed(2) }}</span>
+              </div>
+              <div class="price-row">
+                <span class="label">我的销售价格</span>
+                <span class="sale-price">${{ product.salePrice.toFixed(2) }}</span>
+              </div>
+              <div class="profit-info">
+                <span class="profit-label">预计利润：</span>
+                <span class="profit-value" :class="{ 'negative': (product.salePrice - product.price) < 0 }">
+                  ${{ (product.salePrice - product.price).toFixed(2) }}
+                </span>
+              </div>
+            </template>
+          </div>
+
+          <!-- 销售数据（仅我的商品显示） -->
+          <div v-if="isMyProduct" class="sales-data">
+            <h3>销售数据</h3>
+            <div class="sales-stats">
+              <div class="stat-item">
+                <span class="stat-label">总销售数量</span>
+                <span class="stat-value">{{ product.salesData.totalSales }}</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">总销售额</span>
+                <span class="stat-value">${{ product.salesData.totalRevenue.toFixed(2) }}</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">本月销售</span>
+                <span class="stat-value">{{ product.salesData.monthSales }}</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">本月收入</span>
+                <span class="stat-value">${{ product.salesData.monthRevenue.toFixed(2) }}</span>
+              </div>
             </div>
           </div>
 
@@ -138,6 +182,26 @@
             <div class="action-tip">
               <el-icon><InfoFilled /></el-icon>
               <span>添加到导入列表后可统一管理和铺货</span>
+            </div>
+          </template>
+
+          <!-- 导入商品列表操作按钮 -->
+          <template v-else-if="isFromImport">
+            <div class="action-header">
+              <h3>铺货操作</h3>
+            </div>
+            <el-button
+              type="success"
+              :icon="Shop"
+              @click="deployToStore"
+              size="large"
+              class="deploy-button"
+            >
+              <span class="button-text">铺货到Shopify店铺</span>
+            </el-button>
+            <div class="action-tip">
+              <el-icon><InfoFilled /></el-icon>
+              <span>将商品同步到您的Shopify店铺开始销售</span>
             </div>
           </template>
 
@@ -279,6 +343,13 @@
       </div>
     </div>
 
+    <!-- 铺货对话框 -->
+    <DeployToStoreDialog
+      v-model="showDeployDialog"
+      :product="product"
+      :products="[]"
+      @success="handleDeploySuccess"
+    />
 
   </div>
 </template>
@@ -293,8 +364,10 @@ import {
   Setting,
   Picture,
   Plus,
-  InfoFilled
+  InfoFilled,
+  Shop
 } from '@element-plus/icons-vue'
+import DeployToStoreDialog from './components/DeployToStoreDialog.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -306,13 +379,32 @@ const selectedColor = ref('')
 const selectedSize = ref('')
 const selectedCountry = ref('US')
 const selectedShipping = ref(1)
+const showDeployDialog = ref(false)
+const selectedProduct = ref(null)
+const selectedForDeploy = ref([])
+
+// 判断商品来源类型
+const productSourceType = computed(() => {
+  const from = route.query.from
+  if (from === 'platform') return 'platform'
+  if (from === 'import') return 'import'
+  if (from === 'my-products' || !from) return 'my-products'
+  return 'my-products' // 默认为我的商品
+})
 
 // 判断是否来自平台商品页面
 const isFromPlatform = computed(() => {
-  // 检查多种可能的标识方式
-  return route.query.from === 'platform' || 
-         route.query.source === 'all' ||
-         route.path.includes('/merchant/products/') && route.query.from !== 'my'
+  return productSourceType.value === 'platform'
+})
+
+// 判断是否来自导入商品列表
+const isFromImport = computed(() => {
+  return productSourceType.value === 'import'
+})
+
+// 判断是否为我的商品
+const isMyProduct = computed(() => {
+  return productSourceType.value === 'my-products'
 })
 
 // 商品数据
@@ -326,13 +418,20 @@ const product = ref({
     'https://picsum.photos/400/400?random=3',
     'https://picsum.photos/400/400?random=4'
   ],
-  price: 29.99,
-  suggestedPrice: 59.99,
-  salePrice: 49.99,
+  price: 29.99,           // 平台价格
+  suggestedPrice: 59.99,  // 建议售价
+  salePrice: 49.99,       // 我的销售价格
   stock: 150,
   weight: 0.5,
   categoryName: '男装',
   status: 'active',
+  // 销售数据（仅我的商品显示）
+  salesData: {
+    totalSales: 245,      // 总销售数量
+    totalRevenue: 12250.55, // 总销售额
+    monthSales: 45,       // 本月销售数量
+    monthRevenue: 2250.55  // 本月销售额
+  },
   description: `
     <p>这款休闲套装采用优质冰丝面料制作，透气性极佳，非常适合夏季穿着。</p>
     <p><strong>产品特点：</strong></p>
@@ -421,7 +520,16 @@ const currentStock = computed(() => {
 
 // 当前商品价格（不含运费）
 const currentProductPrice = computed(() => {
-  return selectedSku.value ? selectedSku.value.price : product.value.salePrice
+  if (selectedSku.value) {
+    return selectedSku.value.price
+  }
+
+  // 根据商品来源类型返回不同的价格
+  if (isFromPlatform.value || isFromImport.value) {
+    return product.value.price  // 平台价格
+  } else {
+    return product.value.salePrice  // 我的销售价格
+  }
 })
 
 // 当前运费价格
@@ -602,6 +710,43 @@ const addToImportList = async () => {
   }
 }
 
+// 铺货到店铺
+const deployToStore = () => {
+  selectedProduct.value = product.value
+  selectedForDeploy.value = []
+  showDeployDialog.value = true
+}
+
+// 铺货成功回调
+const handleDeploySuccess = () => {
+  showDeployDialog.value = false
+  selectedProduct.value = null
+  selectedForDeploy.value = []
+
+  // 显示成功消息
+  ElMessage.success('商品铺货成功！')
+
+  // 可以选择跳转到我的商品页面
+  setTimeout(async () => {
+    try {
+      await ElMessageBox.confirm(
+        '商品已成功铺货到店铺！是否前往我的商品页面查看？',
+        '铺货成功',
+        {
+          confirmButtonText: '立即查看',
+          cancelButtonText: '稍后查看',
+          type: 'success'
+        }
+      )
+
+      router.push('/merchant/products/my')
+
+    } catch (error) {
+      // 用户选择稍后查看，不做任何操作
+    }
+  }, 500)
+}
+
 // 切换商品状态
 const toggleStatus = async () => {
   const action = product.value.status === 'active' ? '下架' : '上架'
@@ -634,6 +779,8 @@ const toggleStatus = async () => {
 const goBack = () => {
   if (isFromPlatform.value) {
     router.push('/merchant/products/all')
+  } else if (isFromImport.value) {
+    router.push('/merchant/products/import')
   } else {
     router.push('/merchant/products/my')
   }
@@ -766,10 +913,80 @@ onMounted(() => {
               color: #374151;
             }
 
-            .product-price {
+            .product-price, .sale-price {
               color: #dc2626;
               font-weight: 600;
               font-size: 18px;
+            }
+
+            .platform-price {
+              color: #6b7280;
+              font-weight: 500;
+              font-size: 16px;
+            }
+          }
+
+          .profit-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 8px;
+            padding: 8px 12px;
+            background: #f8fafc;
+            border-radius: 6px;
+
+            .profit-label {
+              font-weight: 500;
+              color: #374151;
+            }
+
+            .profit-value {
+              font-weight: 600;
+              color: #059669;
+
+              &.negative {
+                color: #dc2626;
+              }
+            }
+          }
+        }
+
+        .sales-data {
+          margin: 24px 0;
+          padding: 20px;
+          background: #f8fafc;
+          border-radius: 8px;
+          border-left: 4px solid #3b82f6;
+
+          h3 {
+            margin: 0 0 16px 0;
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f2937;
+          }
+
+          .sales-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+
+            .stat-item {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              padding: 8px 0;
+
+              .stat-label {
+                font-weight: 500;
+                color: #6b7280;
+                font-size: 14px;
+              }
+
+              .stat-value {
+                font-weight: 600;
+                color: #1f2937;
+                font-size: 16px;
+              }
             }
           }
         }
@@ -859,6 +1076,36 @@ onMounted(() => {
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
             background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+          }
+
+          &:active {
+            transform: translateY(0);
+          }
+
+          .button-text {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            color: white;
+          }
+        }
+
+        .deploy-button {
+          width: 100%;
+          height: 56px;
+          background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+          border: none;
+          border-radius: 12px;
+          font-size: 16px;
+          font-weight: 600;
+          box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+          transition: all 0.3s ease;
+
+          &:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6);
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
           }
 
           &:active {
