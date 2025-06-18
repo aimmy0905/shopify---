@@ -20,9 +20,6 @@
           <el-icon><Money /></el-icon>
           余额提现
         </el-button>
-        <el-button size="large" @click="viewBalanceDetails">
-          查看明细
-        </el-button>
       </div>
     </div>
 
@@ -66,7 +63,7 @@
           <balance-records-table :records="expenseRecords" @view-detail="viewRecordDetail" />
         </el-tab-pane>
         <el-tab-pane label="佣金收入" name="commission">
-          <balance-records-table :records="commissionRecords" @view-detail="viewRecordDetail" />
+          <balance-records-table :records="commissionRecords" :hide-original-currency="true" :hide-view-detail="true" @view-detail="viewRecordDetail" />
         </el-tab-pane>
       </el-tabs>
     </div>
@@ -122,7 +119,11 @@ const balanceRecords = ref([
     id: 1,
     type: 'recharge',
     amount: 2000.00,
-    currency: 'USD',
+    originalCurrency: 'USD',
+    originalAmount: 2000.00,
+    exchangeRate: 1.0000,
+    usdAmount: 2000.00,
+    currency: 'USD', // 保持兼容性
     time: '2024-05-21 14:30:00',
     source: 'PayPal充值',
     status: 'confirmed',
@@ -134,7 +135,11 @@ const balanceRecords = ref([
     id: 2,
     type: 'expense',
     amount: -450.00,
-    currency: 'USD',
+    originalCurrency: 'USD',
+    originalAmount: -450.00,
+    exchangeRate: 1.0000,
+    usdAmount: -450.00,
+    currency: 'USD', // 保持兼容性
     time: '2024-05-20 10:15:00',
     source: '采购订单 #PO202405200001',
     status: 'confirmed',
@@ -146,7 +151,11 @@ const balanceRecords = ref([
     id: 3,
     type: 'commission',
     amount: 67.30,
-    currency: 'USD',
+    originalCurrency: 'USD',
+    originalAmount: 67.30,
+    exchangeRate: 1.0000,
+    usdAmount: 67.30,
+    currency: 'USD', // 保持兼容性
     time: '2024-05-19 16:45:00',
     source: '下级用户订单佣金',
     status: 'confirmed',
@@ -156,15 +165,35 @@ const balanceRecords = ref([
   },
   {
     id: 4,
-    type: 'expense',
-    amount: -125.50,
-    currency: 'USD',
+    type: 'refund', // 修改为退款类型
+    amount: 125.50, // 退款显示为正数，用+表示
+    originalCurrency: 'EUR',
+    originalAmount: 115.20,
+    exchangeRate: 1.0894,
+    usdAmount: 125.50,
+    currency: 'USD', // 保持兼容性
     time: '2024-05-18 09:20:00',
     source: '退款处理',
     status: 'confirmed',
     description: '客户退款',
     orderId: 'OR202405180001',
     receiptUrl: null
+  },
+  {
+    id: 5,
+    type: 'recharge',
+    amount: 1500.00,
+    originalCurrency: 'EUR',
+    originalAmount: 1377.50,
+    exchangeRate: 1.0889,
+    usdAmount: 1500.00,
+    currency: 'USD', // 保持兼容性
+    time: '2024-05-17 15:20:00',
+    source: 'Wise转账',
+    status: 'confirmed',
+    description: '欧元充值',
+    orderId: null,
+    receiptUrl: '/receipts/recharge_002.jpg'
   }
 ])
 
@@ -205,8 +234,8 @@ const rechargeRecords = computed(() =>
   balanceRecords.value.filter(record => record.type === 'recharge')
 )
 
-const expenseRecords = computed(() => 
-  balanceRecords.value.filter(record => record.type === 'expense')
+const expenseRecords = computed(() =>
+  balanceRecords.value.filter(record => record.type === 'expense' || record.type === 'refund')
 )
 
 const commissionRecords = computed(() => 
@@ -252,10 +281,7 @@ const handleWithdrawSuccess = () => {
   console.log('提现申请成功，刷新数据')
 }
 
-const viewBalanceDetails = () => {
-  // 实现查看明细的逻辑
-  console.log('查看明细')
-}
+
 
 onMounted(() => {
   console.log('余额页面已加载')

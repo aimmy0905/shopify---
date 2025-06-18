@@ -368,19 +368,24 @@
     <el-dialog
       v-model="quoteViewDialogVisible"
       title="报价单查看"
-      width="800px"
+      width="80%"
+      :close-on-click-modal="false"
     >
       <div class="quote-view-dialog">
         <div class="pdf-viewer">
-          <!-- 这里应该是PDF查看器组件 -->
-          <div class="pdf-placeholder">
+          <iframe
+            v-if="application.quote_document"
+            :src="`/${application.quote_document}`"
+            frameborder="0"
+            class="pdf-iframe"
+          ></iframe>
+          <div v-else class="pdf-placeholder">
             <el-icon size="64"><Document /></el-icon>
-            <p>PDF文档预览</p>
-            <p>文件名：{{ application.quote_document }}</p>
+            <p>暂无报价单文档</p>
           </div>
         </div>
       </div>
-      
+
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="downloadQuoteDocument">
@@ -601,8 +606,19 @@ const viewQuoteDocument = () => {
 }
 
 const downloadQuoteDocument = () => {
+  if (!application.value.quote_document) {
+    ElMessage.warning('暂无报价单可下载')
+    return
+  }
+
+  // 模拟下载
+  const link = document.createElement('a')
+  link.href = `/${application.value.quote_document}`
+  link.download = `报价单_${application.value.id}.html`
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
   ElMessage.success('下载报价单：' + application.value.quote_document)
-  // 这里应该实现实际的下载功能
 }
 
 const deleteApplication = () => {
@@ -727,13 +743,22 @@ onMounted(() => {
   height: 100%;
   border: 1px solid #dcdfe6;
   border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   background: #f5f7fa;
 }
 
+.pdf-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  border-radius: 4px;
+}
+
 .pdf-placeholder {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   text-align: center;
   color: #909399;
 }

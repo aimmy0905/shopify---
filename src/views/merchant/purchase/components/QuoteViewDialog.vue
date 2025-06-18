@@ -81,8 +81,8 @@ const dialogVisible = computed({
 
 // 获取PDF URL
 const getPdfUrl = (document) => {
-  // 这里应该返回实际的PDF文件URL
-  return `/api/quotes/${document}`
+  // 返回静态HTML文件URL用于演示
+  return `/${document}`
 }
 
 // 格式化日期

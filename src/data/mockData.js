@@ -1368,17 +1368,17 @@ export const purchaseApplications = [
     accept_similar: false,
     description: '多功能智能手表，支持健康监测、运动追踪、消息提醒等功能。',
     remark: '需要支持中文界面，电池续航至少3天。',
-    status: 'quotation_pending',
+    status: 'quotation_success',
     created_at: '2023-12-14 14:20:00',
     processed_at: '2023-12-15 09:15:00',
     processor: '管理员A',
     quoter_id: 1,
     quoter: '张三',
-    quoted_at: null,
-    final_quote: null,
+    quoted_at: '2023-12-15 16:30:00',
+    final_quote: 89.50,
     reject_reason: null,
-    quote_document: null,
-    quote_remark: null
+    quote_document: 'mock-quotation-PA202312002.html',
+    quote_remark: '找到优质电子产品供应商，支持中文界面，续航符合要求。'
   },
   {
     id: 'PA202312003',
@@ -1394,17 +1394,17 @@ export const purchaseApplications = [
     accept_similar: true,
     description: '15W快速无线充电器，支持多种设备，带LED指示灯。',
     remark: '需要通过CE认证，包装要求精美。',
-    status: 'quotation_processing',
+    status: 'quotation_success',
     created_at: '2023-12-13 16:45:00',
     processed_at: '2023-12-14 10:30:00',
     processor: '管理员B',
     quoter_id: 2,
     quoter: '李四',
     quoted_at: '2023-12-14 15:20:00',
-    final_quote: null,
+    final_quote: 25.00,
     reject_reason: null,
-    quote_document: 'quote_PA202312003.pdf',
-    quote_remark: '已联系3家供应商，正在对比价格和质量。'
+    quote_document: 'mock-quotation-PA202312002.html',
+    quote_remark: '已联系3家供应商，找到符合CE认证要求的优质供应商。'
   },
   {
     id: 'PA202312004',
@@ -1429,7 +1429,7 @@ export const purchaseApplications = [
     quoted_at: '2023-12-13 14:30:00',
     final_quote: 12.50,
     reject_reason: null,
-    quote_document: 'quote_PA202312004.pdf',
+    quote_document: 'mock-quotation-PA202312004.html',
     quote_remark: '找到优质供应商，价格合理，质量可靠。'
   },
   {

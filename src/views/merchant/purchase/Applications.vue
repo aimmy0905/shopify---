@@ -193,6 +193,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Search } from '@element-plus/icons-vue'
 import QuoteViewDialog from './components/QuoteViewDialog.vue'
 import { useRouter } from 'vue-router'
+import { purchaseApplications } from '@/data/mockData.js'
 
 const router = useRouter()
 
@@ -212,52 +213,22 @@ const selectedQuote = ref(null)
 const fetchApplications = async () => {
   loading.value = true
   try {
-    // 模拟API调用
-    const mockData = [
-      {
-        id: 1,
-        productName: '蓝牙耳机 Pro Max',
-        productImage: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjYwIiBmaWxsPSIjRjVGNUY1Ii8+CjxwYXRoIGQ9Ik0yMCAyNUgyNVYzNUgyMFYyNVoiIGZpbGw9IiM0MDlFRkYiLz4KPHBhdGggZD0iTTM1IDI1SDQwVjM1SDM1VjI1WiIgZmlsbD0iIzQwOUVGRiIvPgo8cGF0aCBkPSJNMjUgMjBIMzVWNDBIMjVWMjBaIiBmaWxsPSIjNDA5RUZGIi8+Cjx0ZXh0IHg9IjMwIiB5PSI1MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzk5OTk5OSIgZm9udC1zaXplPSI4Ij7oi7PniZs8L3RleHQ+Cjwvc3ZnPgo=',
-        productUrl: 'https://example.com/product/1',
-        targetCountry: '美国',
-        targetPrice: 25.99,
-        dailyOrderCount: 50,
-        status: 'pending',
-        remarks: '需要快速处理',
-        createdAt: '2024-01-15',
-        finalQuote: null,
-        quoteDocument: null
-      },
-      {
-        id: 2,
-        productName: '智能手表运动版',
-        productImage: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjYwIiBmaWxsPSIjRjVGNUY1Ii8+CjxyZWN0IHg9IjIwIiB5PSIyMCIgd2lkdGg9IjIwIiBoZWlnaHQ9IjIwIiByeD0iNCIgZmlsbD0iIzY3QzIzQSIvPgo8Y2lyY2xlIGN4PSIzMCIgY3k9IjMwIiByPSI4IiBmaWxsPSIjRkZGIi8+Cjx0ZXh0IHg9IjMwIiB5PSI1MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzk5OTk5OSIgZm9udC1zaXplPSI4Ij7miYvooag8L3RleHQ+Cjwvc3ZnPgo=',
-        productUrl: 'https://example.com/product/2',
-        targetCountry: '英国',
-        targetPrice: 45.00,
-        dailyOrderCount: 30,
-        status: 'quoted',
-        remarks: '优先处理',
-        createdAt: '2024-01-10',
-        finalQuote: 42.50,
-        quoteDocument: 'quote-doc-2.pdf'
-      },
-      {
-        id: 3,
-        productName: '无线充电器',
-        productImage: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjYwIiBmaWxsPSIjRjVGNUY1Ii8+CjxjaXJjbGUgY3g9IjMwIiBjeT0iMzAiIHI9IjE1IiBmaWxsPSIjRkY5NTAwIi8+CjxwYXRoIGQ9Ik0yNSAyNUwzNSAzNUwyNSAzNVYyNVoiIGZpbGw9IiNGRkYiLz4KPHRleHQgeD0iMzAiIHk9IjUwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjOTk5OTk5IiBmb250LXNpemU9IjgiPuWFheeUteWZqDwvdGV4dD4KPC9zdmc+Cg==',
-        productUrl: 'https://example.com/product/3',
-        targetCountry: '德国',
-        targetPrice: 15.99,
-        dailyOrderCount: 80,
-        status: 'quoting',
-        remarks: '',
-        createdAt: '2024-01-08',
-        finalQuote: null,
-        quoteDocument: null
-      }
-    ]
-    
+    // 使用实际的mock数据
+    const mockData = purchaseApplications.map(app => ({
+      id: app.id,
+      productName: app.product_name,
+      productImage: app.product_image,
+      productUrl: app.product_url,
+      targetCountry: app.target_country,
+      targetPrice: app.target_price,
+      dailyOrderCount: app.daily_orders,
+      status: app.status,
+      remarks: app.remark,
+      createdAt: app.created_at,
+      finalQuote: app.final_quote,
+      quoteDocument: app.quote_document
+    }))
+
     applicationList.value = mockData
     total.value = mockData.length
   } catch (error) {
@@ -271,9 +242,11 @@ const fetchApplications = async () => {
 const getStatusType = (status) => {
   const statusMap = {
     pending: 'warning',
-    quoting: 'primary',
-    quoted: 'success',
-    failed: 'danger'
+    quotation_pending: 'info',
+    quotation_processing: 'primary',
+    quotation_success: 'success',
+    quotation_failed: 'danger',
+    rejected: 'danger'
   }
   return statusMap[status] || 'info'
 }
@@ -281,9 +254,11 @@ const getStatusType = (status) => {
 const getStatusText = (status) => {
   const statusMap = {
     pending: '待处理',
-    quoting: '报价中',
-    quoted: '报价成功',
-    failed: '报价失败'
+    quotation_pending: '待报价',
+    quotation_processing: '报价中',
+    quotation_success: '报价成功',
+    quotation_failed: '报价失败',
+    rejected: '已拒绝'
   }
   return statusMap[status] || '未知'
 }

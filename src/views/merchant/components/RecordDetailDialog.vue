@@ -19,9 +19,23 @@
         </div>
         
         <div class="detail-item">
-          <span class="label">交易金额：</span>
-          <span class="value" :class="record.type">
-            {{ record.type === 'expense' ? '-' : '+' }}${{ Math.abs(record.amount).toFixed(2) }}
+          <span class="label">原始金额：</span>
+          <span class="value" :class="getAmountClass(record)">
+            {{ getAmountPrefix(record) }}{{ record.originalCurrency }} {{ Math.abs(record.originalAmount || record.amount).toFixed(2) }}
+          </span>
+        </div>
+
+        <div v-if="record.originalCurrency && record.originalCurrency !== 'USD'" class="detail-item">
+          <span class="label">汇率：</span>
+          <span class="value">
+            1 {{ record.originalCurrency }} = {{ (record.exchangeRate || 1).toFixed(4) }} USD
+          </span>
+        </div>
+
+        <div class="detail-item">
+          <span class="label">美元金额：</span>
+          <span class="value" :class="getAmountClass(record)">
+            {{ getAmountPrefix(record) }}${{ Math.abs(record.usdAmount || record.amount).toFixed(2) }} USD
           </span>
         </div>
         
@@ -185,7 +199,8 @@ const getTypeLabel = (type) => {
   const labelMap = {
     'recharge': '充值',
     'expense': '消费',
-    'commission': '佣金'
+    'commission': '佣金',
+    'refund': '退款'
   }
   return labelMap[type] || type
 }
@@ -194,7 +209,8 @@ const getTypeTag = (type) => {
   const tagMap = {
     'recharge': 'primary',
     'expense': 'danger',
-    'commission': 'success'
+    'commission': 'success',
+    'refund': 'success'
   }
   return tagMap[type] || ''
 }
@@ -229,6 +245,24 @@ const getPaymentMethodLabel = (method) => {
 
 const formatDateTime = (dateTime) => {
   return new Date(dateTime).toLocaleString('zh-CN')
+}
+
+// 获取金额前缀符号
+const getAmountPrefix = (record) => {
+  // 退款类型显示为+，其他按原逻辑
+  if (record.type === 'refund') {
+    return '+'
+  }
+  return record.type === 'expense' ? '-' : '+'
+}
+
+// 获取金额样式类
+const getAmountClass = (record) => {
+  // 退款和佣金、充值都显示为正向（绿色）
+  if (record.type === 'refund' || record.type === 'commission' || record.type === 'recharge') {
+    return 'positive'
+  }
+  return 'negative'
 }
 
 const viewReceipt = () => {
@@ -285,12 +319,12 @@ const handleClose = () => {
     flex: 1;
     color: #2c3e50;
     
-    &.recharge, &.commission {
+    &.positive {
       color: #67c23a;
       font-weight: 600;
     }
-    
-    &.expense {
+
+    &.negative {
       color: #f56c6c;
       font-weight: 600;
     }

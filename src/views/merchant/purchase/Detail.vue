@@ -162,46 +162,49 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import QuoteViewDialog from './components/QuoteViewDialog.vue'
+import { purchaseApplications } from '@/data/mockData.js'
 
 const route = useRoute()
 const router = useRouter()
 const quoteDialogVisible = ref(false)
 
-// 模拟申请数据
+// 申请数据
 const applicationData = ref({
-  id: 'PA202401150001',
-  status: 'quoted',
-  createdAt: '2024-01-15 10:30:00',
-  processedAt: '2024-01-15 14:20:00',
-  productName: '蓝牙耳机 Pro Max',
-  productImage: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjVGNUY1Ii8+CjxwYXRoIGQ9Ik02MCA4MEg4NVYxMjBINjBWODBaIiBmaWxsPSIjNDA5RUZGIi8+CjxwYXRoIGQ9Ik0xMTUgODBIMTQwVjEyMEgxMTVWODBaIiBmaWxsPSIjNDA5RUZGIi8+CjxwYXRoIGQ9Ik04NSA2MEgxMTVWMTQwSDg1VjYwWiIgZmlsbD0iIzQwOUVGRiIvPgo8dGV4dCB4PSIxMDAiIHk9IjE3MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzk5OTk5OSIgZm9udC1zaXplPSIxNiI+6Iu754mZ6ICz5py6PC90ZXh0Pgo8L3N2Zz4K',
-  productUrl: 'https://example.com/product/1',
-  purchaseType: 'existing',
-  targetPrice: 25.99,
-  targetCountry: '美国',
-  dailyOrderCount: 50,
-  acceptSimilar: true,
-  description: '这是一款高品质的蓝牙耳机，支持主动降噪，续航时间长达20小时。采用最新的蓝牙5.2技术，支持多点连接，音质清晰，佩戴舒适。',
-  remarks: '需要快速处理，希望能在本周内完成报价。',
-  quoteStatus: 'success',
-  quoteTime: '2024-01-15 14:20:00',
-  finalQuote: 23.50,
+  id: '',
+  status: '',
+  createdAt: '',
+  processedAt: '',
+  productName: '',
+  productImage: '',
+  productUrl: '',
+  purchaseType: '',
+  targetPrice: 0,
+  targetCountry: '',
+  dailyOrderCount: 0,
+  acceptSimilar: false,
+  description: '',
+  remarks: '',
+  quoteStatus: '',
+  quoteTime: '',
+  finalQuote: null,
   rejectReason: '',
-  quoteDocument: 'quote-doc-1.pdf'
+  quoteDocument: null
 })
 
 // 计算属性
 const showQuoteInfo = computed(() => {
-  return ['quoting', 'quoted', 'failed'].includes(applicationData.value.status)
+  return ['quotation_processing', 'quotation_success', 'quotation_failed'].includes(applicationData.value.status)
 })
 
 // 状态处理方法
 const getStatusType = (status) => {
   const statusMap = {
     pending: 'warning',
-    quoting: 'primary',
-    quoted: 'success',
-    failed: 'danger'
+    quotation_pending: 'info',
+    quotation_processing: 'primary',
+    quotation_success: 'success',
+    quotation_failed: 'danger',
+    rejected: 'danger'
   }
   return statusMap[status] || 'info'
 }
@@ -209,9 +212,11 @@ const getStatusType = (status) => {
 const getStatusText = (status) => {
   const statusMap = {
     pending: '待处理',
-    quoting: '报价中',
-    quoted: '报价成功',
-    failed: '报价失败'
+    quotation_pending: '待报价',
+    quotation_processing: '报价中',
+    quotation_success: '报价成功',
+    quotation_failed: '报价失败',
+    rejected: '已拒绝'
   }
   return statusMap[status] || '未知'
 }
@@ -271,10 +276,38 @@ const deleteApplication = async () => {
 // 初始化数据
 onMounted(async () => {
   try {
-    // 模拟API调用获取申请详情
-    // const id = route.params.id
-    // const response = await api.getPurchaseApplication(id)
-    // applicationData.value = response.data
+    const id = route.params.id
+    // 从mock数据中查找对应的申请
+    const application = purchaseApplications.find(app => app.id === id)
+
+    if (application) {
+      // 转换数据格式以匹配组件期望的结构
+      applicationData.value = {
+        id: application.id,
+        status: application.status,
+        createdAt: application.created_at,
+        processedAt: application.processed_at,
+        productName: application.product_name,
+        productImage: application.product_image,
+        productUrl: application.product_url,
+        purchaseType: application.type,
+        targetPrice: application.target_price,
+        targetCountry: application.target_country,
+        dailyOrderCount: application.daily_orders,
+        acceptSimilar: application.accept_similar,
+        description: application.description,
+        remarks: application.remark,
+        quoteStatus: application.status === 'quotation_success' ? 'success' :
+                    application.status === 'quotation_failed' ? 'failed' : '',
+        quoteTime: application.quoted_at,
+        finalQuote: application.final_quote,
+        rejectReason: application.reject_reason,
+        quoteDocument: application.quote_document
+      }
+    } else {
+      ElMessage.error('未找到对应的采购申请')
+      router.push('/merchant/purchase/applications')
+    }
   } catch (error) {
     ElMessage.error('获取申请详情失败')
   }
