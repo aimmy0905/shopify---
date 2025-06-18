@@ -93,6 +93,16 @@
         <template #header>
           <div class="table-header">
             <span>采购订单列表 (共 {{ total }} 条)</span>
+            <div class="table-actions">
+              <el-button
+                type="primary"
+                :disabled="selectedOrders.length === 0"
+                @click="handleBulkInvoice"
+              >
+                <el-icon><Document /></el-icon>
+                批量开具Invoice ({{ selectedOrders.length }})
+              </el-button>
+            </div>
           </div>
         </template>
 
@@ -112,24 +122,44 @@
             </template>
           </el-table-column>
 
-          <el-table-column label="订单商品" width="280">
+          <el-table-column label="订单商品" width="450">
             <template #default="{ row }">
               <div class="order-products">
                 <div
-                  v-for="(product, index) in row.products.slice(0, 2)"
+                  v-for="(product, index) in row.products.slice(0, 3)"
                   :key="index"
-                  class="product-item"
+                  class="product-item-detailed"
                 >
-                  <el-image
-                    :src="product.image"
-                    fit="cover"
-                    class="product-image"
-                  />
-                  <span class="product-name">{{ product.name }} ×{{ product.quantity }}</span>
+                  <div class="product-basic-info">
+                    <el-image
+                      :src="product.image"
+                      fit="cover"
+                      class="product-image"
+                    />
+                    <div class="product-main-details">
+                      <div class="product-name">{{ product.name }}</div>
+                      <div class="product-specs">
+                        <span
+                          v-for="(value, key) in product.specifications"
+                          :key="key"
+                          class="spec-item"
+                        >
+                          {{ key }}: {{ value }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="product-pricing-info">
+                    <div class="pricing-row">
+                      <span class="unit-price">${{ product.unitPrice.toFixed(2) }}</span>
+                      <span class="quantity">×{{ product.quantity }}</span>
+                      <span class="line-total">${{ product.lineTotal.toFixed(2) }}</span>
+                    </div>
+                  </div>
                 </div>
-                <span v-if="row.products.length > 2" class="more-products">
-                  等{{ row.products.length }}件商品
-                </span>
+                <div v-if="row.products.length > 3" class="products-summary">
+                  <span class="total-items">+{{ row.products.length - 3 }}件更多商品</span>
+                </div>
               </div>
             </template>
           </el-table-column>
@@ -315,6 +345,13 @@
         </div>
       </div>
     </el-dialog>
+
+    <!-- 批量开具Invoice弹窗 -->
+    <BulkInvoiceDialog
+      v-model="bulkInvoiceVisible"
+      :selected-orders="selectedOrders"
+      @success="handleBulkInvoiceSuccess"
+    />
   </div>
 </template>
 
@@ -322,7 +359,8 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { Search, Download } from '@element-plus/icons-vue'
+import { Search, Download, Document } from '@element-plus/icons-vue'
+import BulkInvoiceDialog from '../components/BulkInvoiceDialog.vue'
 
 const router = useRouter()
 
@@ -334,6 +372,7 @@ const selectedOrders = ref([])
 const advancedFilterVisible = ref([])
 const paymentDialogVisible = ref(false)
 const logisticsDialogVisible = ref(false)
+const bulkInvoiceVisible = ref(false)
 const currentOrder = ref(null)
 const currentLogistics = ref(null)
 
@@ -372,22 +411,39 @@ const loadOrderList = async () => {
           {
             name: '智能手表 Pro Max 批发',
             image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=50&h=50&fit=crop',
-            quantity: 50
+            quantity: 50,
+            unitPrice: 179.99,
+            specifications: {
+              color: '深空黑',
+              size: '44mm',
+              storage: '32GB',
+              band: '运动型表带',
+              warranty: '1年保修'
+            },
+            lineTotal: 8999.50
           },
           {
             name: '无线充电器 15W 批发',
             image: 'https://images.unsplash.com/photo-1586953208448-b95a79798f07?w=50&h=50&fit=crop',
-            quantity: 100
+            quantity: 100,
+            unitPrice: 8.50,
+            specifications: {
+              color: '白色',
+              power: '15W',
+              compatibility: 'iPhone/Android',
+              certification: 'Qi认证'
+            },
+            lineTotal: 850.00
           }
         ],
-        productAmount: 8849.50,
+        productAmount: 9849.50,
         shippingAmount: 150.00,
-        totalAmount: 8999.50,
+        totalAmount: 9999.50,
         settlementStatus: 'pending',
         settlementCurrency: 'EUR',
         settlementAmount: 8100.50,
         exchangeRate: 1.111,
-        usdAmount: 8999.50,
+        usdAmount: 9999.50,
         createdAt: '2023-12-15 10:30:00',
         shippingAddress: {
           country: '美国',
@@ -403,17 +459,25 @@ const loadOrderList = async () => {
           {
             name: '蓝牙耳机 AirPods Pro 批发',
             image: 'https://images.unsplash.com/photo-1572569511254-d8f925fe2cbb?w=50&h=50&fit=crop',
-            quantity: 200
+            quantity: 200,
+            unitPrice: 63.99,
+            specifications: {
+              color: '白色',
+              model: 'AirPods Pro',
+              features: '主动降噪',
+              battery: '24小时续航'
+            },
+            lineTotal: 12798.00
           }
         ],
-        productAmount: 12799.00,
+        productAmount: 12798.00,
         shippingAmount: 200.00,
-        totalAmount: 12999.00,
+        totalAmount: 12998.00,
         settlementStatus: 'settled',
         settlementCurrency: 'GBP',
         settlementAmount: 10350.00,
         exchangeRate: 1.256,
-        usdAmount: 12999.00,
+        usdAmount: 12998.00,
         createdAt: '2023-12-14 15:20:00',
         shippingAddress: {
           country: '英国',
@@ -432,22 +496,38 @@ const loadOrderList = async () => {
           {
             name: 'iPhone 15 Pro 手机壳批发',
             image: 'https://images.unsplash.com/photo-1601593346740-925612772716?w=50&h=50&fit=crop',
-            quantity: 500
+            quantity: 500,
+            unitPrice: 5.99,
+            specifications: {
+              color: '透明',
+              material: '硅胶',
+              compatibility: 'iPhone 15 Pro',
+              protection: '防摔保护'
+            },
+            lineTotal: 2995.00
           },
           {
             name: '钢化膜套装批发',
             image: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=50&h=50&fit=crop',
-            quantity: 300
+            quantity: 300,
+            unitPrice: 1.85,
+            specifications: {
+              type: '钢化玻璃',
+              thickness: '0.33mm',
+              compatibility: 'iPhone 15 Pro',
+              hardness: '9H硬度'
+            },
+            lineTotal: 555.00
           }
         ],
-        productAmount: 3549.70,
+        productAmount: 3550.00,
         shippingAmount: 50.00,
-        totalAmount: 3599.70,
+        totalAmount: 3600.00,
         settlementStatus: 'settled',
         settlementCurrency: 'USD',
-        settlementAmount: 3599.70,
+        settlementAmount: 3600.00,
         exchangeRate: 1.000,
-        usdAmount: 3599.70,
+        usdAmount: 3600.00,
         createdAt: '2023-12-14 09:15:00',
         shippingAddress: {
           country: '加拿大',
@@ -466,12 +546,28 @@ const loadOrderList = async () => {
           {
             name: '游戏机械键盘批发',
             image: 'https://images.unsplash.com/photo-1541140532154-b024d705b90a?w=50&h=50&fit=crop',
-            quantity: 80
+            quantity: 80,
+            unitPrice: 89.99,
+            specifications: {
+              switch: '青轴',
+              backlight: 'RGB',
+              layout: '87键',
+              connectivity: '有线/无线'
+            },
+            lineTotal: 7199.20
           },
           {
             name: '游戏鼠标 RGB 批发',
             image: 'https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=50&h=50&fit=crop',
-            quantity: 120
+            quantity: 120,
+            unitPrice: 39.99,
+            specifications: {
+              dpi: '16000',
+              buttons: '7键',
+              lighting: 'RGB',
+              sensor: '光学传感器'
+            },
+            lineTotal: 4798.80
           }
         ],
         productAmount: 15799.60,
@@ -497,7 +593,15 @@ const loadOrderList = async () => {
           {
             name: '智能家居摄像头批发',
             image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=50&h=50&fit=crop',
-            quantity: 150
+            quantity: 150,
+            unitPrice: 49.33,
+            specifications: {
+              resolution: '1080P',
+              connectivity: 'WiFi',
+              features: '夜视+双向语音',
+              storage: '云存储'
+            },
+            lineTotal: 7399.50
           }
         ],
         productAmount: 7399.25,
@@ -526,12 +630,28 @@ const loadOrderList = async () => {
           {
             name: '运动蓝牙耳机批发',
             image: 'https://images.unsplash.com/photo-1484704849700-f032a568e944?w=50&h=50&fit=crop',
-            quantity: 300
+            quantity: 300,
+            unitPrice: 18.99,
+            specifications: {
+              color: '黑色',
+              waterproof: 'IPX7',
+              battery: '8小时续航',
+              connectivity: '蓝牙5.0'
+            },
+            lineTotal: 5697.00
           },
           {
             name: '运动臂带批发',
             image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=50&h=50&fit=crop',
-            quantity: 200
+            quantity: 200,
+            unitPrice: 6.99,
+            specifications: {
+              color: '黑色',
+              size: '可调节',
+              material: '透气网布',
+              compatibility: '通用型'
+            },
+            lineTotal: 1398.00
           }
         ],
         productAmount: 5899.40,
@@ -689,6 +809,21 @@ const formatDateTime = (dateTime) => {
   if (!dateTime) return '-'
   return new Date(dateTime).toLocaleString('zh-CN')
 }
+
+const handleBulkInvoice = () => {
+  if (selectedOrders.value.length === 0) {
+    ElMessage.warning('请先选择要开具Invoice的订单')
+    return
+  }
+  bulkInvoiceVisible.value = true
+}
+
+const handleBulkInvoiceSuccess = () => {
+  ElMessage.success(`成功提交 ${selectedOrders.value.length} 个订单的批量Invoice申请`)
+  // 清空选择
+  selectedOrders.value = []
+  // 可以在这里刷新列表或跳转到Invoice管理页面
+}
 </script>
 
 <style scoped>
@@ -723,31 +858,103 @@ const formatDateTime = (dateTime) => {
   align-items: center;
 }
 
+.table-actions {
+  display: flex;
+  gap: 10px;
+}
+
 .order-products {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
 }
 
-.product-item {
+.product-item-detailed {
+  border: 1px solid #EBEEF5;
+  border-radius: 6px;
+  padding: 12px;
+  background-color: #FAFAFA;
+}
+
+.product-basic-info {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 8px;
 }
 
 .product-image {
-  width: 40px;
-  height: 40px;
-  border-radius: 4px;
+  width: 50px;
+  height: 50px;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.product-main-details {
+  flex: 1;
+  min-width: 0;
 }
 
 .product-name {
-  font-size: 12px;
-  color: #606266;
-  flex: 1;
+  font-size: 14px;
+  font-weight: 600;
+  color: #303133;
+  margin-bottom: 6px;
+  line-height: 1.4;
 }
 
-.more-products {
+.product-specs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.spec-item {
+  font-size: 12px;
+  color: #606266;
+  background-color: #F0F2F5;
+  padding: 2px 6px;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+.product-pricing-info {
+  border-top: 1px solid #E4E7ED;
+  padding-top: 8px;
+}
+
+.pricing-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+}
+
+.unit-price {
+  color: #606266;
+  font-weight: 500;
+}
+
+.quantity {
+  color: #909399;
+  margin: 0 8px;
+}
+
+.line-total {
+  color: #67C23A;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.products-summary {
+  text-align: center;
+  padding: 8px;
+  background-color: #F5F7FA;
+  border-radius: 4px;
+  margin-top: 8px;
+}
+
+.total-items {
   font-size: 12px;
   color: #909399;
 }

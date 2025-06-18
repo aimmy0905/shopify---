@@ -90,6 +90,20 @@
             </template>
           </el-table-column>
 
+          <el-table-column label="发票类型" width="100">
+            <template #default="{ row }">
+              <el-tag :type="row.invoiceType === 'enterprise' ? 'primary' : 'success'" size="small">
+                {{ row.invoiceType === 'enterprise' ? '企业' : '个人' }}
+              </el-tag>
+            </template>
+          </el-table-column>
+
+          <el-table-column label="发票抬头" width="200">
+            <template #default="{ row }">
+              <span>{{ getInvoiceHeader(row) }}</span>
+            </template>
+          </el-table-column>
+
           <el-table-column label="开票金额" width="120">
             <template #default="{ row }">
               <span class="amount-text">${{ row.amount.toFixed(2) }}</span>
@@ -236,6 +250,8 @@ const getInvoiceList = async () => {
         invoiceNo: 'INV-2024-001',
         amount: 1250.00,
         status: 'completed',
+        invoiceType: 'enterprise',
+        companyName: 'TechCorp Solutions Ltd.',
         recipientInfo: {
           name: 'John Smith',
           phone: '+1234567890',
@@ -254,6 +270,8 @@ const getInvoiceList = async () => {
         invoiceNo: null,
         amount: 800.00,
         status: 'pending',
+        invoiceType: 'individual',
+        individualName: 'Jane Doe',
         recipientInfo: {
           name: 'Jane Doe',
           phone: '+1987654321',
@@ -265,6 +283,53 @@ const getInvoiceList = async () => {
         ],
         invoiceFile: null,
         remarks: ''
+      },
+      {
+        id: 3,
+        applyTime: '2024-01-22 09:15:00',
+        invoiceNo: 'INV-2024-002',
+        amount: 2850.00,
+        status: 'completed',
+        invoiceType: 'enterprise',
+        companyName: '深圳科技有限公司',
+        recipientInfo: {
+          name: '李经理',
+          phone: '+86-138-0000-0000',
+          address: '深圳市南山区科技园南区'
+        },
+        orders: [
+          { id: 5, orderNo: 'PUR202312150001', amount: 999.50, time: '2024-01-20 10:30:00' },
+          { id: 6, orderNo: 'PUR202312150002', amount: 1298.00, time: '2024-01-20 11:15:00' },
+          { id: 7, orderNo: 'PUR202312150003', amount: 360.00, time: '2024-01-20 14:20:00' },
+          { id: 8, orderNo: 'ORD202312150001', amount: 344.99, time: '2024-01-21 09:30:00' }
+        ],
+        invoiceFile: 'invoice_002.pdf',
+        remarks: '批量采购订单Invoice',
+        isBulk: true
+      },
+      {
+        id: 4,
+        applyTime: '2024-01-23 14:30:00',
+        invoiceNo: null,
+        amount: 1580.50,
+        status: 'pending',
+        invoiceType: 'individual',
+        individualName: '王先生',
+        recipientInfo: {
+          name: '王先生',
+          phone: '+86-139-0000-0000',
+          address: '上海市浦东新区陆家嘴金融区'
+        },
+        orders: [
+          { id: 9, orderNo: 'ORD202312150002', amount: 97.99, time: '2024-01-22 15:20:00' },
+          { id: 10, orderNo: 'ORD202312150003', amount: 50.97, time: '2024-01-22 16:45:00' },
+          { id: 11, orderNo: 'ORD202312150004', amount: 201.98, time: '2024-01-23 10:15:00' },
+          { id: 12, orderNo: 'ORD202312150005', amount: 169.98, time: '2024-01-23 11:30:00' },
+          { id: 13, orderNo: 'PUR202312150004', amount: 1599.60, time: '2024-01-23 13:45:00' }
+        ],
+        invoiceFile: null,
+        remarks: '批量店铺订单Invoice',
+        isBulk: true
       }
     ]
     
@@ -354,6 +419,15 @@ const downloadInvoice = async (invoice) => {
   } catch (error) {
     ElMessage.error('下载失败')
     console.error('Download error:', error)
+  }
+}
+
+// 获取发票抬头
+const getInvoiceHeader = (invoice) => {
+  if (invoice.invoiceType === 'enterprise') {
+    return invoice.companyName || '-'
+  } else {
+    return invoice.individualName || '-'
   }
 }
 

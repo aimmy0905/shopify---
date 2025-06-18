@@ -208,6 +208,33 @@ const routes = [
         }
       },
       {
+        path: 'orders/aftersale/:id',
+        name: 'AftersaleOrderDetail',
+        component: () => import('@/views/merchant/orders/AftersaleOrderDetail.vue'),
+        meta: {
+          title: '售后订单详情 - Shopify铺货系统',
+          requiresAuth: true
+        }
+      },
+      {
+        path: 'currency-demo',
+        name: 'CurrencyDemo',
+        component: () => import('@/views/merchant/CurrencyDemo.vue'),
+        meta: {
+          title: '汇率演示 - Shopify铺货系统',
+          requiresAuth: true
+        }
+      },
+      {
+        path: 'currency-test',
+        name: 'CurrencyTest',
+        component: () => import('@/views/merchant/CurrencyTest.vue'),
+        meta: {
+          title: '汇率测试 - Shopify铺货系统',
+          requiresAuth: true
+        }
+      },
+      {
         path: 'orders/:id',
         name: 'OrderDetail',
         component: () => import('@/views/merchant/orders/Detail.vue'),

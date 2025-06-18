@@ -123,7 +123,7 @@
           
           <el-table-column prop="refundOrderNo" label="售后订单号" width="180">
             <template #default="{ row }">
-              <el-link type="primary" @click="goToOrderDetail(row.id)">
+              <el-link type="primary" @click="goToAftersaleDetail(row.id)">
                 {{ row.refundOrderNo }}
               </el-link>
             </template>
@@ -146,24 +146,44 @@
             </template>
           </el-table-column>
 
-          <el-table-column label="退货商品" width="280">
+          <el-table-column label="退货商品" width="450">
             <template #default="{ row }">
               <div class="refund-products">
                 <div
-                  v-for="(product, index) in row.products.slice(0, 2)"
+                  v-for="(product, index) in row.products.slice(0, 3)"
                   :key="index"
-                  class="product-item"
+                  class="product-item-detailed"
                 >
-                  <el-image
-                    :src="product.image"
-                    fit="cover"
-                    class="product-image"
-                  />
-                  <span class="product-name">{{ product.name }} ×{{ product.quantity }}</span>
+                  <div class="product-basic-info">
+                    <el-image
+                      :src="product.image"
+                      fit="cover"
+                      class="product-image"
+                    />
+                    <div class="product-main-details">
+                      <div class="product-name">{{ product.name }}</div>
+                      <div class="product-specs">
+                        <span
+                          v-for="(value, key) in product.specifications"
+                          :key="key"
+                          class="spec-item"
+                        >
+                          {{ key }}: {{ value }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="product-pricing-info">
+                    <div class="pricing-row">
+                      <span class="unit-price">${{ product.unitPrice.toFixed(2) }}</span>
+                      <span class="quantity">×{{ product.quantity }}</span>
+                      <span class="line-total">${{ product.lineTotal.toFixed(2) }}</span>
+                    </div>
+                  </div>
                 </div>
-                <span v-if="row.products.length > 2" class="more-products">
-                  等{{ row.products.length }}件商品
-                </span>
+                <div v-if="row.products.length > 3" class="products-summary">
+                  <span class="total-items">+{{ row.products.length - 3 }}件更多商品</span>
+                </div>
               </div>
             </template>
           </el-table-column>
@@ -174,12 +194,17 @@
             </template>
           </el-table-column>
 
-          <el-table-column label="退还结算金额" width="150">
+          <el-table-column label="退还结算金额" width="180">
             <template #default="{ row }">
-              <div class="settlement-refund">
-                <div>{{ row.settlementCurrency }} {{ row.refundSettlementAmount.toFixed(2) }}</div>
-                <div class="exchange-info">
-                  ≈ ${{ row.refundUsdAmount.toFixed(2) }}
+              <div class="settlement-refund-display">
+                <!-- Primary amount -->
+                <div class="primary-amount">
+                  {{ row.settlementCurrency }} {{ row.refundSettlementAmount.toFixed(2) }}
+                </div>
+
+                <!-- Exchange rate and conversion -->
+                <div class="exchange-rate-line" :id="'conversion-' + row.id">
+                  汇率: 1.111 ≈ ${{ (row.refundSettlementAmount * 1.111).toFixed(2) }}
                 </div>
               </div>
             </template>
@@ -223,7 +248,7 @@
                 size="small"
                 type="primary"
                 link
-                @click="goToOrderDetail(row.id)"
+                @click="goToAftersaleDetail(row.id)"
               >
                 查看详情
               </el-button>
@@ -249,10 +274,11 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { Search, Download } from '@element-plus/icons-vue'
+import { Search, Download, Clock } from '@element-plus/icons-vue'
+import { convertCurrencyEnhanced } from '@/utils/currency.js'
 
 const router = useRouter()
 
@@ -263,6 +289,7 @@ const storeList = ref([])
 const total = ref(0)
 const selectedOrders = ref([])
 const advancedFilterVisible = ref([])
+const refreshTimer = ref(null)
 
 // 搜索表单
 const searchForm = reactive({
@@ -284,6 +311,19 @@ const pagination = reactive({
 onMounted(() => {
   loadStoreList()
   loadOrderList()
+
+  // 启动自动刷新汇率，每5分钟更新一次
+  refreshTimer.value = setInterval(() => {
+    fetchExchangeRates()
+  }, 5 * 60 * 1000) // 5分钟
+})
+
+onUnmounted(() => {
+  // 清理定时器
+  if (refreshTimer.value) {
+    clearInterval(refreshTimer.value)
+    refreshTimer.value = null
+  }
 })
 
 // 方法
@@ -319,7 +359,15 @@ const loadOrderList = async () => {
           {
             name: '智能手表 Pro Max',
             image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=50&h=50&fit=crop',
-            quantity: 1
+            quantity: 1,
+            unitPrice: 299.99,
+            specifications: {
+              color: '深空黑',
+              size: '44mm',
+              storage: '32GB',
+              band: '运动型表带'
+            },
+            lineTotal: 299.99
           }
         ],
         refundAmount: 299.99,
@@ -342,12 +390,26 @@ const loadOrderList = async () => {
           {
             name: '蓝牙耳机 AirPods Pro',
             image: 'https://images.unsplash.com/photo-1572569511254-d8f925fe2cbb?w=50&h=50&fit=crop',
-            quantity: 1
+            quantity: 1,
+            unitPrice: 89.99,
+            specifications: {
+              color: '白色',
+              model: 'AirPods Pro',
+              features: '主动降噪'
+            },
+            lineTotal: 89.99
           },
           {
             name: 'USB-C 充电线',
             image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=50&h=50&fit=crop',
-            quantity: 1
+            quantity: 1,
+            unitPrice: 15.00,
+            specifications: {
+              length: '1米',
+              type: 'USB-C to USB-C',
+              speed: '快充支持'
+            },
+            lineTotal: 15.00
           }
         ],
         refundAmount: 129.99,
@@ -370,7 +432,14 @@ const loadOrderList = async () => {
           {
             name: 'iPhone 15 Pro 手机壳',
             image: 'https://images.unsplash.com/photo-1601593346740-925612772716?w=50&h=50&fit=crop',
-            quantity: 2
+            quantity: 2,
+            unitPrice: 19.99,
+            specifications: {
+              color: '透明',
+              material: '硅胶',
+              compatibility: 'iPhone 15 Pro'
+            },
+            lineTotal: 39.98
           }
         ],
         refundAmount: 39.98,
@@ -393,7 +462,14 @@ const loadOrderList = async () => {
           {
             name: '游戏机械键盘',
             image: 'https://images.unsplash.com/photo-1541140532154-b024d705b90a?w=50&h=50&fit=crop',
-            quantity: 1
+            quantity: 1,
+            unitPrice: 189.99,
+            specifications: {
+              switch: '青轴',
+              backlight: 'RGB',
+              layout: '87键'
+            },
+            lineTotal: 189.99
           }
         ],
         refundAmount: 189.99,
@@ -416,7 +492,14 @@ const loadOrderList = async () => {
           {
             name: '智能家居摄像头',
             image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=50&h=50&fit=crop',
-            quantity: 1
+            quantity: 1,
+            unitPrice: 79.99,
+            specifications: {
+              resolution: '1080P',
+              connectivity: 'WiFi',
+              features: '夜视+双向语音'
+            },
+            lineTotal: 79.99
           }
         ],
         refundAmount: 79.99,
@@ -439,12 +522,26 @@ const loadOrderList = async () => {
           {
             name: '运动蓝牙耳机',
             image: 'https://images.unsplash.com/photo-1484704849700-f032a568e944?w=50&h=50&fit=crop',
-            quantity: 1
+            quantity: 1,
+            unitPrice: 59.99,
+            specifications: {
+              color: '黑色',
+              waterproof: 'IPX7',
+              battery: '8小时续航'
+            },
+            lineTotal: 59.99
           },
           {
             name: '运动臂带',
             image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=50&h=50&fit=crop',
-            quantity: 1
+            quantity: 1,
+            unitPrice: 25.99,
+            specifications: {
+              color: '黑色',
+              size: '可调节',
+              material: '透气网布'
+            },
+            lineTotal: 25.99
           }
         ],
         refundAmount: 85.98,
@@ -467,7 +564,14 @@ const loadOrderList = async () => {
           {
             name: '钢化膜套装',
             image: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=50&h=50&fit=crop',
-            quantity: 3
+            quantity: 3,
+            unitPrice: 9.99,
+            specifications: {
+              type: '钢化玻璃',
+              thickness: '0.33mm',
+              compatibility: 'iPhone 15 Pro'
+            },
+            lineTotal: 29.97
           }
         ],
         refundAmount: 29.97,
@@ -480,12 +584,57 @@ const loadOrderList = async () => {
         refundReason: '商品已拆封使用，不符合退货条件'
       }
     ]
-    
+
     total.value = 43
+
+    // Fetch exchange rates for all orders after a short delay to ensure DOM is ready
+    setTimeout(() => {
+      fetchExchangeRates()
+    }, 100)
   } catch (error) {
     ElMessage.error('加载售后订单列表失败')
   } finally {
     loading.value = false
+  }
+}
+
+// Fetch exchange rates for all orders
+const fetchExchangeRates = async () => {
+  for (const order of orderList.value) {
+    if (order.settlementCurrency !== 'USD') {
+      try {
+        const conversion = await convertCurrencyEnhanced(
+          order.refundSettlementAmount,
+          order.settlementCurrency,
+          'USD'
+        )
+
+        // Update the display to match new screenshot format: "汇率: 1.111 ≈ $9999.50"
+        const conversionElement = document.getElementById(`conversion-${order.id}`)
+
+        if (conversionElement) {
+          const rate = conversion.exchangeRate.toFixed(3)
+          const convertedAmount = conversion.convertedAmount.toFixed(2)
+          conversionElement.textContent = `汇率: ${rate} ≈ $${convertedAmount}`
+        }
+
+      } catch (error) {
+        console.error(`Failed to convert currency for order ${order.id}:`, error)
+
+        const conversionElement = document.getElementById(`conversion-${order.id}`)
+        if (conversionElement) {
+          conversionElement.textContent = '汇率获取失败'
+          conversionElement.style.color = '#F56C6C'
+        }
+      }
+    } else {
+      // Same currency, show rate as 1.000
+      const conversionElement = document.getElementById(`conversion-${order.id}`)
+
+      if (conversionElement) {
+        conversionElement.textContent = `汇率: 1.000 ≈ $${order.refundSettlementAmount.toFixed(2)}`
+      }
+    }
   }
 }
 
@@ -527,6 +676,10 @@ const handleCurrentChange = (page) => {
 
 const goToOrderDetail = (orderId) => {
   router.push(`/merchant/orders/${orderId}`)
+}
+
+const goToAftersaleDetail = (orderId) => {
+  router.push(`/merchant/orders/aftersale/${orderId}`)
 }
 
 const goToOriginalOrder = (originalOrderId) => {
@@ -600,28 +753,95 @@ const formatDateTime = (dateTime) => {
 .refund-products {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
 }
 
-.product-item {
+.product-item-detailed {
+  border: 1px solid #EBEEF5;
+  border-radius: 6px;
+  padding: 12px;
+  background-color: #FAFAFA;
+}
+
+.product-basic-info {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 8px;
 }
 
 .product-image {
-  width: 40px;
-  height: 40px;
-  border-radius: 4px;
+  width: 50px;
+  height: 50px;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.product-main-details {
+  flex: 1;
+  min-width: 0;
 }
 
 .product-name {
-  font-size: 12px;
-  color: #606266;
-  flex: 1;
+  font-size: 14px;
+  font-weight: 600;
+  color: #303133;
+  margin-bottom: 6px;
+  line-height: 1.4;
 }
 
-.more-products {
+.product-specs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.spec-item {
+  font-size: 12px;
+  color: #606266;
+  background-color: #F0F2F5;
+  padding: 2px 6px;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+.product-pricing-info {
+  border-top: 1px solid #E4E7ED;
+  padding-top: 8px;
+}
+
+.pricing-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+}
+
+.unit-price {
+  color: #606266;
+  font-weight: 500;
+}
+
+.quantity {
+  color: #909399;
+  margin: 0 8px;
+}
+
+.line-total {
+  color: #67C23A;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.products-summary {
+  text-align: center;
+  padding: 8px;
+  background-color: #F5F7FA;
+  border-radius: 4px;
+  margin-top: 8px;
+}
+
+.total-items {
   font-size: 12px;
   color: #909399;
 }
@@ -631,10 +851,41 @@ const formatDateTime = (dateTime) => {
   color: #F56C6C;
 }
 
+/* Enhanced currency display styling */
+.settlement-refund {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
 .settlement-refund .exchange-info {
   font-size: 12px;
   color: #909399;
   margin-top: 4px;
+}
+
+/* Settlement refund display matching new screenshot format */
+.settlement-refund-display {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 160px;
+  text-align: left;
+}
+
+.settlement-refund-display .primary-amount {
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
+  line-height: 1.5;
+  margin-bottom: 4px;
+}
+
+.settlement-refund-display .exchange-rate-line {
+  font-size: 12px;
+  color: #909399;
+  font-weight: 400;
+  line-height: 1.4;
 }
 
 .refund-reason {

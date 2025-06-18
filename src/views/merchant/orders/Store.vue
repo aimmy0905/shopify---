@@ -122,6 +122,16 @@
         <template #header>
           <div class="table-header">
             <span>订单列表 (共 {{ total }} 条)</span>
+            <div class="table-actions">
+              <el-button
+                type="primary"
+                :disabled="selectedOrders.length === 0"
+                @click="handleBulkInvoice"
+              >
+                <el-icon><Document /></el-icon>
+                批量开具Invoice ({{ selectedOrders.length }})
+              </el-button>
+            </div>
           </div>
         </template>
 
@@ -328,6 +338,13 @@
         </div>
       </div>
     </el-dialog>
+
+    <!-- 批量开具Invoice弹窗 -->
+    <BulkInvoiceDialog
+      v-model="bulkInvoiceVisible"
+      :selected-orders="selectedOrders"
+      @success="handleBulkInvoiceSuccess"
+    />
   </div>
 </template>
 
@@ -335,7 +352,8 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { Search, Download } from '@element-plus/icons-vue'
+import { Search, Download, Document } from '@element-plus/icons-vue'
+import BulkInvoiceDialog from '../components/BulkInvoiceDialog.vue'
 
 const router = useRouter()
 
@@ -347,6 +365,7 @@ const total = ref(0)
 const selectedOrders = ref([])
 const advancedFilterVisible = ref([])
 const logisticsDialogVisible = ref(false)
+const bulkInvoiceVisible = ref(false)
 const currentLogistics = ref(null)
 
 // 搜索表单
@@ -830,6 +849,21 @@ const formatDateTime = (dateTime) => {
   if (!dateTime) return '-'
   return new Date(dateTime).toLocaleString('zh-CN')
 }
+
+const handleBulkInvoice = () => {
+  if (selectedOrders.value.length === 0) {
+    ElMessage.warning('请先选择要开具Invoice的订单')
+    return
+  }
+  bulkInvoiceVisible.value = true
+}
+
+const handleBulkInvoiceSuccess = () => {
+  ElMessage.success(`成功提交 ${selectedOrders.value.length} 个订单的批量Invoice申请`)
+  // 清空选择
+  selectedOrders.value = []
+  // 可以在这里刷新列表或跳转到Invoice管理页面
+}
 </script>
 
 <style scoped>
@@ -862,6 +896,11 @@ const formatDateTime = (dateTime) => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.table-actions {
+  display: flex;
+  gap: 10px;
 }
 
 .order-products {
