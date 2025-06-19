@@ -1,120 +1,89 @@
 <template>
   <div class="commission-details">
-    <!-- 佣金统计信息 -->
-    <div class="commission-stats">
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-label">筛选结果总佣金</div>
-          <div class="stat-value">${{ filteredTotal.toFixed(2) }}</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">待结算总额</div>
-          <div class="stat-value pending">${{ pendingTotal.toFixed(2) }}</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">已结算总额</div>
-          <div class="stat-value settled">${{ settledTotal.toFixed(2) }}</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 筛选工具 -->
+    <!-- 筛选工具栏 -->
     <div class="filter-section">
       <div class="filter-row">
-        <el-date-picker
-          v-model="dateRange"
-          type="daterange"
-          range-separator="至"
-          start-placeholder="开始日期"
-          end-placeholder="结束日期"
-          format="YYYY-MM-DD"
-          value-format="YYYY-MM-DD"
-          @change="handleFilterChange"
-        />
-        
-        <el-select 
-          v-model="levelFilter" 
-          placeholder="佣金层级" 
+        <el-select
+          v-model="selectedYear"
+          placeholder="选择年份"
           clearable
           @change="handleFilterChange"
+          style="width: 120px;"
         >
-          <el-option label="全部" value=""></el-option>
-          <el-option label="一级佣金" value="1"></el-option>
-          <el-option label="二级佣金" value="2"></el-option>
+          <el-option
+            v-for="year in availableYears"
+            :key="year"
+            :label="year + '年'"
+            :value="year"
+          />
         </el-select>
-        
-        <el-select 
-          v-model="statusFilter" 
-          placeholder="结算状态" 
+
+        <el-select
+          v-model="selectedMonth"
+          placeholder="选择月份"
           clearable
           @change="handleFilterChange"
+          style="width: 120px;"
         >
-          <el-option label="全部" value=""></el-option>
-          <el-option label="待结算" value="pending"></el-option>
-          <el-option label="已结算" value="settled"></el-option>
+          <el-option
+            v-for="month in availableMonths"
+            :key="month"
+            :label="month + '月'"
+            :value="month"
+          />
         </el-select>
-        
+
         <el-button @click="resetFilters">重置筛选</el-button>
       </div>
     </div>
 
     <!-- 佣金明细列表 -->
     <div class="table-container">
-      <el-table 
-        :data="filteredRecords" 
+      <el-table
+        :data="monthlyRecords"
         :loading="loading"
         stripe
-        @sort-change="handleSortChange"
       >
-        <el-table-column prop="time" label="时间" width="160" sortable="custom">
+        <el-table-column prop="period" label="时间" width="140">
           <template #default="{ row }">
-            <div class="time-cell">{{ formatTime(row.time) }}</div>
+            <div class="time-cell">{{ row.period }}</div>
           </template>
         </el-table-column>
-        
-        <el-table-column prop="source" label="佣金来源" min-width="200">
+
+        <el-table-column prop="source" label="佣金来源" width="120">
           <template #default="{ row }">
-            <div class="source-cell">
-              <div class="source-main">{{ row.source }}</div>
-              <div class="source-sub">来自: {{ row.referralUser }}</div>
-            </div>
+            <div class="source-cell">下级分佣</div>
           </template>
         </el-table-column>
-        
-        <el-table-column prop="level" label="佣金层级" width="100" align="center">
-          <template #default="{ row }">
-            <el-tag :type="row.level === 1 ? 'primary' : 'success'" size="small">
-              {{ row.level === 1 ? '一级' : '二级' }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        
-        <el-table-column prop="amount" label="佣金金额" width="120" align="right" sortable="custom">
+
+        <el-table-column prop="amount" label="佣金金额" width="140" align="right">
           <template #default="{ row }">
             <div class="amount-cell">
               ${{ row.amount.toFixed(2) }}
             </div>
           </template>
         </el-table-column>
-        
+
         <el-table-column prop="status" label="状态" width="100" align="center">
           <template #default="{ row }">
-            <el-tag 
-              :type="row.status === 'pending' ? 'warning' : 'success'" 
+            <el-tag
+              :type="row.status === 'pending' ? 'warning' : 'success'"
               size="small"
             >
               {{ row.status === 'pending' ? '待结算' : '已结算' }}
             </el-tag>
           </template>
         </el-table-column>
-        
-        <el-table-column prop="settlementTime" label="结算时间" width="160">
+
+        <el-table-column prop="settlementTime" label="结算时间" min-width="160">
           <template #default="{ row }">
             <div class="time-cell">
-              {{ row.settlementTime ? formatTime(row.settlementTime) : '-' }}
+              {{ row.settlementTime ? formatSettlementTime(row.settlementTime) : '-' }}
             </div>
           </template>
         </el-table-column>
+
+
       </el-table>
     </div>
 
@@ -136,6 +105,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 
+
 // Props
 const props = defineProps({
   records: {
@@ -148,150 +118,135 @@ const props = defineProps({
   }
 })
 
-// Emits
-const emit = defineEmits(['filter-change'])
+
 
 // 响应式数据
-const dateRange = ref([])
-const levelFilter = ref('')
-const statusFilter = ref('')
 const currentPage = ref(1)
 const pageSize = ref(20)
-const sortField = ref('')
-const sortOrder = ref('')
+const selectedYear = ref('')
+const selectedMonth = ref('')
 
-// 计算属性
-const filteredRecords = computed(() => {
-  let records = [...props.records]
-  
-  // 按日期筛选
-  if (dateRange.value && dateRange.value.length === 2) {
-    records = records.filter(record => {
-      const recordDate = record.time.split(' ')[0]
-      return recordDate >= dateRange.value[0] && recordDate <= dateRange.value[1]
-    })
-  }
-  
-  // 按层级筛选
-  if (levelFilter.value) {
-    records = records.filter(record => record.level === Number(levelFilter.value))
-  }
-  
-  // 按状态筛选
-  if (statusFilter.value) {
-    records = records.filter(record => record.status === statusFilter.value)
-  }
-  
-  // 排序
-  if (sortField.value) {
-    records.sort((a, b) => {
-      const aVal = a[sortField.value]
-      const bVal = b[sortField.value]
-      
-      if (sortField.value === 'amount') {
-        return sortOrder.value === 'ascending' ? aVal - bVal : bVal - aVal
-      } else if (sortField.value === 'time') {
-        const aTime = new Date(aVal).getTime()
-        const bTime = new Date(bVal).getTime()
-        return sortOrder.value === 'ascending' ? aTime - bTime : bTime - aTime
+// 计算属性 - 获取可用的年份和月份
+const availableYears = computed(() => {
+  const years = new Set()
+  props.records.forEach(record => {
+    const date = new Date(record.time)
+    years.add(date.getFullYear())
+  })
+  return Array.from(years).sort((a, b) => b - a)
+})
+
+const availableMonths = computed(() => {
+  return Array.from({ length: 12 }, (_, i) => i + 1)
+})
+
+// 计算属性 - 将原始记录按月汇总并应用筛选
+const monthlyRecords = computed(() => {
+  // 按月份分组汇总佣金数据
+  const monthlyMap = new Map()
+
+  props.records.forEach(record => {
+    const date = new Date(record.time)
+    const year = date.getFullYear()
+    const month = date.getMonth() + 1
+    const yearMonth = `${year}年${String(month).padStart(2, '0')}月`
+
+    // 应用年份筛选
+    if (selectedYear.value && year !== selectedYear.value) {
+      return
+    }
+
+    // 应用月份筛选
+    if (selectedMonth.value && month !== selectedMonth.value) {
+      return
+    }
+
+    if (!monthlyMap.has(yearMonth)) {
+      monthlyMap.set(yearMonth, {
+        period: yearMonth,
+        source: '下级分佣',
+        amount: 0,
+        status: 'pending', // 默认待结算
+        settlementTime: null,
+        originalDate: date,
+        records: [] // 存储该月的所有记录
+      })
+    }
+
+    const monthData = monthlyMap.get(yearMonth)
+    monthData.amount += record.amount
+    monthData.records.push(record)
+  })
+
+  // 更新每月的结算状态
+  monthlyMap.forEach(monthData => {
+    // 检查该月是否所有记录都已结算
+    const allSettled = monthData.records.every(record => record.status === 'settled')
+    const hasSettled = monthData.records.some(record => record.status === 'settled')
+
+    if (allSettled && monthData.records.length > 0) {
+      monthData.status = 'settled'
+      // 使用最早的结算时间
+      const settlementTimes = monthData.records
+        .filter(record => record.settlementTime)
+        .map(record => new Date(record.settlementTime))
+
+      if (settlementTimes.length > 0) {
+        monthData.settlementTime = new Date(Math.min(...settlementTimes)).toISOString()
       }
-      return 0
-    })
-  }
-  
-  // 分页
+    } else if (hasSettled) {
+      // 部分结算的情况，仍显示为待结算
+      monthData.status = 'pending'
+    }
+  })
+
+  // 转换为数组并按时间倒序排列
+  const monthlyArray = Array.from(monthlyMap.values())
+    .sort((a, b) => b.originalDate.getTime() - a.originalDate.getTime())
+
+  // 分页处理
   const start = (currentPage.value - 1) * pageSize.value
   const end = start + pageSize.value
-  return records.slice(start, end)
+  return monthlyArray.slice(start, end)
 })
 
 const totalRecords = computed(() => {
-  let records = [...props.records]
-  
-  // 应用筛选条件
-  if (dateRange.value && dateRange.value.length === 2) {
-    records = records.filter(record => {
-      const recordDate = record.time.split(' ')[0]
-      return recordDate >= dateRange.value[0] && recordDate <= dateRange.value[1]
-    })
-  }
-  
-  if (levelFilter.value) {
-    records = records.filter(record => record.level === Number(levelFilter.value))
-  }
-  
-  if (statusFilter.value) {
-    records = records.filter(record => record.status === statusFilter.value)
-  }
-  
-  return records.length
-})
+  // 计算按月汇总后的总记录数（应用筛选）
+  const monthlyMap = new Map()
 
-const filteredTotal = computed(() => {
-  let records = [...props.records]
-  
-  // 应用筛选条件
-  if (dateRange.value && dateRange.value.length === 2) {
-    records = records.filter(record => {
-      const recordDate = record.time.split(' ')[0]
-      return recordDate >= dateRange.value[0] && recordDate <= dateRange.value[1]
-    })
-  }
-  
-  if (levelFilter.value) {
-    records = records.filter(record => record.level === Number(levelFilter.value))
-  }
-  
-  if (statusFilter.value) {
-    records = records.filter(record => record.status === statusFilter.value)
-  }
-  
-  return records.reduce((sum, record) => sum + record.amount, 0)
-})
+  props.records.forEach(record => {
+    const date = new Date(record.time)
+    const year = date.getFullYear()
+    const month = date.getMonth() + 1
+    const yearMonth = `${year}年${String(month).padStart(2, '0')}月`
 
-const pendingTotal = computed(() => {
-  return props.records
-    .filter(record => record.status === 'pending')
-    .reduce((sum, record) => sum + record.amount, 0)
-})
+    // 应用年份筛选
+    if (selectedYear.value && year !== selectedYear.value) {
+      return
+    }
 
-const settledTotal = computed(() => {
-  return props.records
-    .filter(record => record.status === 'settled')
-    .reduce((sum, record) => sum + record.amount, 0)
+    // 应用月份筛选
+    if (selectedMonth.value && month !== selectedMonth.value) {
+      return
+    }
+
+    if (!monthlyMap.has(yearMonth)) {
+      monthlyMap.set(yearMonth, true)
+    }
+  })
+
+  return monthlyMap.size
 })
 
 // 方法
-const formatTime = (timeStr) => {
+const formatSettlementTime = (timeStr) => {
   if (!timeStr) return '-'
   const date = new Date(timeStr)
-  return date.toLocaleString('zh-CN', {
+  return date.toLocaleDateString('zh-CN', {
     year: 'numeric',
     month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit'
+    day: '2-digit'
   })
-}
-
-const handleFilterChange = () => {
-  currentPage.value = 1
-  emitFilterChange()
-}
-
-const resetFilters = () => {
-  dateRange.value = []
-  levelFilter.value = ''
-  statusFilter.value = ''
-  currentPage.value = 1
-  sortField.value = ''
-  sortOrder.value = ''
-  emitFilterChange()
-}
-
-const handleSortChange = ({ prop, order }) => {
-  sortField.value = prop
-  sortOrder.value = order
 }
 
 const handleSizeChange = (newSize) => {
@@ -303,15 +258,17 @@ const handleCurrentChange = (newPage) => {
   currentPage.value = newPage
 }
 
-const emitFilterChange = () => {
-  emit('filter-change', {
-    dateRange: dateRange.value,
-    levelFilter: levelFilter.value,
-    statusFilter: statusFilter.value,
-    currentPage: currentPage.value,
-    pageSize: pageSize.value
-  })
+const handleFilterChange = () => {
+  currentPage.value = 1
 }
+
+const resetFilters = () => {
+  selectedYear.value = ''
+  selectedMonth.value = ''
+  currentPage.value = 1
+}
+
+
 
 // 监听器
 watch(() => props.records, () => {
@@ -322,44 +279,6 @@ watch(() => props.records, () => {
 <style scoped>
 .commission-details {
   padding: 16px 0;
-}
-
-/* 统计信息 */
-.commission-stats {
-  margin-bottom: 20px;
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
-}
-
-.stat-card {
-  background: #f8f9fa;
-  border-radius: 6px;
-  padding: 16px;
-  text-align: center;
-}
-
-.stat-label {
-  font-size: 14px;
-  color: #909399;
-  margin-bottom: 8px;
-}
-
-.stat-value {
-  font-size: 20px;
-  font-weight: 600;
-  color: #303133;
-}
-
-.stat-value.pending {
-  color: #e6a23c;
-}
-
-.stat-value.settled {
-  color: #67c23a;
 }
 
 /* 筛选区域 */
@@ -377,13 +296,7 @@ watch(() => props.records, () => {
   flex-wrap: wrap;
 }
 
-.filter-row .el-date-editor {
-  min-width: 280px;
-}
 
-.filter-row .el-select {
-  min-width: 120px;
-}
 
 /* 表格容器 */
 .table-container {
@@ -426,20 +339,13 @@ watch(() => props.records, () => {
 
 /* 响应式设计 */
 @media (max-width: 768px) {
-  .stats-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-  
   .filter-row {
     flex-direction: column;
     align-items: stretch;
     gap: 8px;
   }
-  
-  .filter-row .el-date-editor,
+
   .filter-row .el-select {
-    min-width: auto;
     width: 100%;
   }
 }

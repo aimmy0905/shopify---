@@ -53,27 +53,7 @@
             </div>
           </div>
         </div>
-        <div class="invitation-actions">
-          <el-button type="primary" @click="showPosterDialog = true">
-            <el-icon><Picture /></el-icon>
-            生成邀请海报
-          </el-button>
-          <el-dropdown @command="handleShare">
-            <el-button>
-              <el-icon><Share /></el-icon>
-              分享
-              <el-icon class="el-icon--right"><ArrowDown /></el-icon>
-            </el-button>
-            <template #dropdown>
-              <el-dropdown-menu>
-                <el-dropdown-item command="email">邮件分享</el-dropdown-item>
-                <el-dropdown-item command="wechat">微信分享</el-dropdown-item>
-                <el-dropdown-item command="facebook">Facebook</el-dropdown-item>
-                <el-dropdown-item command="twitter">Twitter</el-dropdown-item>
-              </el-dropdown-menu>
-            </template>
-          </el-dropdown>
-        </div>
+
       </div>
     </div>
 
@@ -103,10 +83,9 @@
     <div class="commission-tabs">
       <el-tabs v-model="activeTab" @tab-change="handleTabChange">
         <el-tab-pane label="佣金明细" name="details">
-          <commission-details 
-            :records="commissionDetails" 
+          <commission-details
+            :records="commissionDetails"
             :loading="detailsLoading"
-            @filter-change="handleDetailsFilter"
           />
         </el-tab-pane>
         <el-tab-pane label="我的下级" name="referrals">
@@ -126,33 +105,22 @@
       </el-tabs>
     </div>
 
-    <!-- 生成邀请海报弹窗 -->
-    <invitation-poster-dialog 
-      v-model="showPosterDialog" 
-      :invitation-code="invitationCode"
-      :invitation-link="invitationLink"
-      :commission-rules="commissionRules"
-    />
+
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { 
-  DocumentCopy, 
-  Picture, 
-  Share, 
-  ArrowDown 
+import {
+  DocumentCopy
 } from '@element-plus/icons-vue'
 import CommissionDetails from './components/CommissionDetails.vue'
 import MyReferrals from './components/MyReferrals.vue'
 import SettlementRecords from './components/SettlementRecords.vue'
-import InvitationPosterDialog from './components/InvitationPosterDialog.vue'
 
 // 响应式数据
 const activeTab = ref('details')
-const showPosterDialog = ref(false)
 
 // 佣金概览数据
 const totalCommission = ref(2580.45)
@@ -176,36 +144,169 @@ const detailsLoading = ref(false)
 const referralsLoading = ref(false)
 const settlementsLoading = ref(false)
 
-// 佣金明细数据
+// 佣金明细数据 - 原始交易记录（用于汇总计算）
 const commissionDetails = ref([
+  // 2025年3月的佣金记录
   {
     id: 1,
-    time: '2024-05-21 14:30:00',
-    source: '订单 #OR202405210001',
+    time: '2025-03-21 14:30:00',
+    source: '下级分佣',
     level: 1,
-    amount: 45.60,
+    amount: 1250.60,
     status: 'pending',
     settlementTime: null,
     referralUser: 'user***@example.com'
   },
   {
     id: 2,
-    time: '2024-05-20 16:45:00',
-    source: '订单 #OR202405200002',
+    time: '2025-03-20 16:45:00',
+    source: '下级分佣',
     level: 2,
-    amount: 18.30,
-    status: 'settled',
-    settlementTime: '2024-05-25 10:00:00',
+    amount: 680.30,
+    status: 'pending',
+    settlementTime: null,
     referralUser: 'merchant***@example.com'
   },
   {
     id: 3,
-    time: '2024-05-19 11:20:00',
-    source: '订单 #OR202405190003',
+    time: '2025-03-19 11:20:00',
+    source: '下级分佣',
     level: 1,
-    amount: 67.90,
+    amount: 890.50,
+    status: 'pending',
+    settlementTime: null,
+    referralUser: 'shop***@example.com'
+  },
+  {
+    id: 4,
+    time: '2025-03-15 09:15:00',
+    source: '下级分佣',
+    level: 2,
+    amount: 420.80,
+    status: 'pending',
+    settlementTime: null,
+    referralUser: 'store***@example.com'
+  },
+  {
+    id: 5,
+    time: '2025-03-10 16:20:00',
+    source: '下级分佣',
+    level: 1,
+    amount: 1580.90,
+    status: 'pending',
+    settlementTime: null,
+    referralUser: 'business***@example.com'
+  },
+  {
+    id: 6,
+    time: '2025-03-05 13:45:00',
+    source: '下级分佣',
+    level: 2,
+    amount: 750.40,
+    status: 'pending',
+    settlementTime: null,
+    referralUser: 'vendor***@example.com'
+  },
+  {
+    id: 7,
+    time: '2025-03-02 10:30:00',
+    source: '下级分佣',
+    level: 1,
+    amount: 1120.50,
+    status: 'pending',
+    settlementTime: null,
+    referralUser: 'partner***@example.com'
+  },
+  {
+    id: 8,
+    time: '2025-03-01 08:15:00',
+    source: '下级分佣',
+    level: 2,
+    amount: 510.00,
+    status: 'pending',
+    settlementTime: null,
+    referralUser: 'client***@example.com'
+  },
+  // 2025年2月的佣金记录（已结算）
+  {
+    id: 9,
+    time: '2025-02-28 17:30:00',
+    source: '下级分佣',
+    level: 1,
+    amount: 980.75,
     status: 'settled',
-    settlementTime: '2024-05-25 10:00:00',
+    settlementTime: '2025-03-01 10:00:00',
+    referralUser: 'user***@example.com'
+  },
+  {
+    id: 10,
+    time: '2025-02-25 14:20:00',
+    source: '下级分佣',
+    level: 2,
+    amount: 650.45,
+    status: 'settled',
+    settlementTime: '2025-03-01 10:00:00',
+    referralUser: 'merchant***@example.com'
+  },
+  {
+    id: 11,
+    time: '2025-02-20 11:15:00',
+    source: '下级分佣',
+    level: 1,
+    amount: 1200.00,
+    status: 'settled',
+    settlementTime: '2025-03-01 10:00:00',
+    referralUser: 'shop***@example.com'
+  },
+  {
+    id: 12,
+    time: '2025-02-15 16:45:00',
+    source: '下级分佣',
+    level: 2,
+    amount: 420.30,
+    status: 'settled',
+    settlementTime: '2025-03-01 10:00:00',
+    referralUser: 'store***@example.com'
+  },
+  {
+    id: 13,
+    time: '2025-02-10 09:30:00',
+    source: '下级分佣',
+    level: 1,
+    amount: 1580.50,
+    status: 'settled',
+    settlementTime: '2025-03-01 10:00:00',
+    referralUser: 'business***@example.com'
+  },
+  // 2025年1月的佣金记录（已结算）
+  {
+    id: 14,
+    time: '2025-01-28 15:20:00',
+    source: '下级分佣',
+    level: 1,
+    amount: 1150.80,
+    status: 'settled',
+    settlementTime: '2025-02-01 10:00:00',
+    referralUser: 'user***@example.com'
+  },
+  {
+    id: 15,
+    time: '2025-01-20 12:30:00',
+    source: '下级分佣',
+    level: 2,
+    amount: 780.25,
+    status: 'settled',
+    settlementTime: '2025-02-01 10:00:00',
+    referralUser: 'merchant***@example.com'
+  },
+  {
+    id: 16,
+    time: '2025-01-15 14:45:00',
+    source: '下级分佣',
+    level: 1,
+    amount: 920.60,
+    status: 'settled',
+    settlementTime: '2025-02-01 10:00:00',
     referralUser: 'shop***@example.com'
   }
 ])
@@ -283,26 +384,7 @@ const copyInvitationLink = () => {
   ElMessage.success('邀请链接已复制到剪贴板')
 }
 
-const handleShare = (command) => {
-  const shareText = `邀请您加入我们的平台，使用邀请码：${invitationCode.value}，链接：${invitationLink.value}`
-  
-  switch (command) {
-    case 'email':
-      window.open(`mailto:?subject=邀请加入平台&body=${encodeURIComponent(shareText)}`)
-      break
-    case 'wechat':
-      // 微信分享逻辑
-      ElMessage.info('请复制链接到微信分享')
-      copyInvitationLink()
-      break
-    case 'facebook':
-      window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(invitationLink.value)}`)
-      break
-    case 'twitter':
-      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`)
-      break
-  }
-}
+
 
 const showRulesDetail = () => {
   ElMessage.info('查看详细规则功能待开发')
@@ -312,9 +394,32 @@ const handleTabChange = (tabName) => {
   console.log('切换到标签页:', tabName)
 }
 
-const handleDetailsFilter = (filterData) => {
-  console.log('佣金明细筛选:', filterData)
-  // 这里处理佣金明细的筛选逻辑
+
+
+const updateCommissionStats = () => {
+  const total = commissionDetails.value.reduce((sum, record) => sum + record.amount, 0)
+  const settled = commissionDetails.value
+    .filter(record => record.status === 'settled')
+    .reduce((sum, record) => sum + record.amount, 0)
+  const pending = commissionDetails.value
+    .filter(record => record.status === 'pending')
+    .reduce((sum, record) => sum + record.amount, 0)
+
+  totalCommission.value = total
+  settledCommission.value = settled
+  pendingCommission.value = pending
+
+  // 计算本月佣金
+  const currentDate = new Date()
+  const currentYearMonth = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`
+
+  monthlyCommission.value = commissionDetails.value
+    .filter(record => {
+      const recordDate = new Date(record.time)
+      const recordYearMonth = `${recordDate.getFullYear()}-${String(recordDate.getMonth() + 1).padStart(2, '0')}`
+      return recordYearMonth === currentYearMonth
+    })
+    .reduce((sum, record) => sum + record.amount, 0)
 }
 
 const handleReferralsSearch = (searchText) => {
@@ -329,7 +434,8 @@ const handleSettlementsFilter = (filterData) => {
 
 // 生命周期
 onMounted(() => {
-  // 组件挂载时加载数据
+  // 组件挂载时加载数据并更新统计
+  updateCommissionStats()
   console.log('佣金管理页面已加载')
 })
 </script>
@@ -446,11 +552,7 @@ onMounted(() => {
   flex: 1;
 }
 
-.invitation-actions {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
+
 
 /* 佣金规则卡片 */
 .commission-rules-card {
@@ -531,10 +633,7 @@ onMounted(() => {
     align-items: stretch;
   }
   
-  .invitation-actions {
-    flex-direction: column;
-    align-items: stretch;
-  }
+
   
   .rules-content {
     flex-direction: column;

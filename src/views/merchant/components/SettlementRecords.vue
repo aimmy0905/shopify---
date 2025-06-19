@@ -1,53 +1,38 @@
 <template>
   <div class="settlement-records">
-    <!-- 结算统计信息 -->
-    <div class="settlement-stats">
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-label">累计结算总金额</div>
-          <div class="stat-value">${{ totalSettlementAmount.toFixed(2) }}</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">平均每月结算金额</div>
-          <div class="stat-value">${{ averageMonthlyAmount.toFixed(2) }}</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">总结算次数</div>
-          <div class="stat-value">{{ records.length }}</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 筛选工具 -->
+    <!-- 筛选工具栏 -->
     <div class="filter-section">
       <div class="filter-row">
-        <el-date-picker
-          v-model="dateRange"
-          type="daterange"
-          range-separator="至"
-          start-placeholder="开始日期"
-          end-placeholder="结束日期"
-          format="YYYY-MM-DD"
-          value-format="YYYY-MM-DD"
+        <el-select
+          v-model="selectedYear"
+          placeholder="选择年份"
+          clearable
           @change="handleFilterChange"
-        />
-        
-        <div class="amount-filter">
-          <el-input 
-            v-model="amountRange[0]" 
-            placeholder="最小金额" 
-            type="number"
-            @input="handleFilterChange"
+          style="width: 120px;"
+        >
+          <el-option
+            v-for="year in availableYears"
+            :key="year"
+            :label="year + '年'"
+            :value="year"
           />
-          <span class="range-separator">-</span>
-          <el-input 
-            v-model="amountRange[1]" 
-            placeholder="最大金额" 
-            type="number"
-            @input="handleFilterChange"
+        </el-select>
+
+        <el-select
+          v-model="selectedMonth"
+          placeholder="选择月份"
+          clearable
+          @change="handleFilterChange"
+          style="width: 120px;"
+        >
+          <el-option
+            v-for="month in availableMonths"
+            :key="month"
+            :label="month + '月'"
+            :value="month"
           />
-        </div>
-        
+        </el-select>
+
         <el-button @click="resetFilters">重置筛选</el-button>
       </div>
     </div>
@@ -151,8 +136,8 @@ const props = defineProps({
 const emit = defineEmits(['filter-change'])
 
 // 响应式数据
-const dateRange = ref([])
-const amountRange = ref(['', ''])
+const selectedYear = ref('')
+const selectedMonth = ref('')
 const currentPage = ref(1)
 const pageSize = ref(20)
 const sortField = ref('')
@@ -160,24 +145,38 @@ const sortOrder = ref('')
 const showDetailDialog = ref(false)
 const selectedRecord = ref(null)
 
-// 计算属性
+// 计算属性 - 获取可用的年份和月份
+const availableYears = computed(() => {
+  const years = new Set()
+  props.records.forEach(record => {
+    const date = new Date(record.settlementTime)
+    years.add(date.getFullYear())
+  })
+  return Array.from(years).sort((a, b) => b - a)
+})
+
+const availableMonths = computed(() => {
+  return Array.from({ length: 12 }, (_, i) => i + 1)
+})
+
+// 计算属性 - 筛选记录
 const filteredRecords = computed(() => {
   let records = [...props.records]
-  
-  // 按日期筛选
-  if (dateRange.value && dateRange.value.length === 2) {
+
+  // 按年份筛选
+  if (selectedYear.value) {
     records = records.filter(record => {
-      const recordDate = record.settlementTime.split(' ')[0]
-      return recordDate >= dateRange.value[0] && recordDate <= dateRange.value[1]
+      const date = new Date(record.settlementTime)
+      return date.getFullYear() === selectedYear.value
     })
   }
-  
-  // 按金额筛选
-  if (amountRange.value[0] !== '') {
-    records = records.filter(record => record.amount >= Number(amountRange.value[0]))
-  }
-  if (amountRange.value[1] !== '') {
-    records = records.filter(record => record.amount <= Number(amountRange.value[1]))
+
+  // 按月份筛选
+  if (selectedMonth.value) {
+    records = records.filter(record => {
+      const date = new Date(record.settlementTime)
+      return date.getMonth() + 1 === selectedMonth.value
+    })
   }
   
   // 排序
@@ -205,33 +204,27 @@ const filteredRecords = computed(() => {
 
 const totalRecords = computed(() => {
   let records = [...props.records]
-  
-  // 应用筛选条件
-  if (dateRange.value && dateRange.value.length === 2) {
+
+  // 按年份筛选
+  if (selectedYear.value) {
     records = records.filter(record => {
-      const recordDate = record.settlementTime.split(' ')[0]
-      return recordDate >= dateRange.value[0] && recordDate <= dateRange.value[1]
+      const date = new Date(record.settlementTime)
+      return date.getFullYear() === selectedYear.value
     })
   }
-  
-  if (amountRange.value[0] !== '') {
-    records = records.filter(record => record.amount >= Number(amountRange.value[0]))
+
+  // 按月份筛选
+  if (selectedMonth.value) {
+    records = records.filter(record => {
+      const date = new Date(record.settlementTime)
+      return date.getMonth() + 1 === selectedMonth.value
+    })
   }
-  if (amountRange.value[1] !== '') {
-    records = records.filter(record => record.amount <= Number(amountRange.value[1]))
-  }
-  
+
   return records.length
 })
 
-const totalSettlementAmount = computed(() => {
-  return props.records.reduce((sum, record) => sum + record.amount, 0)
-})
 
-const averageMonthlyAmount = computed(() => {
-  if (props.records.length === 0) return 0
-  return totalSettlementAmount.value / props.records.length
-})
 
 // 方法
 const formatTime = (timeStr) => {
@@ -252,8 +245,8 @@ const handleFilterChange = () => {
 }
 
 const resetFilters = () => {
-  dateRange.value = []
-  amountRange.value = ['', '']
+  selectedYear.value = ''
+  selectedMonth.value = ''
   currentPage.value = 1
   sortField.value = ''
   sortOrder.value = ''
@@ -281,8 +274,8 @@ const viewDetail = (record) => {
 
 const emitFilterChange = () => {
   emit('filter-change', {
-    dateRange: dateRange.value,
-    amountRange: amountRange.value,
+    selectedYear: selectedYear.value,
+    selectedMonth: selectedMonth.value,
     currentPage: currentPage.value,
     pageSize: pageSize.value
   })
@@ -299,36 +292,6 @@ watch(() => props.records, () => {
   padding: 16px 0;
 }
 
-/* 统计信息 */
-.settlement-stats {
-  margin-bottom: 20px;
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
-}
-
-.stat-card {
-  background: #f8f9fa;
-  border-radius: 6px;
-  padding: 16px;
-  text-align: center;
-}
-
-.stat-label {
-  font-size: 14px;
-  color: #909399;
-  margin-bottom: 8px;
-}
-
-.stat-value {
-  font-size: 20px;
-  font-weight: 600;
-  color: #303133;
-}
-
 /* 筛选区域 */
 .filter-section {
   margin-bottom: 20px;
@@ -342,25 +305,6 @@ watch(() => props.records, () => {
   gap: 12px;
   align-items: center;
   flex-wrap: wrap;
-}
-
-.filter-row .el-date-editor {
-  min-width: 280px;
-}
-
-.amount-filter {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.amount-filter .el-input {
-  width: 120px;
-}
-
-.range-separator {
-  color: #909399;
-  font-weight: 500;
 }
 
 /* 表格容器 */
@@ -401,33 +345,14 @@ watch(() => props.records, () => {
 
 /* 响应式设计 */
 @media (max-width: 768px) {
-  .stats-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-  
   .filter-row {
     flex-direction: column;
     align-items: stretch;
     gap: 8px;
   }
-  
-  .filter-row .el-date-editor {
-    min-width: auto;
+
+  .filter-row .el-select {
     width: 100%;
-  }
-  
-  .amount-filter {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  
-  .amount-filter .el-input {
-    width: 100%;
-  }
-  
-  .range-separator {
-    text-align: center;
   }
 }
 </style> 

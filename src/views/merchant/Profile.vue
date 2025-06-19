@@ -193,6 +193,29 @@
           />
         </el-form-item>
 
+        <!-- 邮箱验证码 -->
+        <el-form-item label="邮箱验证码" prop="verifyCode">
+          <div class="verify-code-container">
+            <el-input
+              v-model="passwordFormData.verifyCode"
+              placeholder="请输入收到的验证码"
+              class="verify-input"
+              clearable
+            />
+            <el-button
+              :disabled="countdown > 0 || sendingCode"
+              :loading="sendingCode"
+              @click="sendVerifyCode"
+              class="verify-button"
+            >
+              {{ countdown > 0 ? `${countdown}秒后重试` : '获取验证码' }}
+            </el-button>
+          </div>
+          <div class="verify-tip">
+            验证码将发送至您的邮箱：{{ userInfo.email }}
+          </div>
+        </el-form-item>
+
         <!-- 新密码 -->
         <el-form-item label="新密码" prop="newPassword">
           <el-input
@@ -282,6 +305,8 @@ const isEditing = ref(false)
 const saving = ref(false)
 const changePasswordVisible = ref(false)
 const changingPassword = ref(false)
+const sendingCode = ref(false)
+const countdown = ref(0)
 const profileFormRef = ref(null)
 const passwordFormRef = ref(null)
 const avatarInput = ref(null)
@@ -307,6 +332,7 @@ const editForm = reactive({
 // 密码修改表单
 const passwordFormData = reactive({
   currentPassword: '',
+  verifyCode: '',
   newPassword: '',
   confirmPassword: ''
 })
@@ -338,6 +364,11 @@ const formRules = {
 const passwordRules = {
   currentPassword: [
     { required: true, message: '请输入当前密码', trigger: 'blur' }
+  ],
+  verifyCode: [
+    { required: true, message: '请输入邮箱验证码', trigger: 'blur' },
+    { len: 6, message: '验证码应为6位数字', trigger: 'blur' },
+    { pattern: /^\d{6}$/, message: '验证码格式不正确', trigger: 'blur' }
   ],
   newPassword: [
     { required: true, message: '请输入新密码', trigger: 'blur' },
@@ -466,6 +497,7 @@ const showChangePasswordDialog = () => {
   // 重置密码表单
   Object.assign(passwordFormData, {
     currentPassword: '',
+    verifyCode: '',
     newPassword: '',
     confirmPassword: ''
   })
@@ -474,12 +506,54 @@ const showChangePasswordDialog = () => {
     class: '',
     text: ''
   }
+  // 重置验证码相关状态
+  countdown.value = 0
+  sendingCode.value = false
 }
 
 const cancelChangePassword = () => {
   changePasswordVisible.value = false
   if (passwordFormRef.value) {
     passwordFormRef.value.resetFields()
+  }
+  // 重置验证码相关状态
+  countdown.value = 0
+  sendingCode.value = false
+}
+
+// 发送邮箱验证码
+const sendVerifyCode = async () => {
+  // 先验证当前密码是否已填写
+  if (!passwordFormData.currentPassword) {
+    ElMessage.warning('请先输入当前密码')
+    return
+  }
+
+  try {
+    sendingCode.value = true
+
+    // 模拟API调用 - 发送验证码到用户邮箱
+    // await sendPasswordChangeVerifyCodeAPI(userInfo.email, passwordFormData.currentPassword)
+
+    // 模拟API调用延迟
+    await new Promise(resolve => setTimeout(resolve, 1000))
+
+    ElMessage.success(`验证码已发送至 ${userInfo.email}，请查收邮件`)
+
+    // 开始倒计时
+    countdown.value = 60
+    const timer = setInterval(() => {
+      countdown.value--
+      if (countdown.value <= 0) {
+        clearInterval(timer)
+      }
+    }, 1000)
+
+  } catch (error) {
+    console.error('发送验证码失败:', error)
+    ElMessage.error('发送验证码失败，请检查当前密码是否正确')
+  } finally {
+    sendingCode.value = false
   }
 }
 
@@ -490,12 +564,23 @@ const confirmChangePassword = async () => {
     await passwordFormRef.value.validate()
     changingPassword.value = true
 
-    // 模拟API调用
+    // 构建提交数据
+    const changePasswordData = {
+      currentPassword: passwordFormData.currentPassword,
+      verifyCode: passwordFormData.verifyCode,
+      newPassword: passwordFormData.newPassword,
+      email: userInfo.email
+    }
+
+    // 模拟API调用 - 验证当前密码、验证码并修改密码
+    // await changePasswordWithVerifyCodeAPI(changePasswordData)
+
+    // 模拟API调用延迟
     await new Promise(resolve => setTimeout(resolve, 1500))
 
     ElMessage.success('密码修改成功！请重新登录。')
     changePasswordVisible.value = false
-    
+
     // 可以在这里处理重新登录逻辑
     setTimeout(() => {
       ElMessageBox.confirm(
@@ -513,7 +598,14 @@ const confirmChangePassword = async () => {
     }, 1000)
   } catch (error) {
     console.error('密码修改失败:', error)
-    ElMessage.error('密码修改失败，请重试')
+    // 根据错误类型显示不同的错误信息
+    if (error.message && error.message.includes('验证码')) {
+      ElMessage.error('验证码错误或已过期，请重新获取')
+    } else if (error.message && error.message.includes('当前密码')) {
+      ElMessage.error('当前密码错误，请重新输入')
+    } else {
+      ElMessage.error('密码修改失败，请重试')
+    }
   } finally {
     changingPassword.value = false
   }
@@ -846,6 +938,28 @@ onMounted(() => {
   font-size: 12px;
   color: #6b7280;
   line-height: 1.5;
+}
+
+.verify-code-container {
+  display: flex;
+  gap: 10px;
+
+  .verify-input {
+    flex: 1;
+  }
+
+  .verify-button {
+    flex-shrink: 0;
+    white-space: nowrap;
+    min-width: 100px;
+  }
+}
+
+.verify-tip {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 4px;
+  line-height: 1.4;
 }
 
 .dialog-footer {

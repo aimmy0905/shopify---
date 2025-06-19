@@ -150,7 +150,7 @@
 
           <el-table-column label="操作" width="180" fixed="right">
             <template #default="{ row }">
-              <el-button type="text" size="small" @click="showInvoiceDetail(row)">
+              <el-button type="text" size="small" @click="goToInvoiceDetail(row.id)">
                 查看详情
               </el-button>
               <el-button
@@ -186,12 +186,6 @@
       @success="handleCreateSuccess"
     />
 
-    <!-- Invoice详情弹窗 -->
-    <InvoiceDetailDialog
-      v-model="detailVisible"
-      :invoice="currentInvoice"
-    />
-
     <!-- 订单列表弹窗 -->
     <OrdersListDialog
       v-model="ordersVisible"
@@ -206,7 +200,6 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Plus, Download } from '@element-plus/icons-vue'
 import { useRouter } from 'vue-router'
 import CreateInvoiceDialog from './components/CreateInvoiceDialog.vue'
-import InvoiceDetailDialog from './components/InvoiceDetailDialog.vue'
 import OrdersListDialog from './components/OrdersListDialog.vue'
 import { formatDateTime } from '@/utils/format'
 
@@ -217,9 +210,7 @@ const loading = ref(false)
 const total = ref(0)
 const invoiceList = ref([])
 const createInvoiceVisible = ref(false)
-const detailVisible = ref(false)
 const ordersVisible = ref(false)
-const currentInvoice = ref(null)
 const currentOrders = ref([])
 
 // 搜索表单
@@ -392,10 +383,9 @@ const showCreateInvoiceDialog = () => {
   createInvoiceVisible.value = true
 }
 
-// 显示Invoice详情
-const showInvoiceDetail = (invoice) => {
-  currentInvoice.value = invoice
-  detailVisible.value = true
+// 跳转到Invoice详情页面
+const goToInvoiceDetail = (invoiceId) => {
+  router.push(`/merchant/invoices/${invoiceId}`)
 }
 
 // 显示订单列表

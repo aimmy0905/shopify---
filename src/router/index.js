@@ -295,6 +295,15 @@ const routes = [
         }
       },
       {
+        path: 'invoices/:id',
+        name: 'InvoiceDetail',
+        component: () => import('@/views/merchant/InvoiceDetail.vue'),
+        meta: {
+          title: 'Invoice详情 - Shopify铺货系统',
+          requiresAuth: true
+        }
+      },
+      {
         path: 'logistics',
         name: 'Logistics',
         component: () => import('@/views/merchant/Logistics.vue'),
