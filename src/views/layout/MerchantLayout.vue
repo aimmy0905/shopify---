@@ -117,6 +117,59 @@
             </template>
           </el-dropdown>
 
+          <!-- 消息中心 -->
+          <el-dropdown @command="handleNotificationCommand" class="notification-dropdown">
+            <div class="notification-trigger" @click="toggleNotificationPanel">
+              <el-badge :value="unreadNotificationCount" :hidden="unreadNotificationCount === 0" class="notification-badge">
+                <el-icon class="notification-icon"><Bell /></el-icon>
+              </el-badge>
+            </div>
+            <template #dropdown>
+              <el-dropdown-menu class="notification-dropdown-menu">
+                <div class="notification-header">
+                  <span class="notification-title">通知与公告</span>
+                  <el-button
+                    v-if="unreadNotificationCount > 0"
+                    type="primary"
+                    size="small"
+                    text
+                    @click="markAllAsRead"
+                  >
+                    全部已读
+                  </el-button>
+                </div>
+                <div class="notification-content">
+                  <div v-if="notifications.length === 0" class="empty-notifications">
+                    <el-empty description="暂无通知" :image-size="60" />
+                  </div>
+                  <div v-else class="notification-list">
+                    <div
+                      v-for="notification in notifications"
+                      :key="notification.id"
+                      class="notification-item"
+                      :class="{ 'unread': !notification.read }"
+                      @click="handleNotificationClick(notification)"
+                    >
+                      <div class="notification-icon-wrapper" :class="notification.type">
+                        <component :is="getNotificationIcon(notification.type)"></component>
+                      </div>
+                      <div class="notification-content-wrapper">
+                        <div class="notification-title-text">{{ notification.title }}</div>
+                        <div class="notification-time">{{ notification.time }}</div>
+                      </div>
+                      <div v-if="!notification.read" class="unread-dot"></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="notification-footer">
+                  <el-button type="primary" size="small" text @click="viewAllNotifications">
+                    查看全部
+                  </el-button>
+                </div>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+
           <!-- 用户信息下拉菜单 -->
           <el-dropdown>
             <div class="user-info">
@@ -166,7 +219,12 @@ import {
   Service,
   ArrowDown,
   SwitchButton,
-  Globe
+  Globe,
+  Bell,
+  Warning,
+  InfoFilled,
+  SuccessFilled,
+  Notification
 } from '@element-plus/icons-vue'
 import { t, currentLang, switchLanguage } from '@/utils/i18n.js'
 
@@ -175,6 +233,44 @@ const router = useRouter()
 
 // 当前激活的菜单项
 const activeMenu = ref('/merchant/dashboard')
+
+// 通知相关状态
+const showNotificationPanel = ref(false)
+const notifications = ref([
+  {
+    id: 1,
+    type: 'warning',
+    title: '库存不足提醒',
+    time: '1小时前',
+    read: false
+  },
+  {
+    id: 2,
+    type: 'notice',
+    title: '系统维护通知',
+    time: '3小时前',
+    read: false
+  },
+  {
+    id: 3,
+    type: 'success',
+    title: '订单处理完成',
+    time: '5小时前',
+    read: true
+  },
+  {
+    id: 4,
+    type: 'info',
+    title: '新功能上线通知',
+    time: '1天前',
+    read: false
+  }
+])
+
+// 计算未读通知数量
+const unreadNotificationCount = computed(() => {
+  return notifications.value.filter(n => !n.read).length
+})
 
 // 页面名称映射（使用国际化）
 const getPageNames = () => ({
@@ -227,20 +323,63 @@ const handleLanguageChange = (lang) => {
 // 退出登录 - 修复：返回首页选择页面
 const logout = () => {
   console.log('用户点击退出登录')
-  
+
   // 清除所有登录状态
   localStorage.removeItem('auth_token')
   localStorage.removeItem('token')
   localStorage.removeItem('userType')
   localStorage.removeItem('userInfo')
   localStorage.removeItem('rememberMe')
-  
+
   console.log('已清除所有登录状态')
-  
+
   ElMessage.success('已退出登录')
-  
+
   // 跳转到首页选择页面，而不是登录页面
   router.push('/')
+}
+
+// 通知相关方法
+const toggleNotificationPanel = () => {
+  showNotificationPanel.value = !showNotificationPanel.value
+}
+
+const getNotificationIcon = (type) => {
+  const iconMap = {
+    'warning': Warning,
+    'notice': Notification,
+    'info': InfoFilled,
+    'success': SuccessFilled
+  }
+  return iconMap[type] || Bell
+}
+
+const handleNotificationClick = (notification) => {
+  // 标记为已读
+  if (!notification.read) {
+    notification.read = true
+  }
+
+  // 这里可以根据通知类型跳转到相应页面
+  console.log('点击通知:', notification)
+  ElMessage.info(`查看通知: ${notification.title}`)
+}
+
+const handleNotificationCommand = (command) => {
+  console.log('通知命令:', command)
+}
+
+const markAllAsRead = () => {
+  notifications.value.forEach(notification => {
+    notification.read = true
+  })
+  ElMessage.success('所有通知已标记为已读')
+}
+
+const viewAllNotifications = () => {
+  // 这里可以跳转到专门的通知页面
+  ElMessage.info('跳转到通知中心页面')
+  console.log('查看所有通知')
 }
 </script>
 
@@ -343,6 +482,163 @@ const logout = () => {
   transition: background-color 0.3s;
   color: #606266;
   font-size: 14px;
+}
+
+/* 消息中心样式 */
+.notification-dropdown {
+  margin-right: 12px;
+}
+
+.notification-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 6px;
+  transition: background-color 0.3s;
+}
+
+.notification-trigger:hover {
+  background-color: #f5f7fa;
+}
+
+.notification-icon {
+  font-size: 18px;
+  color: #606266;
+  transition: color 0.3s;
+}
+
+.notification-trigger:hover .notification-icon {
+  color: #409eff;
+}
+
+.notification-badge :deep(.el-badge__content) {
+  background-color: #f56c6c;
+  border: 1px solid #fff;
+}
+
+.notification-dropdown-menu {
+  width: 320px;
+  max-height: 400px;
+  padding: 0;
+}
+
+.notification-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  background-color: #fafafa;
+}
+
+.notification-title {
+  font-weight: 600;
+  color: #303133;
+  font-size: 14px;
+}
+
+.notification-content {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.empty-notifications {
+  padding: 20px;
+  text-align: center;
+}
+
+.notification-list {
+  padding: 0;
+}
+
+.notification-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid #f5f5f5;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  position: relative;
+}
+
+.notification-item:hover {
+  background-color: #f8f9fa;
+}
+
+.notification-item.unread {
+  background-color: #f0f7ff;
+}
+
+.notification-item:last-child {
+  border-bottom: none;
+}
+
+.notification-icon-wrapper {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  font-size: 14px;
+  color: white;
+  flex-shrink: 0;
+}
+
+.notification-icon-wrapper.warning {
+  background: linear-gradient(135deg, #ff9a56 0%, #ff8a80 100%);
+}
+
+.notification-icon-wrapper.notice {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.notification-icon-wrapper.success {
+  background: linear-gradient(135deg, #67c23a 0%, #27ae60 100%);
+}
+
+.notification-icon-wrapper.info {
+  background: linear-gradient(135deg, #909399 0%, #7f8c8d 100%);
+}
+
+.notification-content-wrapper {
+  flex: 1;
+  min-width: 0;
+}
+
+.notification-title-text {
+  font-weight: 500;
+  margin-bottom: 2px;
+  color: #303133;
+  font-size: 13px;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.notification-time {
+  font-size: 12px;
+  color: #999;
+}
+
+.unread-dot {
+  width: 8px;
+  height: 8px;
+  background: #f56c6c;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+.notification-footer {
+  padding: 8px 16px;
+  border-top: 1px solid #f0f0f0;
+  background-color: #fafafa;
+  text-align: center;
 }
 
 .language-selector:hover {

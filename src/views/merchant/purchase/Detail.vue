@@ -121,10 +121,6 @@
           <span class="label">报价时间：</span>
           <span class="value">{{ formatDate(applicationData.quoteTime) }}</span>
         </div>
-        <div v-if="applicationData.finalQuote" class="info-item">
-          <span class="label">最终报价：</span>
-          <span class="value highlight">${{ applicationData.finalQuote }}</span>
-        </div>
         <div v-if="applicationData.rejectReason" class="info-item full-width">
           <span class="label">拒绝原因：</span>
           <span class="value description error">{{ applicationData.rejectReason }}</span>
@@ -186,7 +182,6 @@ const applicationData = ref({
   remarks: '',
   quoteStatus: '',
   quoteTime: '',
-  finalQuote: null,
   rejectReason: '',
   quoteDocument: null
 })
@@ -300,7 +295,6 @@ onMounted(async () => {
         quoteStatus: application.status === 'quotation_success' ? 'success' :
                     application.status === 'quotation_failed' ? 'failed' : '',
         quoteTime: application.quoted_at,
-        finalQuote: application.final_quote,
         rejectReason: application.reject_reason,
         quoteDocument: application.quote_document
       }

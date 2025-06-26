@@ -197,14 +197,8 @@
           <el-table-column label="退还结算金额" width="180">
             <template #default="{ row }">
               <div class="settlement-refund-display">
-                <!-- Primary amount -->
                 <div class="primary-amount">
-                  {{ row.settlementCurrency }} {{ row.refundSettlementAmount.toFixed(2) }}
-                </div>
-
-                <!-- Exchange rate and conversion -->
-                <div class="exchange-rate-line" :id="'conversion-' + row.id">
-                  汇率: 1.111 ≈ ${{ (row.refundSettlementAmount * 1.111).toFixed(2) }}
+                  ${{ row.refundUsdAmount.toFixed(2) }}
                 </div>
               </div>
             </template>
@@ -274,11 +268,11 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, onUnmounted } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Search, Download, Clock } from '@element-plus/icons-vue'
-import { convertCurrencyEnhanced } from '@/utils/currency.js'
+
 
 const router = useRouter()
 
@@ -289,7 +283,7 @@ const storeList = ref([])
 const total = ref(0)
 const selectedOrders = ref([])
 const advancedFilterVisible = ref([])
-const refreshTimer = ref(null)
+
 
 // 搜索表单
 const searchForm = reactive({
@@ -311,20 +305,9 @@ const pagination = reactive({
 onMounted(() => {
   loadStoreList()
   loadOrderList()
-
-  // 启动自动刷新汇率，每5分钟更新一次
-  refreshTimer.value = setInterval(() => {
-    fetchExchangeRates()
-  }, 5 * 60 * 1000) // 5分钟
 })
 
-onUnmounted(() => {
-  // 清理定时器
-  if (refreshTimer.value) {
-    clearInterval(refreshTimer.value)
-    refreshTimer.value = null
-  }
-})
+
 
 // 方法
 const loadStoreList = async () => {
@@ -586,11 +569,6 @@ const loadOrderList = async () => {
     ]
 
     total.value = 43
-
-    // Fetch exchange rates for all orders after a short delay to ensure DOM is ready
-    setTimeout(() => {
-      fetchExchangeRates()
-    }, 100)
   } catch (error) {
     ElMessage.error('加载售后订单列表失败')
   } finally {
@@ -598,45 +576,7 @@ const loadOrderList = async () => {
   }
 }
 
-// Fetch exchange rates for all orders
-const fetchExchangeRates = async () => {
-  for (const order of orderList.value) {
-    if (order.settlementCurrency !== 'USD') {
-      try {
-        const conversion = await convertCurrencyEnhanced(
-          order.refundSettlementAmount,
-          order.settlementCurrency,
-          'USD'
-        )
 
-        // Update the display to match new screenshot format: "汇率: 1.111 ≈ $9999.50"
-        const conversionElement = document.getElementById(`conversion-${order.id}`)
-
-        if (conversionElement) {
-          const rate = conversion.exchangeRate.toFixed(3)
-          const convertedAmount = conversion.convertedAmount.toFixed(2)
-          conversionElement.textContent = `汇率: ${rate} ≈ $${convertedAmount}`
-        }
-
-      } catch (error) {
-        console.error(`Failed to convert currency for order ${order.id}:`, error)
-
-        const conversionElement = document.getElementById(`conversion-${order.id}`)
-        if (conversionElement) {
-          conversionElement.textContent = '汇率获取失败'
-          conversionElement.style.color = '#F56C6C'
-        }
-      }
-    } else {
-      // Same currency, show rate as 1.000
-      const conversionElement = document.getElementById(`conversion-${order.id}`)
-
-      if (conversionElement) {
-        conversionElement.textContent = `汇率: 1.000 ≈ $${order.refundSettlementAmount.toFixed(2)}`
-      }
-    }
-  }
-}
 
 const handleSearch = () => {
   pagination.page = 1
@@ -851,20 +791,7 @@ const formatDateTime = (dateTime) => {
   color: #F56C6C;
 }
 
-/* Enhanced currency display styling */
-.settlement-refund {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.settlement-refund .exchange-info {
-  font-size: 12px;
-  color: #909399;
-  margin-top: 4px;
-}
-
-/* Settlement refund display matching new screenshot format */
+/* Settlement refund display */
 .settlement-refund-display {
   display: flex;
   flex-direction: column;
@@ -878,14 +805,6 @@ const formatDateTime = (dateTime) => {
   font-weight: 600;
   color: #303133;
   line-height: 1.5;
-  margin-bottom: 4px;
-}
-
-.settlement-refund-display .exchange-rate-line {
-  font-size: 12px;
-  color: #909399;
-  font-weight: 400;
-  line-height: 1.4;
 }
 
 .refund-reason {

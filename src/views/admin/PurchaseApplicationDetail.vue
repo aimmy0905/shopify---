@@ -117,9 +117,6 @@
         <el-descriptions-item label="报价时间" v-if="application.quoted_at">
           {{ application.quoted_at }}
         </el-descriptions-item>
-        <el-descriptions-item label="最终报价金额" v-if="application.final_quote">
-          ${{ application.final_quote }}
-        </el-descriptions-item>
         <el-descriptions-item label="拒绝原因" v-if="application.reject_reason" span="2">
           <div class="description-text">{{ application.reject_reason }}</div>
         </el-descriptions-item>
@@ -323,22 +320,7 @@
               </el-radio-group>
             </el-form-item>
             
-            <el-form-item 
-              v-if="completeForm.result === 'success'" 
-              label="最终报价金额"
-              required
-            >
-              <el-input-number
-                v-model="completeForm.finalPrice"
-                :precision="2"
-                :step="0.01"
-                :min="0"
-                controls-position="right"
-                placeholder="请输入最终报价"
-                style="width: 200px"
-              />
-              <span style="margin-left: 10px">美元</span>
-            </el-form-item>
+
             
             <el-form-item 
               v-if="completeForm.result === 'failed'" 
@@ -440,7 +422,6 @@ const quoteForm = reactive({
 
 const completeForm = reactive({
   result: 'success',
-  finalPrice: null,
   failReason: ''
 })
 
@@ -566,33 +547,26 @@ const confirmQuoteUpload = () => {
 
 const completeQuote = () => {
   completeForm.result = 'success'
-  completeForm.finalPrice = null
   completeForm.failReason = ''
   completeQuoteDialogVisible.value = true
 }
 
 const confirmCompleteQuote = () => {
-  if (completeForm.result === 'success' && !completeForm.finalPrice) {
-    ElMessage.error('请输入最终报价金额')
-    return
-  }
-  
   if (completeForm.result === 'failed' && !completeForm.failReason.trim()) {
     ElMessage.error('请输入失败原因')
     return
   }
-  
+
   // 更新申请状态
   if (completeForm.result === 'success') {
     application.value.status = 'quotation_success'
-    application.value.final_quote = completeForm.finalPrice
     ElMessage.success('报价完成，可以创建采购订单')
   } else {
     application.value.status = 'quotation_failed'
     application.value.reject_reason = completeForm.failReason
     ElMessage.success('已标记为报价失败')
   }
-  
+
   completeQuoteDialogVisible.value = false
 }
 

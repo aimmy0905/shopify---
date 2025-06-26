@@ -193,10 +193,7 @@
           <el-table-column label="结算金额信息" width="180">
             <template #default="{ row }">
               <div class="settlement-amount">
-                <div>{{ row.settlementCurrency }} {{ row.settlementAmount.toFixed(2) }}</div>
-                <div class="exchange-info">
-                  汇率: {{ row.exchangeRate }} ≈ ${{ row.usdAmount.toFixed(2) }}
-                </div>
+                <div>${{ row.usdAmount.toFixed(2) }}</div>
               </div>
             </template>
           </el-table-column>

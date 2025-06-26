@@ -31,10 +31,6 @@
           <span class="value">${{ quoteData?.targetPrice }}</span>
         </div>
         <div class="info-item">
-          <span class="label">最终报价：</span>
-          <span class="value highlight">${{ quoteData?.finalQuote }}</span>
-        </div>
-        <div class="info-item">
           <span class="label">报价时间：</span>
           <span class="value">{{ formatDate(quoteData?.quoteTime) }}</span>
         </div>

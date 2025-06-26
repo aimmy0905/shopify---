@@ -156,14 +156,7 @@
           </el-table-column>
           
           <el-table-column prop="created_at" label="申请时间" width="120" />
-          
-          <el-table-column prop="final_quote" label="最终报价" width="100">
-            <template #default="{ row }">
-              <span v-if="row.final_quote">${{ row.final_quote }}</span>
-              <span v-else>-</span>
-            </template>
-          </el-table-column>
-          
+
           <el-table-column label="操作" width="200" fixed="right">
             <template #default="{ row }">
               <el-button size="small" @click="viewApplicationDetail(row)">查看详情</el-button>
@@ -375,22 +368,7 @@
               </el-radio-group>
             </el-form-item>
             
-            <el-form-item 
-              v-if="completeForm.result === 'success'" 
-              label="最终报价金额"
-              required
-            >
-              <el-input-number
-                v-model="completeForm.finalPrice"
-                :precision="2"
-                :step="0.01"
-                :min="0"
-                controls-position="right"
-                placeholder="请输入最终报价"
-                style="width: 200px"
-              />
-              <span style="margin-left: 10px">美元</span>
-            </el-form-item>
+
             
             <el-form-item 
               v-if="completeForm.result === 'failed'" 
@@ -571,7 +549,6 @@ const quoteForm = reactive({
 
 const completeForm = reactive({
   result: 'success',
-  finalPrice: null,
   failReason: ''
 })
 
@@ -765,28 +742,21 @@ const confirmQuoteUpload = () => {
 const completeQuote = (application) => {
   currentApplication.value = application
   completeForm.result = 'success'
-  completeForm.finalPrice = null
   completeForm.failReason = ''
   completeQuoteDialogVisible.value = true
 }
 
 const confirmCompleteQuote = () => {
-  if (completeForm.result === 'success' && !completeForm.finalPrice) {
-    ElMessage.error('请输入最终报价金额')
-    return
-  }
-  
   if (completeForm.result === 'failed' && !completeForm.failReason.trim()) {
     ElMessage.error('请输入失败原因')
     return
   }
-  
+
   // 更新申请状态
   const application = applicationList.value.find(app => app.id === currentApplication.value.id)
   if (application) {
     if (completeForm.result === 'success') {
       application.status = 'quotation_success'
-      application.final_quote = completeForm.finalPrice
       ElMessage.success('报价完成，可以创建采购订单')
     } else {
       application.status = 'quotation_failed'
@@ -794,7 +764,7 @@ const confirmCompleteQuote = () => {
       ElMessage.success('已标记为报价失败')
     }
   }
-  
+
   completeQuoteDialogVisible.value = false
 }
 

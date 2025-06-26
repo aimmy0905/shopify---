@@ -91,16 +91,7 @@
           </template>
           
           <el-descriptions border :column="2">
-            <el-descriptions-item label="结算币种">
-              {{ orderInfo.settlement.currency }}
-            </el-descriptions-item>
-            <el-descriptions-item label="支付金额">
-              {{ orderInfo.settlement.currency }} {{ orderInfo.settlement.amount.toFixed(2) }}
-            </el-descriptions-item>
-            <el-descriptions-item label="当前汇率">
-              {{ orderInfo.settlement.exchangeRate }}
-            </el-descriptions-item>
-            <el-descriptions-item label="美元金额">
+            <el-descriptions-item label="结算金额">
               ${{ orderInfo.settlement.usdAmount.toFixed(2) }}
             </el-descriptions-item>
             <el-descriptions-item label="结算状态">

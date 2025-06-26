@@ -23,63 +23,9 @@
       </div>
     </div>
 
-    <!-- 筛选工具 -->
-    <div class="filter-section">
-      <div class="filter-row">
-        <el-date-picker
-          v-model="dateRange"
-          type="daterange"
-          range-separator="至"
-          start-placeholder="开始日期"
-          end-placeholder="结束日期"
-          format="YYYY-MM-DD"
-          value-format="YYYY-MM-DD"
-        />
-        <el-select v-model="typeFilter" placeholder="类型筛选">
-          <el-option label="全部" value="all"></el-option>
-          <el-option label="充值" value="recharge"></el-option>
-          <el-option label="消费" value="expense"></el-option>
-          <el-option label="佣金" value="commission"></el-option>
-        </el-select>
-        <div class="amount-filter">
-          <el-input v-model="amountRange[0]" placeholder="最小金额" type="number" />
-          <span>-</span>
-          <el-input v-model="amountRange[1]" placeholder="最大金额" type="number" />
-        </div>
-        <el-button @click="resetFilters">重置</el-button>
-      </div>
-    </div>
+    <!-- 筛选工具已移除 - 因为删除了交易记录列表显示 -->
 
-    <!-- 余额明细标签页 -->
-    <div class="balance-tabs">
-      <el-tabs v-model="activeTab" @tab-change="handleTabChange">
-        <el-tab-pane label="全部记录" name="all">
-          <balance-records-table :records="filteredRecords" @view-detail="viewRecordDetail" />
-        </el-tab-pane>
-        <el-tab-pane label="充值记录" name="recharge">
-          <balance-records-table :records="rechargeRecords" @view-detail="viewRecordDetail" />
-        </el-tab-pane>
-        <el-tab-pane label="消费记录" name="expense">
-          <balance-records-table :records="expenseRecords" @view-detail="viewRecordDetail" />
-        </el-tab-pane>
-        <el-tab-pane label="佣金收入" name="commission">
-          <balance-records-table :records="commissionRecords" :hide-original-currency="true" :hide-view-detail="true" @view-detail="viewRecordDetail" />
-        </el-tab-pane>
-      </el-tabs>
-    </div>
-
-    <!-- 分页 -->
-    <div class="pagination-wrapper">
-      <el-pagination
-        background
-        layout="total, sizes, prev, pager, next, jumper"
-        :total="totalRecords"
-        :page-size="pageSize"
-        :current-page="currentPage"
-        @size-change="handleSizeChange"
-        @current-change="handleCurrentChange"
-      />
-    </div>
+    <!-- 交易记录列表已移除 - 根据用户要求删除所有交易记录列表的显示 -->
 
     <!-- 充值弹窗 -->
     <recharge-dialog v-model="showRechargeDialog" @success="handleRechargeSuccess" />
@@ -93,183 +39,27 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { CreditCard, Money } from '@element-plus/icons-vue'
-import BalanceRecordsTable from './components/BalanceRecordsTable.vue'
+// BalanceRecordsTable 组件已移除 - 因为删除了交易记录列表显示
 import RechargeDialog from './components/RechargeDialog.vue'
 import WithdrawDialog from './components/WithdrawDialog.vue'
 import RecordDetailDialog from './components/RecordDetailDialog.vue'
 
 // 响应式数据
 const currentBalance = ref(1250.75)
-const activeTab = ref('all')
-const dateRange = ref([])
-const typeFilter = ref('all')
-const amountRange = ref(['', ''])
-const currentPage = ref(1)
-const pageSize = ref(20)
 const showRechargeDialog = ref(false)
 const showWithdrawDialog = ref(false)
 const showDetailDialog = ref(false)
 const selectedRecord = ref(null)
 
-// 余额记录数据
-const balanceRecords = ref([
-  {
-    id: 1,
-    type: 'recharge',
-    amount: 2000.00,
-    originalCurrency: 'USD',
-    originalAmount: 2000.00,
-    exchangeRate: 1.0000,
-    usdAmount: 2000.00,
-    currency: 'USD', // 保持兼容性
-    time: '2024-05-21 14:30:00',
-    source: 'PayPal充值',
-    status: 'confirmed',
-    description: '账户充值',
-    orderId: null,
-    receiptUrl: '/receipts/recharge_001.jpg'
-  },
-  {
-    id: 2,
-    type: 'expense',
-    amount: -450.00,
-    originalCurrency: 'USD',
-    originalAmount: -450.00,
-    exchangeRate: 1.0000,
-    usdAmount: -450.00,
-    currency: 'USD', // 保持兼容性
-    time: '2024-05-20 10:15:00',
-    source: '采购订单 #PO202405200001',
-    status: 'confirmed',
-    description: '采购商品付款',
-    orderId: 'PO202405200001',
-    receiptUrl: null
-  },
-  {
-    id: 3,
-    type: 'commission',
-    amount: 67.30,
-    originalCurrency: 'USD',
-    originalAmount: 67.30,
-    exchangeRate: 1.0000,
-    usdAmount: 67.30,
-    currency: 'USD', // 保持兼容性
-    time: '2024-05-19 16:45:00',
-    source: '下级用户订单佣金',
-    status: 'confirmed',
-    description: '佣金收入',
-    orderId: 'OR202405190001',
-    receiptUrl: null
-  },
-  {
-    id: 4,
-    type: 'refund', // 修改为退款类型
-    amount: 125.50, // 退款显示为正数，用+表示
-    originalCurrency: 'EUR',
-    originalAmount: 115.20,
-    exchangeRate: 1.0894,
-    usdAmount: 125.50,
-    currency: 'USD', // 保持兼容性
-    time: '2024-05-18 09:20:00',
-    source: '退款处理',
-    status: 'confirmed',
-    description: '客户退款',
-    orderId: 'OR202405180001',
-    receiptUrl: null
-  },
-  {
-    id: 5,
-    type: 'recharge',
-    amount: 1500.00,
-    originalCurrency: 'EUR',
-    originalAmount: 1377.50,
-    exchangeRate: 1.0889,
-    usdAmount: 1500.00,
-    currency: 'USD', // 保持兼容性
-    time: '2024-05-17 15:20:00',
-    source: 'Wise转账',
-    status: 'confirmed',
-    description: '欧元充值',
-    orderId: null,
-    receiptUrl: '/receipts/recharge_002.jpg'
-  }
-])
+// 交易记录相关数据已移除 - 因为删除了交易记录列表显示
 
-// 计算属性
-const filteredRecords = computed(() => {
-  let records = balanceRecords.value
-  
-  // 按标签页筛选
-  if (activeTab.value !== 'all') {
-    records = records.filter(record => record.type === activeTab.value)
-  }
-  
-  // 按类型筛选
-  if (typeFilter.value !== 'all') {
-    records = records.filter(record => record.type === typeFilter.value)
-  }
-  
-  // 按日期筛选
-  if (dateRange.value && dateRange.value.length === 2) {
-    records = records.filter(record => {
-      const recordDate = record.time.split(' ')[0]
-      return recordDate >= dateRange.value[0] && recordDate <= dateRange.value[1]
-    })
-  }
-  
-  // 按金额筛选
-  if (amountRange.value[0] !== '') {
-    records = records.filter(record => Math.abs(record.amount) >= Number(amountRange.value[0]))
-  }
-  if (amountRange.value[1] !== '') {
-    records = records.filter(record => Math.abs(record.amount) <= Number(amountRange.value[1]))
-  }
-  
-  return records
-})
+// 余额记录数据已移除 - 因为删除了交易记录列表显示
 
-const rechargeRecords = computed(() => 
-  balanceRecords.value.filter(record => record.type === 'recharge')
-)
+// 计算属性已移除 - 因为删除了交易记录列表显示
 
-const expenseRecords = computed(() =>
-  balanceRecords.value.filter(record => record.type === 'expense' || record.type === 'refund')
-)
-
-const commissionRecords = computed(() => 
-  balanceRecords.value.filter(record => record.type === 'commission')
-)
-
-const totalRecords = computed(() => filteredRecords.value.length)
-
-// 方法
-const handleTabChange = (tab) => {
-  activeTab.value = tab
-  currentPage.value = 1
-}
-
-const resetFilters = () => {
-  dateRange.value = []
-  typeFilter.value = 'all'
-  amountRange.value = ['', '']
-  currentPage.value = 1
-}
-
-const handleSizeChange = (size) => {
-  pageSize.value = size
-  currentPage.value = 1
-}
-
-const handleCurrentChange = (page) => {
-  currentPage.value = page
-}
-
-const viewRecordDetail = (record) => {
-  selectedRecord.value = record
-  showDetailDialog.value = true
-}
+// 交易记录相关方法已移除 - 因为删除了交易记录列表显示
 
 const handleRechargeSuccess = () => {
   // 刷新余额和记录
@@ -361,47 +151,5 @@ onMounted(() => {
   }
 }
 
-.filter-section {
-  background: white;
-  border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 20px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-  
-  .filter-row {
-    display: flex;
-    gap: 15px;
-    align-items: center;
-    flex-wrap: wrap;
-    
-    .amount-filter {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      
-      .el-input {
-        width: 120px;
-      }
-      
-      span {
-        color: #666;
-      }
-    }
-  }
-}
-
-.balance-tabs {
-  background: white;
-  border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 20px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-  min-height: 400px;
-}
-
-.pagination-wrapper {
-  display: flex;
-  justify-content: center;
-  padding: 20px 0;
-}
+/* 交易记录相关样式已移除 - 因为删除了交易记录列表显示 */
 </style> 

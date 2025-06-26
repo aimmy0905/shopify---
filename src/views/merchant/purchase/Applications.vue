@@ -115,13 +115,6 @@
           </template>
         </el-table-column>
 
-        <el-table-column prop="finalQuote" label="最终报价" width="100">
-          <template #default="scope">
-            <span v-if="scope.row.finalQuote">${{ scope.row.finalQuote }}</span>
-            <span v-else>-</span>
-          </template>
-        </el-table-column>
-
         <el-table-column label="操作" width="180" fixed="right">
           <template #default="scope">
             <div class="action-buttons">

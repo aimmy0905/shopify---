@@ -60,10 +60,7 @@
                 <span class="label">结算金额:</span>
                 <div class="settlement-amount">
                   <div class="primary-amount">
-                    {{ orderDetail.settlementCurrency }} {{ orderDetail.refundSettlementAmount.toFixed(2) }}
-                  </div>
-                  <div class="exchange-rate-line" id="exchange-rate-display">
-                    汇率: 1.111 ≈ ${{ (orderDetail.refundSettlementAmount * 1.111).toFixed(2) }}
+                    ${{ orderDetail.refundUsdAmount.toFixed(2) }}
                   </div>
                 </div>
               </div>
@@ -224,7 +221,7 @@ import {
   Clock,
   Box
 } from '@element-plus/icons-vue'
-import { convertCurrencyEnhanced } from '@/utils/currency.js'
+
 
 const route = useRoute()
 const router = useRouter()
@@ -480,28 +477,7 @@ const generateStatusTimeline = () => {
 
 
 
-const updateExchangeRate = async () => {
-  if (!orderDetail.value || orderDetail.value.settlementCurrency === 'USD') {
-    return
-  }
 
-  try {
-    const conversion = await convertCurrencyEnhanced(
-      orderDetail.value.refundSettlementAmount,
-      orderDetail.value.settlementCurrency,
-      'USD'
-    )
-
-    const exchangeRateElement = document.getElementById('exchange-rate-display')
-    if (exchangeRateElement) {
-      const rate = conversion.exchangeRate.toFixed(3)
-      const convertedAmount = conversion.convertedAmount.toFixed(2)
-      exchangeRateElement.textContent = `汇率: ${rate} ≈ $${convertedAmount}`
-    }
-  } catch (error) {
-    console.error('Failed to update exchange rate:', error)
-  }
-}
 
 
 

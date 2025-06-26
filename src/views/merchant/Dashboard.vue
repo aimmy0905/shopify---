@@ -1,35 +1,29 @@
 <template>
   <div class="dashboard">
-    <!-- 欢迎横幅 -->
-    <div class="welcome-banner">
-      <div class="welcome-content">
-        <h1>欢迎回来，商家用户！</h1>
-        <p class="date">{{ currentDate }}</p>
-      </div>
-      <div class="banner-decoration">
-        <el-icon class="decoration-icon"><Sunny /></el-icon>
-      </div>
-    </div>
-
-    <!-- 账户余额卡片 -->
-    <div class="balance-card">
-      <div class="balance-header">
-        <h3>账户余额</h3>
-        <el-link @click="goToBalance" type="primary">查看详情</el-link>
-      </div>
-      <div class="balance-amount">
-        <span class="currency">$</span>
-        <span class="amount">{{ accountBalance.toFixed(2) }}</span>
-      </div>
-      <div class="balance-actions">
-        <el-button type="primary" @click="handleRecharge">
-          <el-icon><CreditCard /></el-icon>
-          余额充值
-        </el-button>
-        <el-button @click="handleWithdraw">
-          <el-icon><Money /></el-icon>
-          余额提现
-        </el-button>
+    <!-- 顶部余额卡片 - 蓝色主题 -->
+    <div class="balance-card-new">
+      <div class="balance-main">
+        <div class="balance-left">
+          <div class="balance-title">账户余额</div>
+          <div class="balance-amount-new">
+            <span class="currency-new">$</span>
+            <span class="amount-new">{{ accountBalance.toFixed(2) }}</span>
+          </div>
+          <div class="balance-actions">
+            <el-button type="text" class="action-btn" @click="handleRecharge">
+              余额充值
+            </el-button>
+            <el-button type="text" class="action-btn" @click="handleWithdraw">
+              余额提现
+            </el-button>
+            <el-button type="text" class="action-btn" @click="handleViewMore">
+              查看更多
+            </el-button>
+          </div>
+        </div>
+        <div class="balance-right">
+          <!-- 右侧预留空间，可用于其他功能 -->
+        </div>
       </div>
     </div>
 
@@ -54,11 +48,152 @@
       <div class="overview-cards">
         <div class="overview-card" v-for="item in overviewData" :key="item.title">
           <div class="card-icon" :style="{ '--icon-color': item.color }">
-            <component :is="item.icon"></component>
+            <el-icon><component :is="item.icon" /></el-icon>
           </div>
           <div class="card-content">
-            <h4>{{ item.title }}</h4>
+            <div class="card-title">{{ item.title }}</div>
             <div class="card-value">{{ item.value }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 订单统计图表 -->
+    <div class="chart-section">
+      <div class="chart-header">
+        <h3>订单统计</h3>
+        <div class="chart-filters">
+          <div class="time-filter">
+            <el-button-group>
+              <el-button
+                v-for="option in chartTimeOptions"
+                :key="option.value"
+                :type="chartTimeRange === option.value ? 'primary' : 'default'"
+                @click="handleChartTimeChange(option.value)"
+                size="small"
+              >
+                {{ option.label }}
+              </el-button>
+            </el-button-group>
+          </div>
+          <div class="custom-date-filter" v-if="chartTimeRange === 'custom'">
+            <el-date-picker
+              v-model="customChartDateRange"
+              type="daterange"
+              range-separator="至"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+              size="small"
+              @change="handleCustomDateChange"
+            />
+          </div>
+        </div>
+      </div>
+      <div class="chart-container">
+        <svg
+          ref="chartSvg"
+          width="100%"
+          height="300"
+          @mousemove="handleChartMouseMove"
+          @mouseleave="hideTooltip"
+        >
+          <!-- 图表网格线 -->
+          <defs>
+            <pattern id="grid" width="50" height="30" patternUnits="userSpaceOnUse">
+              <path d="M 50 0 L 0 0 0 30" fill="none" stroke="#f0f0f0" stroke-width="1"/>
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#grid)" />
+
+          <!-- 订单数据线 -->
+          <polyline
+            :points="orderLinePoints"
+            fill="none"
+            stroke="#409eff"
+            stroke-width="2"
+          />
+
+          <!-- 销售额数据线 -->
+          <polyline
+            :points="salesLinePoints"
+            fill="none"
+            stroke="#67c23a"
+            stroke-width="2"
+          />
+
+          <!-- 数据点 -->
+          <circle
+            v-for="(point, index) in chartData"
+            :key="'orders-' + index"
+            :cx="getXPosition(index)"
+            :cy="getOrderYPosition(point.orders)"
+            r="4"
+            fill="#409eff"
+          />
+
+          <circle
+            v-for="(point, index) in chartData"
+            :key="'sales-' + index"
+            :cx="getXPosition(index)"
+            :cy="getSalesYPosition(point.sales)"
+            r="4"
+            fill="#67c23a"
+          />
+        </svg>
+
+        <!-- 图表提示框 -->
+        <div
+          v-if="showTooltip"
+          class="chart-tooltip"
+          :style="{ left: tooltipX + 'px', top: tooltipY + 'px' }"
+        >
+          <div class="tooltip-date">{{ tooltipData.date }}</div>
+          <div class="tooltip-item">
+            <span class="tooltip-label orders">订单数：</span>
+            <span class="tooltip-value">{{ tooltipData.orders }}</span>
+          </div>
+          <div class="tooltip-item">
+            <span class="tooltip-label sales">销售额：</span>
+            <span class="tooltip-value">¥{{ tooltipData.sales }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 交易记录 -->
+    <div class="transaction-history">
+      <div class="transaction-header">
+        <h3>交易记录</h3>
+        <div class="transaction-filters">
+          <el-button-group>
+            <el-button
+              v-for="option in timeRangeOptions"
+              :key="option.value"
+              :type="overviewTimeRange === option.value ? 'primary' : 'default'"
+              @click="overviewTimeRange = option.value"
+              size="small"
+            >
+              {{ option.label }}
+            </el-button>
+          </el-button-group>
+        </div>
+      </div>
+      <div class="transaction-list">
+        <div class="transaction-item" v-for="record in recentTransactions" :key="record.id">
+          <div class="transaction-icon" :class="record.type">
+            <el-icon><component :is="getTransactionIcon(record.type)" /></el-icon>
+          </div>
+          <div class="transaction-content">
+            <div class="transaction-title">{{ record.title }}</div>
+            <div class="transaction-time">{{ record.time }}</div>
+          </div>
+          <div class="transaction-amount" :class="record.type">
+            {{ record.type === 'income' ? '+' : '-' }}¥{{ Math.abs(record.amount).toFixed(2) }}
+          </div>
+          <div class="transaction-actions">
+            <el-button type="text" size="small" @click="viewTransactionDetail(record)">
+              查看详情
+            </el-button>
           </div>
         </div>
       </div>
@@ -130,174 +265,6 @@
       </div>
     </div>
 
-    <!-- 订单统计图表 -->
-    <div class="chart-section">
-      <div class="chart-header">
-        <h3>订单统计</h3>
-        <div class="chart-filters">
-          <div class="chart-time-filter">
-            <el-button-group>
-              <el-button
-                v-for="option in chartTimeOptions"
-                :key="option.value"
-                :type="chartTimeRange === option.value ? 'primary' : 'default'"
-                @click="handleChartTimeChange(option.value)"
-                size="small"
-              >
-                {{ option.label }}
-              </el-button>
-            </el-button-group>
-          </div>
-          <div class="custom-date-picker" v-if="chartTimeRange === 'custom'">
-            <el-date-picker
-              v-model="customChartDateRange"
-              type="daterange"
-              range-separator="至"
-              start-placeholder="开始日期"
-              end-placeholder="结束日期"
-              size="small"
-              @change="handleCustomDateChange"
-              style="margin-left: 12px;"
-            />
-          </div>
-        </div>
-      </div>
-      <div class="chart-container">
-        <svg 
-          ref="chartSvg" 
-          width="100%" 
-          height="300" 
-          @mousemove="handleChartMouseMove"
-          @mouseleave="hideTooltip"
-        >
-          <!-- 网格背景 -->
-          <defs>
-            <pattern id="grid" width="40" height="30" patternUnits="userSpaceOnUse">
-              <path d="M 40 0 L 0 0 0 30" fill="none" stroke="#f0f0f0" stroke-width="1"/>
-            </pattern>
-          </defs>
-          <rect width="100%" height="100%" fill="url(#grid)" />
-          
-          <!-- 订单数据线 -->
-          <polyline
-            :points="orderLinePoints"
-            fill="none"
-            stroke="#409eff"
-            stroke-width="2"
-          />
-          
-          <!-- 销售额数据线 -->
-          <polyline
-            :points="salesLinePoints"
-            fill="none"
-            stroke="#67c23a"
-            stroke-width="2"
-          />
-          
-          <!-- 数据点 -->
-          <circle
-            v-for="(point, index) in chartData"
-            :key="'order-' + index"
-            :cx="getXPosition(index)"
-            :cy="getOrderYPosition(point.orders)"
-            r="4"
-            fill="#409eff"
-          />
-          
-          <circle
-            v-for="(point, index) in chartData"
-            :key="'sales-' + index"
-            :cx="getXPosition(index)"
-            :cy="getSalesYPosition(point.sales)"
-            r="4"
-            fill="#67c23a"
-          />
-        </svg>
-        
-        <!-- 图表图例 -->
-        <div class="chart-legend">
-          <div class="legend-item">
-            <span class="legend-color" style="background-color: #409eff;"></span>
-            <span>订单数</span>
-          </div>
-          <div class="legend-item">
-            <span class="legend-color" style="background-color: #67c23a;"></span>
-            <span>销售额</span>
-          </div>
-        </div>
-        
-        <!-- 悬停提示框 -->
-        <div 
-          v-if="showTooltip" 
-          class="chart-tooltip" 
-          :style="{ left: tooltipX + 'px', top: tooltipY + 'px' }"
-        >
-          <div><strong>{{ tooltipData.date }}</strong></div>
-          <div>订单数: {{ tooltipData.orders }}</div>
-          <div>销售额: ¥{{ tooltipData.sales.toLocaleString() }}</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 最近交易记录 -->
-    <div class="transaction-records">
-      <div class="records-header">
-        <h3>最近交易记录</h3>
-        <el-link @click="goToBalance" type="primary">查看全部</el-link>
-      </div>
-      <div class="records-list">
-        <div class="record-item" v-for="record in recentTransactions" :key="record.id">
-          <div class="record-icon" :class="record.type">
-            <component :is="getTransactionIcon(record.type)"></component>
-          </div>
-          <div class="record-content">
-            <div class="record-title">{{ record.title }}</div>
-            <div class="record-description">{{ record.description }}</div>
-            <div class="record-time">{{ record.time }}</div>
-          </div>
-          <div class="record-amount" :class="record.type">
-            {{ record.type === 'income' ? '+' : '-' }}¥{{ Math.abs(record.amount).toLocaleString() }}
-          </div>
-          <div class="record-actions">
-            <el-button size="small" text @click="viewTransactionDetail(record)">详情</el-button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 快捷操作 -->
-    <div class="quick-actions">
-      <h3>快捷操作</h3>
-      <div class="action-cards">
-        <div class="action-card" v-for="action in quickActions" :key="action.key" @click="handleQuickAction(action.key)">
-          <div class="action-icon" :style="{ '--icon-color': action.color }">
-            <component :is="action.icon"></component>
-          </div>
-          <div class="action-title">{{ action.title }}</div>
-          <div class="action-description">{{ action.description }}</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 通知与公告 -->
-    <div class="notifications">
-      <h3>通知与公告</h3>
-      <div class="notification-list">
-        <div class="notification-item" v-for="notice in notifications" :key="notice.id">
-          <div class="notification-icon" :class="notice.type">
-            <component :is="getNotificationIcon(notice.type)"></component>
-          </div>
-          <div class="notification-content">
-            <div class="notification-title">{{ notice.title }}</div>
-            <div class="notification-time">{{ notice.time }}</div>
-          </div>
-          <div class="notification-actions">
-            <el-button size="small" text>查看</el-button>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <!-- 充值弹窗 -->
     <recharge-dialog v-model="showRechargeDialog" @success="handleRechargeSuccess" />
 
@@ -309,53 +276,44 @@
 <script>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-
-// Element Plus图标
 import {
-  Sunny, DataAnalysis, ShoppingBag, UserFilled, Refresh,
-  Coin, CirclePlus, DocumentAdd, View, ShoppingCartFull,
-  CreditCard, BellFilled, WarningFilled, PieChart,
-  TrendCharts, Goods, Ship, Service, Money,
-  // 新增更好看的图标
-  WalletFilled, Wallet, Plus, ShoppingCart,
-  Management, InfoFilled, Bell, SuccessFilled,
-  CircleCheckFilled, CircleCloseFilled, Timer,
-  Notification, Warning
+  Phone, Coin, ShoppingBag, UserFilled, Refresh, DocumentAdd,
+  Money, CreditCard, ShoppingCart, Goods
 } from '@element-plus/icons-vue'
-
-// 导入充值和提现弹窗组件
 import RechargeDialog from './components/RechargeDialog.vue'
 import WithdrawDialog from './components/WithdrawDialog.vue'
 
 export default {
   name: 'Dashboard',
   components: {
-    Sunny, DataAnalysis, ShoppingBag, UserFilled, Refresh,
-    Coin, CirclePlus, DocumentAdd, View, ShoppingCartFull,
-    CreditCard, BellFilled, WarningFilled, PieChart,
-    TrendCharts, Goods, Ship, Service, Money,
-    // 新增图标组件
-    WalletFilled, Wallet, Plus, ShoppingCart,
-    Management, InfoFilled, Bell, SuccessFilled,
-    CircleCheckFilled, CircleCloseFilled, Timer,
-    Notification, Warning,
-    RechargeDialog, WithdrawDialog
+    Phone, Coin, ShoppingBag, UserFilled, Refresh, DocumentAdd,
+    Money, CreditCard, ShoppingCart, Goods,
+    RechargeDialog,
+    WithdrawDialog
   },
   setup() {
     const router = useRouter()
-    
+
     // 响应式数据
-    const currentDate = ref('')
-    const accountBalance = ref(1285.69)
+    const accountBalance = ref(12580.50)
+    const showRechargeDialog = ref(false)
+    const showWithdrawDialog = ref(false)
     const overviewTimeRange = ref('7days')
     const rankingTimeRange = ref('30days')
     const selectedStore = ref('all')
     const chartTimeRange = ref('7days')
     const customChartDateRange = ref([])
 
-    // 弹窗状态
-    const showRechargeDialog = ref(false)
-    const showWithdrawDialog = ref(false)
+    // 图表相关
+    const showTooltip = ref(false)
+    const tooltipX = ref(0)
+    const tooltipY = ref(0)
+    const tooltipData = ref({})
+
+    // 计算属性
+    const currentDate = computed(() => {
+      return new Date().toLocaleString('zh-CN')
+    })
 
     // 时间范围选项
     const timeRangeOptions = reactive([
@@ -363,25 +321,23 @@ export default {
       { label: '近七日', value: '7days' },
       { label: '近30天', value: '30days' },
       { label: '近60天', value: '60days' },
-      { label: '近1年', value: '1year' },
-      { label: '自定义', value: 'custom' }
+      { label: '近1年', value: '1year' }
     ])
 
-    // 产品排行时间选项
     const rankingTimeOptions = reactive([
-      { label: '最近3天', value: '3days' },
-      { label: '最近15天', value: '15days' },
-      { label: '最近30天', value: '30days' }
+      { label: '近7天', value: '7days' },
+      { label: '近30天', value: '30days' },
+      { label: '近60天', value: '60days' },
+      { label: '近1年', value: '1year' }
     ])
 
-    // 店铺选项
     const storeOptions = reactive([
       { label: '全部店铺', value: 'all' },
-      { label: 'Shopify店铺A', value: 'shopify-a' },
-      { label: 'Shopify店铺B', value: 'shopify-b' }
+      { label: 'Shopify Store 1', value: 'store1' },
+      { label: 'Shopify Store 2', value: 'store2' },
+      { label: 'Amazon Store', value: 'store3' }
     ])
 
-    // 图表时间选项
     const chartTimeOptions = reactive([
       { label: '近7天', value: '7days' },
       { label: '本周', value: 'thisWeek' },
@@ -390,308 +346,128 @@ export default {
       { label: '自定义', value: 'custom' }
     ])
 
-    // 图表相关
-    const showTooltip = ref(false)
-    const tooltipX = ref(0)
-    const tooltipY = ref(0)
-    const tooltipData = ref({})
-    
-    // 数据概览（移除利润卡片，保留5个）
+    // 数据概览
     const overviewData = reactive([
       {
         title: '销售额',
         value: '¥45,230',
-        color: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        color: '#409eff',
         icon: 'Coin'
       },
       {
         title: '订单数',
         value: '156',
-        color: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+        color: '#409eff',
         icon: 'ShoppingBag'
       },
       {
         title: '客户单价',
         value: '¥290.06',
-        color: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+        color: '#409eff',
         icon: 'UserFilled'
       },
       {
         title: '退款额',
         value: '¥1,240',
-        color: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+        color: '#409eff',
         icon: 'Refresh'
       },
       {
         title: '退款单数',
         value: '8',
-        color: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+        color: '#409eff',
         icon: 'DocumentAdd'
       }
     ])
-    
+
     // 产品排行数据
     const topProducts = reactive([
       {
         id: 1,
-        name: '无线蓝牙耳机',
+        name: 'iPhone 14 Pro Max',
         category: '电子产品',
-        sku: 'WBT-001',
-        image: 'https://images.unsplash.com/photo-1572569511254-d8f925fe2cbb?w=80&h=80&fit=crop&crop=center',
-        store: 'Shopify店铺A',
-        sales: 245,
-        revenue: 12250
+        sku: 'IP14PM-256-BLK',
+        store: 'Shopify Store 1',
+        sales: 156,
+        revenue: 234000,
+        image: 'https://via.placeholder.com/40x40/409eff/ffffff?text=📱'
       },
       {
         id: 2,
-        name: '智能手表',
-        category: '电子产品',
-        sku: 'SW-002',
-        image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=80&h=80&fit=crop&crop=center',
-        store: 'Shopify店铺B',
-        sales: 189,
-        revenue: 18900
+        name: 'MacBook Air M2',
+        category: '电脑',
+        sku: 'MBA-M2-256-SLV',
+        store: 'Shopify Store 2',
+        sales: 89,
+        revenue: 178000,
+        image: 'https://via.placeholder.com/40x40/67c23a/ffffff?text=💻'
       },
       {
         id: 3,
-        name: '运动鞋',
-        category: '服装',
-        sku: 'SHOE-003',
-        image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=80&h=80&fit=crop&crop=center',
-        store: 'Shopify店铺A',
-        sales: 167,
-        revenue: 8350
-      },
-      {
-        id: 4,
-        name: '咖啡机',
-        category: '家居',
-        sku: 'CM-004',
-        image: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=80&h=80&fit=crop&crop=center',
-        store: 'Shopify店铺B',
-        sales: 134,
-        revenue: 13400
-      },
-      {
-        id: 5,
-        name: '护肤套装',
-        category: '美容',
-        sku: 'SK-005',
-        image: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=80&h=80&fit=crop&crop=center',
-        store: 'Shopify店铺A',
-        sales: 98,
-        revenue: 4900
+        name: 'AirPods Pro 2',
+        category: '音频',
+        sku: 'APP2-WHT',
+        store: 'Amazon Store',
+        sales: 234,
+        revenue: 52000,
+        image: 'https://via.placeholder.com/40x40/e6a23c/ffffff?text=🎧'
       }
     ])
-    
-    // 图表数据
-    const chartData = reactive([
-      { date: '01-15', orders: 45, sales: 12500 },
-      { date: '01-16', orders: 52, sales: 14800 },
-      { date: '01-17', orders: 38, sales: 10200 },
-      { date: '01-18', orders: 67, sales: 18900 },
-      { date: '01-19', orders: 43, sales: 11600 },
-      { date: '01-20', orders: 58, sales: 16400 },
-      { date: '01-21', orders: 71, sales: 21300 }
-    ])
-    
-    // 最近交易记录
+
+    // 交易记录数据
     const recentTransactions = reactive([
       {
         id: 1,
-        type: 'income',
         title: '订单收入',
-        description: '订单 #ORD-2024-001 完成',
-        amount: 299,
-        time: '2024-01-21 14:30',
-        orderId: 'ORD-2024-001'
+        time: '2024-06-25 14:30',
+        amount: 1250.00,
+        type: 'income'
       },
       {
         id: 2,
-        type: 'expense',
-        title: '采购支出',
-        description: '供应商付款',
-        amount: -1580,
-        time: '2024-01-21 10:15'
+        title: '退款处理',
+        time: '2024-06-25 12:15',
+        amount: -320.50,
+        type: 'expense'
       },
       {
         id: 3,
-        type: 'income',
-        title: '佣金收入',
-        description: '推广佣金结算',
-        amount: 125,
-        time: '2024-01-20 16:45'
-      },
-      {
-        id: 4,
-        type: 'expense',
-        title: '退款支出',
-        description: '订单 #ORD-2024-002 退款',
-        amount: -189,
-        time: '2024-01-20 09:20',
-        orderId: 'ORD-2024-002'
+        title: '平台费用',
+        time: '2024-06-25 10:20',
+        amount: -45.00,
+        type: 'expense'
       }
     ])
-    
-    // 快捷操作
-    const quickActions = reactive([
-      {
-        key: 'add-product',
-        title: '上架产品',
-        description: '添加新产品到店铺',
-        icon: 'Plus',
-        color: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-      },
-      {
-        key: 'view-orders',
-        title: '查看订单',
-        description: '管理所有订单',
-        icon: 'ShoppingCart',
-        color: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
-      },
-      {
-        key: 'procurement',
-        title: '采购管理',
-        description: '处理采购订单',
-        icon: 'Management',
-        color: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)'
-      },
-      {
-        key: 'commission',
-        title: '佣金管理',
-        description: '查看佣金收益',
-        icon: 'WalletFilled',
-        color: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)'
-      }
+
+    // 图表数据
+    const chartData = reactive([
+      { date: '06-19', orders: 45, sales: 12500 },
+      { date: '06-20', orders: 52, sales: 15200 },
+      { date: '06-21', orders: 38, sales: 9800 },
+      { date: '06-22', orders: 61, sales: 18600 },
+      { date: '06-23', orders: 47, sales: 13400 },
+      { date: '06-24', orders: 55, sales: 16800 },
+      { date: '06-25', orders: 42, sales: 11200 }
     ])
-    
-    // 通知公告
-    const notifications = reactive([
-      {
-        id: 1,
-        type: 'warning',
-        title: '库存不足提醒',
-        time: '1小时前'
-      },
-      {
-        id: 2,
-        type: 'notice',
-        title: '系统维护通知',
-        time: '3小时前'
-      },
-      {
-        id: 3,
-        type: 'success',
-        title: '订单处理完成',
-        time: '5小时前'
-      },
-      {
-        id: 4,
-        type: 'info',
-        title: '新功能上线通知',
-        time: '1天前'
-      }
-    ])
-    
-    // 计算属性
+
+    // 计算图表线条点位
     const orderLinePoints = computed(() => {
-      return chartData.map((_, index) => {
+      return chartData.map((point, index) => {
         const x = getXPosition(index)
-        const y = getOrderYPosition(chartData[index].orders)
+        const y = getOrderYPosition(point.orders)
         return `${x},${y}`
       }).join(' ')
     })
-    
+
     const salesLinePoints = computed(() => {
-      return chartData.map((_, index) => {
+      return chartData.map((point, index) => {
         const x = getXPosition(index)
-        const y = getSalesYPosition(chartData[index].sales)
+        const y = getSalesYPosition(point.sales)
         return `${x},${y}`
       }).join(' ')
     })
-    
+
     // 方法
-    const updateCurrentDate = () => {
-      const now = new Date()
-      const options = { 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric', 
-        weekday: 'long' 
-      }
-      currentDate.value = now.toLocaleDateString('zh-CN', options)
-    }
-    
-    const getXPosition = (index) => {
-      const width = 600 // SVG宽度
-      const padding = 50
-      const stepWidth = (width - 2 * padding) / (chartData.length - 1)
-      return padding + index * stepWidth
-    }
-    
-    const getOrderYPosition = (orders) => {
-      const height = 300
-      const padding = 30
-      const maxOrders = Math.max(...chartData.map(d => d.orders))
-      const ratio = (height - 2 * padding) / maxOrders
-      return height - padding - orders * ratio
-    }
-    
-    const getSalesYPosition = (sales) => {
-      const height = 300
-      const padding = 30
-      const maxSales = Math.max(...chartData.map(d => d.sales))
-      const ratio = (height - 2 * padding) / maxSales
-      return height - padding - sales * ratio
-    }
-    
-    const handleChartMouseMove = (event) => {
-      const rect = event.currentTarget.getBoundingClientRect()
-      const x = event.clientX - rect.left
-      const dataIndex = Math.round((x - 50) / ((600 - 100) / (chartData.length - 1)))
-      
-      if (dataIndex >= 0 && dataIndex < chartData.length) {
-        showTooltip.value = true
-        tooltipX.value = event.clientX - rect.left
-        tooltipY.value = event.clientY - rect.top - 10
-        tooltipData.value = chartData[dataIndex]
-      }
-    }
-    
-    const hideTooltip = () => {
-      showTooltip.value = false
-    }
-    
-    const handleImageError = (event) => {
-      event.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIiBmaWxsPSIjRjVGNUY1Ii8+CjxwYXRoIGQ9Ik00MCAzMEM0My4zMTM3IDMwIDQ2IDMyLjY4NjMgNDYgMzZDNDYgMzkuMzEzNyA0My4zMTM3IDQyIDQwIDQyQzM2LjY4NjMgNDIgMzQgMzkuMzEzNyAzNCAzNkMzNCAzMi42ODYzIDM2LjY4NjMgMzAgNDAgMzBaIiBmaWxsPSIjQ0NDQ0NDIi8+CjxwYXRoIGQ9Ik0yOCA1MEw1MiA1MEw0NiA0NEw0MCA0NkwzNCA0NEwyOCA1MFoiIGZpbGw9IiNDQ0NDQ0MiLz4KPC9zdmc+'
-    }
-    
-    const getStoreTagType = (store) => {
-      const types = {
-        'Shopify店铺A': 'primary',
-        'Shopify店铺B': 'success'
-      }
-      return types[store] || 'info'
-    }
-    
-    const getTransactionIcon = (type) => {
-      return type === 'income' ? 'CircleCheckFilled' : 'CircleCloseFilled'
-    }
-    
-    const getNotificationIcon = (type) => {
-      const iconMap = {
-        'warning': 'Warning',
-        'notice': 'Notification',
-        'info': 'InfoFilled',
-        'success': 'SuccessFilled'
-      }
-      return iconMap[type] || 'Bell'
-    }
-    
-    const goToBalance = () => {
-      router.push('/merchant/balance')
-    }
-    
     const handleRecharge = () => {
       showRechargeDialog.value = true
     }
@@ -700,220 +476,156 @@ export default {
       showWithdrawDialog.value = true
     }
 
-    const handleRechargeSuccess = (data) => {
-      console.log('充值成功:', data)
-      // 这里可以刷新余额数据
-      // accountBalance.value += parseFloat(data.amount)
+    const handleRechargeSuccess = () => {
+      console.log('充值成功')
     }
 
-    const handleWithdrawSuccess = (data) => {
-      console.log('提现申请成功:', data)
-      // 这里可以处理提现成功后的逻辑
+    const handleWithdrawSuccess = () => {
+      console.log('提现成功')
     }
-    
-    const handleQuickAction = (key) => {
-      const routes = {
-        'add-product': '/merchant/products/add',
-        'view-orders': '/merchant/orders',
-        'procurement': '/merchant/procurement',
-        'commission': '/merchant/commission'
-      }
-      if (routes[key]) {
-        router.push(routes[key])
+
+    const goToInvoice = () => {
+      router.push('/merchant/invoices')
+    }
+
+    const handleViewMore = () => {
+      router.push('/merchant/balance')
+    }
+
+    const getTransactionIcon = (type) => {
+      return type === 'income' ? 'Money' : 'CreditCard'
+    }
+
+    const getStoreTagType = (store) => {
+      const types = ['', 'success', 'info', 'warning']
+      return types[Math.floor(Math.random() * types.length)]
+    }
+
+    const handleImageError = (event) => {
+      // 使用CSS创建一个简单的占位符
+      event.target.style.display = 'none'
+      const placeholder = event.target.parentNode.querySelector('.image-placeholder')
+      if (!placeholder) {
+        const div = document.createElement('div')
+        div.className = 'image-placeholder'
+        div.style.cssText = `
+          width: 32px;
+          height: 32px;
+          background: #f5f7fa;
+          border: 1px solid #dcdfe6;
+          border-radius: 4px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 12px;
+          color: #909399;
+        `
+        div.textContent = '📦'
+        event.target.parentNode.insertBefore(div, event.target)
       }
     }
-    
+
     const viewTransactionDetail = (record) => {
-      if (record.orderId) {
-        router.push(`/merchant/orders/${record.orderId}`)
-      } else {
-        router.push('/merchant/balance')
-      }
+      console.log('查看交易详情:', record)
     }
 
-    // 图表时间处理方法
-    const handleChartTimeChange = (timeRange) => {
-      chartTimeRange.value = timeRange
-      if (timeRange !== 'custom') {
-        customChartDateRange.value = []
-      }
-      updateChartData(timeRange)
+    const handleChartTimeChange = (value) => {
+      chartTimeRange.value = value
+      updateChartData(value)
     }
 
-    const handleCustomDateChange = (dateRange) => {
-      if (dateRange && dateRange.length === 2) {
-        updateChartData('custom', dateRange)
+    const handleCustomDateChange = (dates) => {
+      if (dates && dates.length === 2) {
+        updateChartData('custom', dates)
       }
     }
 
     const updateChartData = (timeRange, customRange = null) => {
       console.log('更新图表数据:', timeRange, customRange)
-
-      // 根据时间范围生成不同的数据
-      let newData = []
-      const today = new Date()
-
-      switch (timeRange) {
-        case '7days':
-          newData = generateChartData(7, '近7天')
-          break
-        case 'thisWeek':
-          newData = generateWeekData()
-          break
-        case 'thisMonth':
-          newData = generateMonthData()
-          break
-        case '30days':
-          newData = generateChartData(30, '近30天')
-          break
-        case 'custom':
-          if (customRange) {
-            newData = generateCustomData(customRange)
-          }
-          break
-        default:
-          newData = generateChartData(7, '近7天')
-      }
-
-      // 更新图表数据
-      chartData.splice(0, chartData.length, ...newData)
     }
 
-    const generateChartData = (days, label) => {
-      const data = []
-      for (let i = days - 1; i >= 0; i--) {
-        const date = new Date()
-        date.setDate(date.getDate() - i)
-        const dateStr = `${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
-
-        data.push({
-          date: dateStr,
-          orders: Math.floor(Math.random() * 50) + 30,
-          sales: Math.floor(Math.random() * 15000) + 8000
-        })
-      }
-      return data
+    // 图表位置计算
+    const getXPosition = (index) => {
+      const width = 800
+      const padding = 50
+      const step = (width - padding * 2) / (chartData.length - 1)
+      return padding + index * step
     }
 
-    const generateWeekData = () => {
-      const data = []
-      const today = new Date()
-      const currentDay = today.getDay()
-      const startOfWeek = new Date(today)
-      startOfWeek.setDate(today.getDate() - currentDay + 1) // 本周一
-
-      for (let i = 0; i < 7; i++) {
-        const date = new Date(startOfWeek)
-        date.setDate(startOfWeek.getDate() + i)
-        const dateStr = `${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
-
-        data.push({
-          date: dateStr,
-          orders: Math.floor(Math.random() * 60) + 25,
-          sales: Math.floor(Math.random() * 18000) + 10000
-        })
-      }
-      return data
+    const getOrderYPosition = (orders) => {
+      const height = 300
+      const padding = 30
+      const maxOrders = Math.max(...chartData.map(d => d.orders))
+      const ratio = (height - padding * 2) / maxOrders
+      return height - padding - orders * ratio
     }
 
-    const generateMonthData = () => {
-      const data = []
-      const today = new Date()
-      const year = today.getFullYear()
-      const month = today.getMonth()
-      const daysInMonth = new Date(year, month + 1, 0).getDate()
-
-      // 生成本月每天的数据（最多显示30个点，如果天数太多则按周聚合）
-      const step = daysInMonth > 30 ? Math.ceil(daysInMonth / 30) : 1
-
-      for (let i = 1; i <= daysInMonth; i += step) {
-        const date = new Date(year, month, i)
-        const dateStr = `${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
-
-        data.push({
-          date: dateStr,
-          orders: Math.floor(Math.random() * 80) + 40,
-          sales: Math.floor(Math.random() * 25000) + 15000
-        })
-      }
-      return data
+    const getSalesYPosition = (sales) => {
+      const height = 300
+      const padding = 30
+      const maxSales = Math.max(...chartData.map(d => d.sales))
+      const ratio = (height - padding * 2) / maxSales
+      return height - padding - sales * ratio
     }
 
-    const generateCustomData = (dateRange) => {
-      const data = []
-      const startDate = new Date(dateRange[0])
-      const endDate = new Date(dateRange[1])
-      const diffTime = Math.abs(endDate - startDate)
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-
-      // 如果天数太多，按周或月聚合
-      const step = diffDays > 30 ? Math.ceil(diffDays / 30) : 1
-
-      for (let i = 0; i <= diffDays; i += step) {
-        const date = new Date(startDate)
-        date.setDate(startDate.getDate() + i)
-        const dateStr = `${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
-
-        data.push({
-          date: dateStr,
-          orders: Math.floor(Math.random() * 70) + 20,
-          sales: Math.floor(Math.random() * 20000) + 8000
-        })
+    const handleChartMouseMove = (event) => {
+      // 图表鼠标移动处理
+      showTooltip.value = true
+      tooltipX.value = event.offsetX
+      tooltipY.value = event.offsetY
+      tooltipData.value = {
+        date: '2024-06-25',
+        orders: 42,
+        sales: 11200
       }
-      return data
     }
 
-    // 生命周期
-    onMounted(() => {
-      updateCurrentDate()
-      updateChartData('7days') // 初始化图表数据
-    })
-    
+    const hideTooltip = () => {
+      showTooltip.value = false
+    }
+
     return {
-      currentDate,
       accountBalance,
+      showRechargeDialog,
+      showWithdrawDialog,
       overviewTimeRange,
       rankingTimeRange,
       selectedStore,
       chartTimeRange,
       customChartDateRange,
+      currentDate,
       timeRangeOptions,
       rankingTimeOptions,
       storeOptions,
       chartTimeOptions,
       overviewData,
       topProducts,
-      chartData,
       recentTransactions,
-      quickActions,
-      notifications,
+      chartData,
+      orderLinePoints,
+      salesLinePoints,
       showTooltip,
       tooltipX,
       tooltipY,
       tooltipData,
-      orderLinePoints,
-      salesLinePoints,
-      showRechargeDialog,
-      showWithdrawDialog,
-      getXPosition,
-      getOrderYPosition,
-      getSalesYPosition,
-      handleChartMouseMove,
-      hideTooltip,
-      handleImageError,
-      getStoreTagType,
-      getTransactionIcon,
-      getNotificationIcon,
-      goToBalance,
       handleRecharge,
       handleWithdraw,
       handleRechargeSuccess,
       handleWithdrawSuccess,
-      handleQuickAction,
+      goToInvoice,
+      handleViewMore,
+      getTransactionIcon,
+      getStoreTagType,
+      handleImageError,
       viewTransactionDetail,
       handleChartTimeChange,
       handleCustomDateChange,
-      updateChartData
+      updateChartData,
+      getXPosition,
+      getOrderYPosition,
+      getSalesYPosition,
+      handleChartMouseMove,
+      hideTooltip
     }
   }
 }
@@ -926,90 +638,79 @@ export default {
   min-height: 100vh;
 }
 
-/* 欢迎横幅 */
-.welcome-banner {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 30px;
+.balance-card-new {
+  background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
   border-radius: 12px;
-  margin-bottom: 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.welcome-content h1 {
-  margin: 0 0 8px 0;
-  font-size: 28px;
-  font-weight: 600;
-}
-
-.welcome-content .date {
-  margin: 0;
-  opacity: 0.9;
-  font-size: 16px;
-}
-
-.banner-decoration {
-  font-size: 48px;
-  opacity: 0.9;
-  animation: float 3s ease-in-out infinite;
-}
-
-.decoration-icon {
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
-}
-
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
-
-/* 账户余额卡片 */
-.balance-card {
-  background: white;
   padding: 24px;
-  border-radius: 12px;
+  color: white;
   margin-bottom: 20px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 20px rgba(24, 144, 255, 0.3);
 }
 
-.balance-header {
+.balance-main {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.balance-left {
+  flex: 1;
+}
+
+.balance-title {
+  font-size: 16px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  opacity: 0.9;
+}
+
+.balance-amount-new {
+  display: flex;
+  align-items: baseline;
   margin-bottom: 16px;
 }
 
-.balance-header h3 {
-  margin: 0;
-  color: #333;
-}
-
-.balance-amount {
-  display: flex;
-  align-items: baseline;
-  margin-bottom: 20px;
-}
-
-.balance-amount .currency {
-  font-size: 20px;
-  color: #666;
+.currency-new {
+  font-size: 24px;
   margin-right: 4px;
 }
 
-.balance-amount .amount {
+.amount-new {
   font-size: 36px;
   font-weight: 600;
-  color: #333;
+  line-height: 1;
 }
 
 .balance-actions {
+  margin-top: 16px;
   display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.action-btn {
+  color: white;
+  font-size: 13px;
+  padding: 6px 12px;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  transition: all 0.3s ease;
+  min-width: 80px;
+  text-align: center;
+}
+
+.action-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  color: white;
+}
+
+.balance-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
   gap: 12px;
 }
 
@@ -1017,9 +718,10 @@ export default {
 .data-overview {
   background: white;
   padding: 24px;
-  border-radius: 12px;
-  margin-bottom: 20px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f5f5f5;
 }
 
 .overview-header {
@@ -1031,32 +733,15 @@ export default {
 
 .overview-header h3 {
   margin: 0;
+  font-size: 18px;
+  font-weight: 600;
   color: #333;
 }
 
-.time-filter-buttons {
-  display: flex;
-  align-items: center;
-}
-
-.time-filter-buttons .el-button-group {
+.time-filter-buttons .el-button-group .el-button {
   border-radius: 6px;
-  overflow: hidden;
-}
-
-.time-filter-buttons .el-button {
-  border-radius: 0;
-  transition: all 0.3s ease;
-}
-
-.time-filter-buttons .el-button:first-child {
-  border-top-left-radius: 6px;
-  border-bottom-left-radius: 6px;
-}
-
-.time-filter-buttons .el-button:last-child {
-  border-top-right-radius: 6px;
-  border-bottom-right-radius: 6px;
+  font-size: 12px;
+  padding: 6px 12px;
 }
 
 .overview-cards {
@@ -1068,204 +753,55 @@ export default {
 .overview-card {
   display: flex;
   align-items: center;
-  padding: 16px;
+  padding: 20px;
   background: #f8f9fa;
   border-radius: 8px;
-  transition: transform 0.2s;
+  border: 1px solid #e9ecef;
+  transition: all 0.3s ease;
 }
 
 .overview-card:hover {
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .card-icon {
   width: 48px;
   height: 48px;
-  border-radius: 12px;
+  border-radius: 8px;
+  background: var(--icon-color, #409eff);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
   margin-right: 16px;
+  color: white;
   font-size: 20px;
-  background: var(--icon-color);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  transition: all 0.3s ease;
 }
 
-.card-icon:hover {
-  transform: translateY(-2px) scale(1.05);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+.card-content {
+  flex: 1;
 }
 
-.card-content h4 {
-  margin: 0 0 4px 0;
+.card-title {
   font-size: 14px;
   color: #666;
+  margin-bottom: 4px;
 }
 
 .card-value {
-  font-size: 20px;
+  font-size: 24px;
   font-weight: 600;
   color: #333;
-}
-
-/* 产品排行 */
-.product-ranking {
-  background: white;
-  padding: 24px;
-  border-radius: 12px;
-  margin-bottom: 20px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-}
-
-.ranking-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.ranking-header h3 {
-  margin: 0;
-  color: #333;
-}
-
-.ranking-filters {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.filter-group {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.filter-label {
-  font-size: 14px;
-  color: #666;
-  font-weight: 500;
-  min-width: 60px;
-}
-
-.filter-group .el-button-group {
-  border-radius: 6px;
-  overflow: hidden;
-}
-
-.filter-group .el-button {
-  border-radius: 0;
-  transition: all 0.3s ease;
-  font-size: 12px;
-  padding: 6px 12px;
-}
-
-.filter-group .el-button:first-child {
-  border-top-left-radius: 6px;
-  border-bottom-left-radius: 6px;
-}
-
-.filter-group .el-button:last-child {
-  border-top-right-radius: 6px;
-  border-bottom-right-radius: 6px;
-}
-
-.filter-group .el-button--primary {
-  background-color: #409eff;
-  border-color: #409eff;
-  color: white;
-  box-shadow: 0 2px 4px rgba(64, 158, 255, 0.3);
-}
-
-.filter-group .el-button--default:hover {
-  background-color: #ecf5ff;
-  border-color: #b3d8ff;
-  color: #409eff;
-}
-
-/* 响应式设计 */
-@media (min-width: 768px) {
-  .ranking-filters {
-    flex-direction: row;
-    align-items: center;
-    gap: 24px;
-  }
-}
-
-.ranking-table {
-  overflow-x: auto;
-}
-
-.table-header, .table-row {
-  display: grid;
-  grid-template-columns: 60px 200px 100px 120px 120px 80px 100px;
-  gap: 16px;
-  align-items: center;
-  padding: 12px 0;
-}
-
-.table-header {
-  font-weight: 600;
-  color: #666;
-  border-bottom: 1px solid #eee;
-}
-
-.table-row {
-  border-bottom: 1px solid #f5f5f5;
-}
-
-.table-row:hover {
-  background-color: #f8f9fa;
-}
-
-.ranking-cell {
-  display: flex;
-  justify-content: center;
-}
-
-.ranking-number {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-  color: white;
-  font-size: 12px;
-}
-
-.rank-1 { background-color: #f56c6c; }
-.rank-2 { background-color: #e6a23c; }
-.rank-3 { background-color: #67c23a; }
-.rank-4, .rank-5 { background-color: #909399; }
-
-.product-cell {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.product-cell img {
-  width: 40px;
-  height: 40px;
-  border-radius: 4px;
-  object-fit: cover;
-}
-
-.product-name {
-  font-weight: 500;
 }
 
 /* 图表区域 */
 .chart-section {
   background: white;
   padding: 24px;
-  border-radius: 12px;
-  margin-bottom: 20px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f5f5f5;
 }
 
 .chart-header {
@@ -1273,96 +809,33 @@ export default {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
-  flex-wrap: wrap;
-  gap: 16px;
 }
 
 .chart-header h3 {
   margin: 0;
+  font-size: 18px;
+  font-weight: 600;
   color: #333;
 }
 
 .chart-filters {
   display: flex;
   align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
+  gap: 16px;
 }
 
-.chart-time-filter .el-button-group {
+.chart-filters .el-button-group .el-button {
   border-radius: 6px;
-  overflow: hidden;
-}
-
-.chart-time-filter .el-button {
-  border-radius: 0;
-  transition: all 0.3s ease;
   font-size: 12px;
   padding: 6px 12px;
 }
 
-.chart-time-filter .el-button:first-child {
-  border-top-left-radius: 6px;
-  border-bottom-left-radius: 6px;
-}
-
-.chart-time-filter .el-button:last-child {
-  border-top-right-radius: 6px;
-  border-bottom-right-radius: 6px;
-}
-
-.chart-time-filter .el-button--primary {
-  background-color: #409eff;
-  border-color: #409eff;
-  color: white;
-  box-shadow: 0 2px 4px rgba(64, 158, 255, 0.3);
-}
-
-.chart-time-filter .el-button--default:hover {
-  background-color: #ecf5ff;
-  border-color: #b3d8ff;
-  color: #409eff;
-}
-
-.custom-date-picker {
-  display: flex;
-  align-items: center;
-}
-
-/* 响应式设计 */
-@media (max-width: 768px) {
-  .chart-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .chart-filters {
-    width: 100%;
-    justify-content: flex-start;
-  }
-}
-
 .chart-container {
   position: relative;
-}
-
-.chart-legend {
-  display: flex;
-  gap: 20px;
-  margin-top: 16px;
-  justify-content: center;
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.legend-color {
-  width: 12px;
-  height: 12px;
-  border-radius: 2px;
+  height: 300px;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 .chart-tooltip {
@@ -1376,39 +849,66 @@ export default {
   z-index: 1000;
 }
 
-/* 交易记录 */
-.transaction-records {
-  background: white;
-  padding: 24px;
-  border-radius: 12px;
-  margin-bottom: 20px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+.tooltip-date {
+  font-weight: 600;
+  margin-bottom: 4px;
 }
 
-.records-header {
+.tooltip-item {
+  margin: 2px 0;
+}
+
+/* 交易记录 */
+.transaction-history {
+  background: white;
+  padding: 24px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f5f5f5;
+}
+
+.transaction-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
 }
 
-.records-header h3 {
+.transaction-header h3 {
   margin: 0;
+  font-size: 18px;
+  font-weight: 600;
   color: #333;
 }
 
-.record-item {
+.transaction-filters .el-button-group .el-button {
+  border-radius: 6px;
+  font-size: 12px;
+  padding: 6px 12px;
+}
+
+.transaction-list {
+  margin-top: 16px;
+}
+
+.transaction-item {
   display: flex;
   align-items: center;
   padding: 16px 0;
   border-bottom: 1px solid #f5f5f5;
+  transition: background-color 0.2s;
 }
 
-.record-item:last-child {
+.transaction-item:last-child {
   border-bottom: none;
 }
 
-.record-icon {
+.transaction-item:hover {
+  background-color: #f8f9fa;
+}
+
+.transaction-icon {
   width: 40px;
   height: 40px;
   border-radius: 50%;
@@ -1417,193 +917,213 @@ export default {
   justify-content: center;
   margin-right: 16px;
   font-size: 16px;
-  color: white;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-.record-icon.income {
-  background: linear-gradient(135deg, #67c23a 0%, #27ae60 100%);
+.transaction-icon.income {
+  background: #f0f9ff;
+  color: #67c23a;
 }
 
-.record-icon.expense {
-  background: linear-gradient(135deg, #f56c6c 0%, #e74c3c 100%);
+.transaction-icon.expense {
+  background: #fef0f0;
+  color: #f56c6c;
 }
 
-.record-item:hover .record-icon {
-  transform: translateY(-2px) scale(1.05);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-}
-
-.record-content {
+.transaction-content {
   flex: 1;
 }
 
-.record-title {
+.transaction-title {
+  font-size: 14px;
   font-weight: 500;
+  color: #333;
   margin-bottom: 4px;
 }
 
-.record-description {
-  font-size: 14px;
-  color: #666;
-  margin-bottom: 2px;
-}
-
-.record-time {
+.transaction-time {
   font-size: 12px;
   color: #999;
 }
 
-.record-amount {
+.transaction-amount {
   font-size: 16px;
   font-weight: 600;
   margin-right: 16px;
 }
 
-.record-amount.income {
+.transaction-amount.income {
   color: #67c23a;
 }
 
-.record-amount.expense {
+.transaction-amount.expense {
   color: #f56c6c;
 }
 
-/* 快捷操作 */
-.quick-actions {
+/* 产品排行 */
+.product-ranking {
   background: white;
   padding: 24px;
-  border-radius: 12px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f5f5f5;
+}
+
+.ranking-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
   margin-bottom: 20px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-}
-
-.quick-actions h3 {
-  margin: 0 0 20px 0;
-  color: #333;
-}
-
-.action-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  flex-wrap: wrap;
   gap: 16px;
 }
 
-.action-card {
-  padding: 20px;
-  border: 1px solid #eee;
-  border-radius: 8px;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.action-card:hover {
-  border-color: #409eff;
-  transform: translateY(-2px);
-}
-
-.action-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 12px;
-  color: white;
-  font-size: 20px;
-  background: var(--icon-color);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  transition: all 0.3s ease;
-}
-
-.action-card:hover .action-icon {
-  transform: translateY(-4px) scale(1.1);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
-}
-
-.action-title {
-  font-weight: 500;
-  margin-bottom: 4px;
-}
-
-.action-description {
-  font-size: 12px;
-  color: #666;
-}
-
-/* 通知公告 */
-.notifications {
-  background: white;
-  padding: 24px;
-  border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-}
-
-.notifications h3 {
-  margin: 0 0 20px 0;
+.ranking-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
   color: #333;
 }
 
-.notification-item {
+.ranking-filters {
   display: flex;
-  align-items: center;
-  padding: 12px 0;
-  border-bottom: 1px solid #f5f5f5;
+  flex-wrap: wrap;
+  gap: 16px;
 }
 
-.notification-item:last-child {
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filter-label {
+  font-size: 14px;
+  color: #666;
+  white-space: nowrap;
+}
+
+.ranking-filters .el-button-group .el-button {
+  border-radius: 6px;
+  font-size: 12px;
+  padding: 6px 12px;
+}
+
+.ranking-table {
+  border: 1px solid #e4e7ed;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.table-header {
+  display: grid;
+  grid-template-columns: 60px 1fr 100px 120px 120px 80px 100px;
+  background: #f5f7fa;
+  border-bottom: 1px solid #e4e7ed;
+}
+
+.header-cell {
+  padding: 12px 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  text-align: center;
+}
+
+.table-body {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.table-row {
+  display: grid;
+  grid-template-columns: 60px 1fr 100px 120px 120px 80px 100px;
+  border-bottom: 1px solid #f5f5f5;
+  transition: background-color 0.2s;
+}
+
+.table-row:hover {
+  background-color: #f8f9fa;
+}
+
+.table-row:last-child {
   border-bottom: none;
 }
 
-.notification-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
+.cell {
+  padding: 12px 8px;
+  font-size: 14px;
+  color: #333;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-right: 12px;
-  font-size: 14px;
-  color: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
-  transition: all 0.3s ease;
 }
 
-.notification-icon.warning {
-  background: linear-gradient(135deg, #ff9a56 0%, #ff8a80 100%);
+.ranking-cell {
+  justify-content: center;
 }
 
-.notification-icon.notice {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-.notification-icon.success {
-  background: linear-gradient(135deg, #67c23a 0%, #27ae60 100%);
-}
-
-.notification-icon.info {
-  background: linear-gradient(135deg, #909399 0%, #7f8c8d 100%);
-}
-
-.notification-icon:hover {
-  transform: translateY(-1px) scale(1.05);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
-.notification-content {
-  flex: 1;
-}
-
-.notification-title {
-  font-weight: 500;
-  margin-bottom: 2px;
-}
-
-.notification-time {
+.ranking-number {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 12px;
-  color: #999;
+  font-weight: 600;
+  color: white;
+}
+
+.ranking-number.rank-1 {
+  background: #ffd700;
+}
+
+.ranking-number.rank-2 {
+  background: #c0c0c0;
+}
+
+.ranking-number.rank-3 {
+  background: #cd7f32;
+}
+
+.ranking-number:not(.rank-1):not(.rank-2):not(.rank-3) {
+  background: #909399;
+}
+
+.product-cell {
+  justify-content: flex-start;
+  gap: 12px;
+}
+
+.product-cell img {
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  object-fit: cover;
+  border: 1px solid #e4e7ed;
+  background: #f5f7fa;
+}
+
+.image-placeholder {
+  width: 32px;
+  height: 32px;
+  background: #f5f7fa;
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #909399;
+}
+
+.product-name {
+  font-weight: 500;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* 响应式设计 */
@@ -1611,25 +1131,59 @@ export default {
   .dashboard {
     padding: 12px;
   }
-  
-  .welcome-banner {
+
+  .balance-card-new {
+    padding: 20px;
+  }
+
+  .balance-main {
     flex-direction: column;
-    text-align: center;
+    align-items: flex-start;
     gap: 16px;
   }
-  
+
+  .balance-right {
+    align-items: flex-start;
+  }
+
   .overview-cards {
     grid-template-columns: 1fr;
+    gap: 12px;
   }
-  
-  .action-cards {
-    grid-template-columns: repeat(2, 1fr);
+
+  .chart-header,
+  .transaction-header,
+  .ranking-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
   }
-  
-  .table-header, .table-row {
-    grid-template-columns: 40px 150px 80px 80px 80px 60px 80px;
+
+  .chart-filters,
+  .ranking-filters {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .filter-group {
+    flex-direction: column;
+    align-items: flex-start;
     gap: 8px;
+  }
+
+  .table-header,
+  .table-row {
+    grid-template-columns: 50px 1fr 80px 100px 100px 60px 80px;
     font-size: 12px;
   }
+
+  .header-cell,
+  .cell {
+    padding: 8px 4px;
+  }
+
+  .product-name {
+    max-width: 100px;
+  }
 }
-</style> 
+</style>
