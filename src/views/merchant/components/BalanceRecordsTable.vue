@@ -11,7 +11,39 @@
         </template>
       </el-table-column>
 
-      <!-- 入账金额和实际金额列已移除 - 根据用户要求删除这些显示列 -->
+      <el-table-column label="金额" width="180">
+        <template #default="{ row }">
+          <div class="usd-amount-column">
+            <span class="amount" :class="getAmountClass(row)">
+              {{ getAmountPrefix(row) }}${{ Math.abs(row.usdAmount).toFixed(2) }}
+            </span>
+            <div class="currency-tag">USD</div>
+          </div>
+        </template>
+      </el-table-column>
+
+      <!-- 充值货币信息列 - 仅在充值记录中显示 -->
+      <el-table-column v-if="showRechargeInfo" label="充值货币信息" width="220">
+        <template #default="{ row }">
+          <div class="recharge-currency-info">
+            <!-- 原始充值货币和金额 -->
+            <div class="original-recharge">
+              <span class="currency-name">{{ row.originalCurrency || 'USD' }}</span>
+              <span class="original-amount">{{ Math.abs(row.originalAmount || row.usdAmount).toFixed(2) }}</span>
+            </div>
+
+            <!-- 汇率信息 -->
+            <div v-if="row.originalCurrency && row.originalCurrency !== 'USD'" class="exchange-rate">
+              <span class="rate-text">汇率: 1:{{ (row.exchangeRate || 1).toFixed(4) }}</span>
+            </div>
+            <div v-else class="exchange-rate">
+              <span class="rate-text">汇率: 1:1.0000</span>
+            </div>
+          </div>
+        </template>
+      </el-table-column>
+
+
       
       <el-table-column prop="time" label="时间" width="150">
         <template #default="{ row }">
@@ -81,6 +113,10 @@ const props = defineProps({
   hideViewDetail: {
     type: Boolean,
     default: false
+  },
+  showRechargeInfo: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -101,7 +137,23 @@ const formatDateTime = (dateTime) => {
   return new Date(dateTime).toLocaleString('zh-CN')
 }
 
-// 金额相关函数已移除 - 因为删除了金额显示列
+// 获取金额前缀符号
+const getAmountPrefix = (row) => {
+  // 退款类型显示为+，其他按原逻辑
+  if (row.type === 'refund') {
+    return '+'
+  }
+  return row.type === 'expense' ? '-' : '+'
+}
+
+// 获取金额样式类
+const getAmountClass = (row) => {
+  // 退款和佣金、充值都显示为正向（绿色）
+  if (row.type === 'refund' || row.type === 'commission' || row.type === 'recharge') {
+    return 'positive'
+  }
+  return 'negative'
+}
 
 // 获取状态类型
 const getStatusType = (status) => {
@@ -162,6 +214,68 @@ const viewReceipt = (record) => {
     }
   }
   
-  /* 金额和货币相关样式已移除 - 因为删除了相关显示列 */
+  .usd-amount-column {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+
+    .amount {
+      font-weight: 600;
+      font-size: 16px;
+
+      &.positive {
+        color: #67c23a;
+      }
+
+      &.negative {
+        color: #f56c6c;
+      }
+    }
+
+    .currency-tag {
+      background: #f0f2f5;
+      color: #666;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+  }
+
+  .recharge-currency-info {
+    .original-recharge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+
+      .currency-name {
+        background: #f0f9ff;
+        color: #0369a1;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        min-width: 40px;
+        text-align: center;
+      }
+
+      .original-amount {
+        font-weight: 600;
+        font-size: 14px;
+        color: #059669;
+      }
+    }
+
+    .exchange-rate {
+      .rate-text {
+        font-size: 12px;
+        color: #6b7280;
+        font-style: italic;
+      }
+    }
+  }
+
 }
 </style> 

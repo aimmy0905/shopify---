@@ -38,26 +38,17 @@
           <el-menu-item index="/merchant/products/my">{{ t('myProducts') }}</el-menu-item>
         </el-sub-menu>
         
-        <el-sub-menu index="orders">
-          <template #title>
-            <el-icon><DocumentChecked /></el-icon>
-            <span>{{ t('orderManagement') }}</span>
-          </template>
-          <el-menu-item index="/merchant/orders/store">{{ t('storeOrders') }}</el-menu-item>
-          <el-menu-item index="/merchant/orders/purchase">{{ t('purchaseOrders') }}</el-menu-item>
-          <el-menu-item index="/merchant/orders/aftersale">{{ t('aftersaleOrders') }}</el-menu-item>
-        </el-sub-menu>
+        <el-menu-item index="/merchant/orders/store">
+          <el-icon><DocumentChecked /></el-icon>
+          <span>{{ t('orderManagement') }}</span>
+        </el-menu-item>
         
         <el-menu-item index="/merchant/purchase">
           <el-icon><ShoppingCart /></el-icon>
           <span>{{ t('purchaseManagement') }}</span>
         </el-menu-item>
         
-        <el-menu-item index="/merchant/balance">
-          <el-icon><Wallet /></el-icon>
-          <span>{{ t('balanceManagement') }}</span>
-        </el-menu-item>
-        
+
         <el-menu-item index="/merchant/commission">
           <el-icon><Money /></el-icon>
           <span>{{ t('commissionManagement') }}</span>
@@ -211,7 +202,7 @@ import {
   Goods,
   DocumentChecked,
   ShoppingCart,
-  Wallet,
+
   Money,
   Document,
   Van,
@@ -285,7 +276,7 @@ const getPageNames = () => ({
   '/merchant/purchase': t('purchaseManagement'),
   '/merchant/purchase/applications': t('purchaseManagement'),
   '/merchant/purchase/create': t('purchaseManagement'),
-  '/merchant/balance': t('balanceManagement'),
+
   '/merchant/commission': t('commissionManagement'),
   '/merchant/invoices': t('invoiceManagement'),
   '/merchant/logistics': t('logisticsInfo'),

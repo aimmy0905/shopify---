@@ -1,304 +1,360 @@
 <template>
   <div class="product-detail-container">
     <!-- 面包屑导航 -->
-    <a-breadcrumb style="margin-bottom: 16px;">
-      <a-breadcrumb-item>
+    <el-breadcrumb separator="/" style="margin-bottom: 16px;">
+      <el-breadcrumb-item>
         <router-link to="/admin/dashboard">首页</router-link>
-      </a-breadcrumb-item>
-      <a-breadcrumb-item>
+      </el-breadcrumb-item>
+      <el-breadcrumb-item>
         <router-link to="/admin/products">商品管理</router-link>
-      </a-breadcrumb-item>
-      <a-breadcrumb-item>商品详情</a-breadcrumb-item>
-    </a-breadcrumb>
+      </el-breadcrumb-item>
+      <el-breadcrumb-item>商品详情</el-breadcrumb-item>
+    </el-breadcrumb>
 
     <!-- 商品状态标签 -->
     <div class="status-header">
-      <a-tag 
-        :color="getStatusColor(productDetail.status)" 
+      <el-tag
+        :type="getStatusType(productDetail.status)"
+        size="large"
         style="font-size: 16px; padding: 8px 16px; margin-bottom: 24px;"
       >
         {{ getStatusText(productDetail.status) }}
-      </a-tag>
+      </el-tag>
     </div>
 
-    <a-row :gutter="24">
+    <el-row :gutter="24">
       <!-- 左侧内容 -->
-      <a-col :span="16">
+      <el-col :span="16">
         <!-- 商品基本信息卡片 -->
-        <a-card title="商品基本信息" :bordered="false" style="margin-bottom: 24px;">
-          <a-row :gutter="24">
-            <a-col :span="10">
+        <el-card shadow="never" style="margin-bottom: 24px;">
+          <template #header>
+            <div class="card-header">
+              <span class="card-title">商品基本信息</span>
+            </div>
+          </template>
+          <el-row :gutter="32">
+            <el-col :span="8">
               <!-- 商品图片展示 -->
               <div class="image-gallery">
-                <a-image
-                  :width="400"
-                  :height="400"
-                  :src="currentImage"
-                  :preview="false"
-                  @click="previewImages"
-                  style="border-radius: 8px; cursor: pointer;"
-                />
+                <div class="main-image-container">
+                  <el-image
+                    :src="currentImage"
+                    fit="cover"
+                    class="main-image"
+                    :preview-src-list="productDetail.images"
+                    @click="previewImages"
+                  />
+                </div>
                 <div v-if="productDetail.images && productDetail.images.length > 1" class="image-thumbnails">
-                  <div 
-                    v-for="(image, index) in productDetail.images" 
+                  <div
+                    v-for="(image, index) in productDetail.images"
                     :key="index"
                     class="thumbnail"
                     :class="{ active: currentImageIndex === index }"
                     @click="switchImage(index)"
                   >
-                    <a-image
-                      :width="60"
-                      :height="60"
+                    <el-image
                       :src="image"
-                      :preview="false"
+                      fit="cover"
+                      class="thumbnail-image"
                     />
                   </div>
                 </div>
               </div>
-            </a-col>
-            <a-col :span="14">
+            </el-col>
+            <el-col :span="16">
               <div class="product-info">
-                <h2 class="product-title">{{ productDetail.name }}</h2>
-                
-                <a-descriptions :column="1" size="large">
-                  <a-descriptions-item label="商品编号">
-                    <a-tag>{{ productDetail.code }}</a-tag>
-                  </a-descriptions-item>
-                  <a-descriptions-item label="商品分类">
-                    {{ productDetail.categoryName }}
-                  </a-descriptions-item>
-                  <a-descriptions-item label="商品价格">
-                    <span class="price">${{ productDetail.price?.toFixed(2) }}</span>
-                  </a-descriptions-item>
-                  <a-descriptions-item label="建议零售价">
-                    <span class="suggested-price">${{ productDetail.suggestedPrice?.toFixed(2) }}</span>
-                  </a-descriptions-item>
-                  <a-descriptions-item label="采购成本">
-                    <span class="cost-price">${{ productDetail.cost?.toFixed(2) }}</span>
-                  </a-descriptions-item>
-                  <a-descriptions-item label="库存数量">
-                    <span :class="{ 'low-stock': productDetail.stock < 10 }">
-                      {{ productDetail.stock }}
-                    </span>
-                  </a-descriptions-item>
-                  <a-descriptions-item label="供应商">
-                    {{ productDetail.supplierName }}
-                  </a-descriptions-item>
-                  <a-descriptions-item label="创建时间">
-                    {{ productDetail.createdAt }}
-                  </a-descriptions-item>
-                </a-descriptions>
-
-                <!-- 审核信息 -->
-                <div v-if="productDetail.auditInfo" class="audit-info">
-                  <h4>审核信息</h4>
-                  <a-descriptions :column="1" size="small">
-                    <a-descriptions-item label="审核人">
-                      {{ productDetail.auditInfo.auditor }}
-                    </a-descriptions-item>
-                    <a-descriptions-item label="审核时间">
-                      {{ productDetail.auditInfo.auditTime }}
-                    </a-descriptions-item>
-                    <a-descriptions-item label="审核结果">
-                      <a-tag :color="productDetail.auditInfo.result === 'approved' ? 'green' : 'red'">
-                        {{ productDetail.auditInfo.result === 'approved' ? '通过' : '不通过' }}
-                      </a-tag>
-                    </a-descriptions-item>
-                    <a-descriptions-item v-if="productDetail.auditInfo.remark" label="审核备注">
-                      {{ productDetail.auditInfo.remark }}
-                    </a-descriptions-item>
-                  </a-descriptions>
+                <div class="product-header">
+                  <h2 class="product-title">{{ productDetail.name }}</h2>
+                  <div class="product-code">
+                    <el-tag type="info" size="large">{{ productDetail.code }}</el-tag>
+                  </div>
                 </div>
+
+                <div class="product-details">
+                  <el-row :gutter="24">
+                    <el-col :span="12">
+                      <div class="detail-item">
+                        <label class="detail-label">商品分类</label>
+                        <div class="detail-value">{{ productDetail.categoryName }}</div>
+                      </div>
+                      <div class="detail-item">
+                        <label class="detail-label">商品价格</label>
+                        <div class="detail-value price">${{ productDetail.price?.toFixed(2) }}</div>
+                      </div>
+                      <div class="detail-item">
+                        <label class="detail-label">建议零售价</label>
+                        <div class="detail-value suggested-price">${{ productDetail.suggestedPrice?.toFixed(2) }}</div>
+                      </div>
+                      <div class="detail-item">
+                        <label class="detail-label">采购成本</label>
+                        <div class="detail-value cost-price">${{ productDetail.cost?.toFixed(2) }}</div>
+                      </div>
+                    </el-col>
+                    <el-col :span="12">
+                      <div class="detail-item">
+                        <label class="detail-label">库存数量</label>
+                        <div class="detail-value" :class="{ 'low-stock': productDetail.stock < 10 }">
+                          {{ productDetail.stock }}
+                        </div>
+                      </div>
+                      <div class="detail-item">
+                        <label class="detail-label">供应商</label>
+                        <div class="detail-value">{{ productDetail.supplierName }}</div>
+                      </div>
+                      <div class="detail-item">
+                        <label class="detail-label">创建时间</label>
+                        <div class="detail-value">{{ productDetail.createdAt }}</div>
+                      </div>
+                    </el-col>
+                  </el-row>
+                </div>
+
+
               </div>
-            </a-col>
-          </a-row>
-        </a-card>
+            </el-col>
+          </el-row>
+        </el-card>
 
         <!-- 商品描述信息卡片 -->
-        <a-card title="商品描述" :bordered="false" style="margin-bottom: 24px;">
+        <el-card shadow="never" style="margin-bottom: 24px;">
+          <template #header>
+            <span>商品描述</span>
+          </template>
           <div class="description-content" v-html="productDetail.description || '暂无描述'"></div>
-          
+
           <!-- 规格参数表 -->
           <div v-if="productDetail.specifications" class="specifications">
             <h4>规格参数</h4>
-            <a-table
-              :columns="specColumns"
-              :data-source="productDetail.specifications"
-              :pagination="false"
+            <el-table
+              :data="productDetail.specifications"
+              style="width: 100%"
               size="small"
               :show-header="false"
             >
-              <template #bodyCell="{ column, record }">
-                <template v-if="column.key === 'name'">
-                  <strong>{{ record.name }}</strong>
+              <el-table-column prop="name" width="200">
+                <template #default="{ row }">
+                  <strong>{{ row.name }}</strong>
                 </template>
-              </template>
-            </a-table>
+              </el-table-column>
+              <el-table-column prop="value" />
+            </el-table>
           </div>
-        </a-card>
+        </el-card>
 
         <!-- 上架店铺卡片 -->
-        <a-card title="上架店铺" :bordered="false" style="margin-bottom: 24px;">
-          <a-table
-            :columns="storeColumns"
-            :data-source="productDetail.stores"
-            :pagination="false"
-            size="middle"
+        <el-card shadow="never" style="margin-bottom: 24px;">
+          <template #header>
+            <span>上架店铺</span>
+          </template>
+          <el-table
+            :data="productDetail.stores"
+            style="width: 100%"
+            size="default"
           >
-            <template #bodyCell="{ column, record }">
-              <template v-if="column.key === 'status'">
-                <a-tag :color="record.status === 'active' ? 'green' : 'red'">
-                  {{ record.status === 'active' ? '上架中' : '已下架' }}
-                </a-tag>
+            <el-table-column prop="merchantName" label="商家名称" />
+            <el-table-column prop="storeName" label="店铺名称" />
+            <el-table-column prop="listedAt" label="上架时间" />
+            <el-table-column label="售价">
+              <template #default="{ row }">
+                ${{ row.price?.toFixed(2) }}
               </template>
-              <template v-if="column.key === 'price'">
-                ${{ record.price?.toFixed(2) }}
+            </el-table-column>
+            <el-table-column label="状态">
+              <template #default="{ row }">
+                <el-tag :type="row.status === 'active' ? 'success' : 'danger'">
+                  {{ row.status === 'active' ? '上架中' : '已下架' }}
+                </el-tag>
               </template>
-              <template v-if="column.key === 'action'">
-                <a @click="viewStore(record)">查看店铺</a>
+            </el-table-column>
+            <el-table-column label="操作">
+              <template #default="{ row }">
+                <el-button type="primary" link @click="viewStore(row)">查看店铺</el-button>
               </template>
-            </template>
-          </a-table>
-        </a-card>
-      </a-col>
+            </el-table-column>
+          </el-table>
+        </el-card>
+      </el-col>
 
       <!-- 右侧边栏 -->
-      <a-col :span="8">
+      <el-col :span="8">
         <!-- 销售数据卡片 -->
-        <a-card title="销售数据" :bordered="false" style="margin-bottom: 24px;">
-          <a-statistic-group>
-            <a-statistic
-              title="总销量"
-              :value="productDetail.salesData?.totalSales || 0"
-              suffix="件"
-            />
-            <a-statistic
-              title="销售额"
-              :value="productDetail.salesData?.totalRevenue || 0"
-              prefix="$"
-              :precision="2"
-            />
-            <a-statistic
-              title="利润"
-              :value="productDetail.salesData?.totalProfit || 0"
-              prefix="$"
-              :precision="2"
-              :value-style="{ color: '#52c41a' }"
-            />
-          </a-statistic-group>
+        <el-card shadow="never" style="margin-bottom: 24px;">
+          <template #header>
+            <div class="card-header">
+              <span class="card-title">销售数据</span>
+            </div>
+          </template>
+          <div class="sales-statistics">
+            <div class="statistic-item">
+              <div class="statistic-value">{{ productDetail.salesData?.totalSales || 0 }}</div>
+              <div class="statistic-label">总销量 (件)</div>
+            </div>
+            <div class="statistic-item">
+              <div class="statistic-value sales-revenue">${{ (productDetail.salesData?.totalRevenue || 0).toFixed(2) }}</div>
+              <div class="statistic-label">销售额</div>
+            </div>
+            <div class="statistic-item">
+              <div class="statistic-value profit">${{ (productDetail.salesData?.totalProfit || 0).toFixed(2) }}</div>
+              <div class="statistic-label">利润</div>
+            </div>
+          </div>
 
           <!-- 销量趋势图 -->
-          <div style="margin-top: 24px;">
-            <h4>销量趋势（近30天）</h4>
-            <div id="salesChart" style="height: 200px;"></div>
+          <div class="chart-section">
+            <h4 class="chart-title">销量趋势（近30天）</h4>
+            <div id="salesChart" class="chart-container"></div>
           </div>
-        </a-card>
+        </el-card>
 
-        <!-- 相关商品推荐 -->
-        <a-card title="相关商品推荐" :bordered="false" style="margin-bottom: 24px;">
-          <div class="related-products">
-            <div 
-              v-for="product in relatedProducts" 
-              :key="product.id"
-              class="related-product-item"
-              @click="viewRelatedProduct(product.id)"
-            >
-              <a-image
-                :width="50"
-                :height="50"
-                :src="product.image"
-                :preview="false"
-                style="border-radius: 4px;"
-              />
-              <div class="product-info">
-                <div class="product-name">{{ product.name }}</div>
-                <div class="product-price">${{ product.price?.toFixed(2) }}</div>
+        <!-- 审核信息 -->
+        <el-card v-if="productDetail.auditInfo" shadow="never" style="margin-bottom: 24px;">
+          <template #header>
+            <div class="card-header">
+              <span class="card-title">审核信息</span>
+            </div>
+          </template>
+          <div class="audit-info">
+            <!-- 审核结果 -->
+            <div class="audit-result-section">
+              <el-tag
+                :type="productDetail.auditInfo.result === 'approved' ? 'success' : 'danger'"
+                size="large"
+                effect="dark"
+                class="audit-result-tag"
+              >
+                <el-icon class="result-icon">
+                  <Check v-if="productDetail.auditInfo.result === 'approved'" />
+                  <Close v-else />
+                </el-icon>
+                {{ productDetail.auditInfo.result === 'approved' ? '审核通过' : '审核不通过' }}
+              </el-tag>
+            </div>
+
+            <!-- 审核详情 -->
+            <div class="audit-details">
+              <div class="audit-item">
+                <div class="audit-label">
+                  <el-icon><User /></el-icon>
+                  <span>审核人</span>
+                </div>
+                <div class="audit-value">{{ productDetail.auditInfo.auditor }}</div>
+              </div>
+
+              <div class="audit-item">
+                <div class="audit-label">
+                  <el-icon><Clock /></el-icon>
+                  <span>审核时间</span>
+                </div>
+                <div class="audit-value">{{ productDetail.auditInfo.auditTime }}</div>
+              </div>
+
+              <div v-if="productDetail.auditInfo.remark" class="audit-item">
+                <div class="audit-label">
+                  <el-icon><Document /></el-icon>
+                  <span>审核备注</span>
+                </div>
+                <div class="audit-value audit-remark">{{ productDetail.auditInfo.remark }}</div>
               </div>
             </div>
           </div>
-        </a-card>
+        </el-card>
 
         <!-- 操作按钮 -->
-        <a-card title="操作" :bordered="false">
-          <a-space direction="vertical" style="width: 100%;">
-            <a-button type="primary" block @click="editProduct">
-              <template #icon><EditOutlined /></template>
+        <el-card shadow="never">
+          <template #header>
+            <div class="card-header">
+              <span class="card-title">操作</span>
+            </div>
+          </template>
+          <div class="operation-buttons">
+            <el-button type="primary" class="operation-btn" @click="editProduct">
+              <el-icon><Edit /></el-icon>
               编辑商品
-            </a-button>
-            
-            <a-button v-if="productDetail.status === 'pending'" block @click="approveProduct">
-              <template #icon><CheckOutlined /></template>
+            </el-button>
+
+            <el-button v-if="productDetail.status === 'pending'" type="success" class="operation-btn" @click="approveProduct">
+              <el-icon><Check /></el-icon>
               审核通过
-            </a-button>
-            
-            <a-button v-if="productDetail.status === 'pending'" block @click="rejectProduct">
-              <template #icon><CloseOutlined /></template>
+            </el-button>
+
+            <el-button v-if="productDetail.status === 'pending'" type="warning" class="operation-btn" @click="rejectProduct">
+              <el-icon><Close /></el-icon>
               审核不通过
-            </a-button>
-            
-            <a-button block @click="copyProduct">
-              <template #icon><CopyOutlined /></template>
+            </el-button>
+
+            <el-button class="operation-btn" @click="copyProduct">
+              <el-icon><CopyDocument /></el-icon>
               复制商品
-            </a-button>
-            
-            <a-button block @click="downloadProduct">
-              <template #icon><DownloadOutlined /></template>
+            </el-button>
+
+            <el-button class="operation-btn" @click="downloadProduct">
+              <el-icon><Download /></el-icon>
               导出商品
-            </a-button>
-            
-            <a-button danger block @click="deleteProduct">
-              <template #icon><DeleteOutlined /></template>
+            </el-button>
+
+            <el-button type="danger" class="operation-btn" @click="deleteProduct">
+              <el-icon><Delete /></el-icon>
               删除商品
-            </a-button>
-            
-            <a-button block @click="goBack">
-              <template #icon><ArrowLeftOutlined /></template>
+            </el-button>
+
+            <el-button class="operation-btn back-btn" @click="goBack">
+              <el-icon><ArrowLeft /></el-icon>
               返回列表
-            </a-button>
-          </a-space>
-        </a-card>
-      </a-col>
-    </a-row>
+            </el-button>
+          </div>
+        </el-card>
+      </el-col>
+    </el-row>
 
     <!-- 审核弹窗 -->
-    <a-modal
-      v-model:visible="auditModalVisible"
+    <el-dialog
+      v-model="auditModalVisible"
       :title="auditForm.type === 'approve' ? '商品审核通过' : '商品审核不通过'"
-      @ok="handleAudit"
+      width="500px"
     >
-      <a-form :model="auditForm" :label-col="{ span: 4 }" :wrapper-col="{ span: 18 }">
-        <a-form-item label="审核结果">
-          <a-radio-group v-model:value="auditForm.type">
-            <a-radio value="approve">审核通过</a-radio>
-            <a-radio value="reject">审核不通过</a-radio>
-          </a-radio-group>
-        </a-form-item>
-        <a-form-item label="审核备注">
-          <a-textarea 
-            v-model:value="auditForm.remark" 
+      <el-form :model="auditForm" label-width="80px">
+        <el-form-item label="审核结果">
+          <el-radio-group v-model="auditForm.type">
+            <el-radio value="approve">审核通过</el-radio>
+            <el-radio value="reject">审核不通过</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="审核备注">
+          <el-input
+            v-model="auditForm.remark"
+            type="textarea"
             :placeholder="auditForm.type === 'reject' ? '请输入拒绝原因' : '可填写审核备注(选填)'"
             :rows="3"
-            :required="auditForm.type === 'reject'"
           />
-        </a-form-item>
-      </a-form>
-    </a-modal>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="auditModalVisible = false">取消</el-button>
+          <el-button type="primary" @click="handleAudit">确定</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { message, Modal } from 'ant-design-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import {
-  EditOutlined,
-  CheckOutlined,
-  CloseOutlined,
-  CopyOutlined,
-  DownloadOutlined,
-  DeleteOutlined,
-  ArrowLeftOutlined
-} from '@ant-design/icons-vue'
+  Edit,
+  Check,
+  Close,
+  CopyDocument,
+  Download,
+  Delete,
+  ArrowLeft,
+  User,
+  Clock,
+  Document
+} from '@element-plus/icons-vue'
 import * as echarts from 'echarts'
 
 const route = useRoute()
@@ -337,64 +393,17 @@ const productDetail = ref({
   auditInfo: null
 })
 
-// 相关商品
-const relatedProducts = ref([])
 
-// 规格参数表列配置
-const specColumns = [
-  {
-    title: '参数名称',
-    dataIndex: 'name',
-    key: 'name',
-    width: '40%'
-  },
-  {
-    title: '参数值',
-    dataIndex: 'value',
-    key: 'value'
-  }
-]
 
-// 上架店铺表列配置
-const storeColumns = [
-  {
-    title: '商家名称',
-    dataIndex: 'merchantName',
-    key: 'merchantName'
-  },
-  {
-    title: '店铺名称',
-    dataIndex: 'storeName',
-    key: 'storeName'
-  },
-  {
-    title: '上架时间',
-    dataIndex: 'listedAt',
-    key: 'listedAt'
-  },
-  {
-    title: '售价',
-    key: 'price'
-  },
-  {
-    title: '状态',
-    key: 'status'
-  },
-  {
-    title: '操作',
-    key: 'action'
+// 获取状态类型
+const getStatusType = (status) => {
+  const types = {
+    pending: 'warning',
+    draft: 'info',
+    published: 'success',
+    rejected: 'danger'
   }
-]
-
-// 获取状态颜色
-const getStatusColor = (status) => {
-  const colors = {
-    pending: 'orange',
-    draft: 'default',
-    published: 'green',
-    rejected: 'red'
-  }
-  return colors[status] || 'default'
+  return types[status] || 'info'
 }
 
 // 获取状态文本
@@ -481,57 +490,44 @@ const initProductDetail = (id) => {
       totalRevenue: 369872.34,
       totalProfit: 184936.17
     },
-    auditInfo: Math.random() > 0.5 ? {
+    auditInfo: {
       auditor: '审核员张三',
       auditTime: '2023-12-02 14:20:00',
-      result: Math.random() > 0.3 ? 'approved' : 'rejected',
+      result: 'approved',
       remark: '商品信息完整，质量符合要求，审核通过。'
-    } : null
+    }
   }
   
   return mockData
 }
 
-// 初始化相关商品数据
-const initRelatedProducts = () => {
-  const products = []
-  for (let i = 1; i <= 5; i++) {
-    products.push({
-      id: i + 1000,
-      name: `相关商品 ${i}`,
-      image: `https://picsum.photos/100/100?random=${i + 500}`,
-      price: Math.floor(Math.random() * 500 + 100)
-    })
-  }
-  return products
-}
+
 
 // 加载商品详情
 const loadProductDetail = async () => {
   try {
     const id = route.params.id
     if (!id) {
-      message.error('商品ID不能为空')
+      ElMessage.error('商品ID不能为空')
       return
     }
-    
+
     // 模拟API调用
     await new Promise(resolve => setTimeout(resolve, 500))
-    
+
     const data = initProductDetail(id)
     productDetail.value = data
     currentImage.value = data.images[0]
-    
-    // 加载相关商品
-    relatedProducts.value = initRelatedProducts()
-    
+
+
+
     // 渲染销量图表
     nextTick(() => {
       renderSalesChart()
     })
-    
+
   } catch (error) {
-    message.error('加载商品详情失败')
+    ElMessage.error('加载商品详情失败')
   }
 }
 
@@ -619,66 +615,75 @@ const rejectProduct = () => {
 // 处理审核
 const handleAudit = async () => {
   if (auditForm.type === 'reject' && !auditForm.remark) {
-    message.error('审核不通过时必须填写拒绝原因')
+    ElMessage.error('审核不通过时必须填写拒绝原因')
     return
   }
-  
+
   try {
     const action = auditForm.type === 'approve' ? '通过' : '拒绝'
-    message.success(`商品审核${action}成功`)
+    ElMessage.success(`商品审核${action}成功`)
     auditModalVisible.value = false
     // 重新加载数据
     loadProductDetail()
   } catch (error) {
-    message.error('审核操作失败')
+    ElMessage.error('审核操作失败')
   }
 }
 
 // 复制商品
 const copyProduct = () => {
-  Modal.confirm({
-    title: '复制商品',
-    content: `确定要复制商品 "${productDetail.value.name}" 吗？`,
-    onOk: async () => {
-      try {
-        message.success('商品复制成功')
-      } catch (error) {
-        message.error('复制失败')
-      }
+  ElMessageBox.confirm(
+    `确定要复制商品 "${productDetail.value.name}" 吗？`,
+    '复制商品',
+    {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
     }
+  ).then(async () => {
+    try {
+      ElMessage.success('商品复制成功')
+    } catch (error) {
+      ElMessage.error('复制失败')
+    }
+  }).catch(() => {
+    // 用户取消
   })
 }
 
 // 下载商品
 const downloadProduct = () => {
-  message.success('导出功能开发中...')
+  ElMessage.success('导出功能开发中...')
 }
 
 // 删除商品
 const deleteProduct = () => {
-  Modal.confirm({
-    title: '删除商品',
-    content: `确定要删除商品 "${productDetail.value.name}" 吗？此操作不可恢复。`,
-    onOk: async () => {
-      try {
-        message.success('商品删除成功')
-        router.push('/admin/products')
-      } catch (error) {
-        message.error('删除失败')
-      }
+  ElMessageBox.confirm(
+    `确定要删除商品 "${productDetail.value.name}" 吗？此操作不可恢复。`,
+    '删除商品',
+    {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
     }
+  ).then(async () => {
+    try {
+      ElMessage.success('商品删除成功')
+      router.push('/admin/products')
+    } catch (error) {
+      ElMessage.error('删除失败')
+    }
+  }).catch(() => {
+    // 用户取消
   })
 }
 
 // 查看店铺
 const viewStore = (store) => {
-  message.info(`查看店铺：${store.storeName}`)
+  ElMessage.info(`查看店铺：${store.storeName}`)
 }
 
-// 查看相关商品
-const viewRelatedProduct = (id) => {
-  router.push(`/admin/products/${id}`)
-}
+
 
 // 返回列表
 const goBack = () => {
@@ -694,92 +699,231 @@ onMounted(() => {
 <style scoped lang="scss">
 .product-detail-container {
   padding: 24px;
-  background: #f0f2f5;
-  min-height: calc(100vh - 64px);
+  background: #f5f7fa;
+  min-height: calc(100vh - 60px);
 }
 
 .status-header {
   text-align: center;
+  margin-bottom: 24px;
+
+  .el-tag {
+    font-size: 16px;
+    padding: 12px 24px;
+    border-radius: 20px;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.card-header {
+  .card-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #303133;
+  }
 }
 
 .image-gallery {
+  .main-image-container {
+    width: 100%;
+    height: 300px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #e4e7ed;
+
+    .main-image {
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+
+      &:hover {
+        transform: scale(1.02);
+      }
+    }
+  }
+
   .image-thumbnails {
     display: flex;
     gap: 8px;
     margin-top: 16px;
-    
+    justify-content: flex-start;
+
     .thumbnail {
+      width: 60px;
+      height: 60px;
       cursor: pointer;
       border: 2px solid transparent;
       border-radius: 6px;
       overflow: hidden;
-      transition: border-color 0.3s;
-      
+      transition: all 0.3s ease;
+
       &:hover {
-        border-color: #1890ff;
+        border-color: #409eff;
+        transform: translateY(-2px);
       }
-      
+
       &.active {
-        border-color: #1890ff;
+        border-color: #409eff;
+        box-shadow: 0 2px 8px rgba(64, 158, 255, 0.3);
+      }
+
+      .thumbnail-image {
+        width: 100%;
+        height: 100%;
       }
     }
   }
 }
 
 .product-info {
-  .product-title {
-    font-size: 24px;
-    font-weight: 600;
-    color: #262626;
-    margin-bottom: 24px;
-  }
-  
-  .price {
-    font-size: 20px;
-    font-weight: 600;
-    color: #f5222d;
-  }
-  
-  .suggested-price {
-    font-size: 16px;
-    color: #52c41a;
-  }
-  
-  .cost-price {
-    font-size: 16px;
-    color: #fa8c16;
-  }
-  
-  .low-stock {
-    color: #ff4d4f;
-    font-weight: 500;
-  }
-  
-  .audit-info {
-    margin-top: 24px;
-    padding: 16px;
-    background: #fafafa;
-    border-radius: 6px;
-    
-    h4 {
+  .product-header {
+    margin-bottom: 32px;
+
+    .product-title {
+      font-size: 28px;
+      font-weight: 600;
+      color: #303133;
       margin-bottom: 12px;
-      color: #262626;
+      line-height: 1.4;
+    }
+
+    .product-code {
+      margin-bottom: 8px;
+    }
+  }
+
+  .product-details {
+    margin-bottom: 32px;
+  }
+
+  .detail-item {
+    margin-bottom: 20px;
+
+    .detail-label {
+      display: block;
+      font-size: 14px;
+      color: #606266;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+
+    .detail-value {
+      font-size: 16px;
+      color: #303133;
+      font-weight: 500;
+
+      &.price {
+        font-size: 24px;
+        font-weight: 700;
+        color: #f56c6c;
+      }
+
+      &.suggested-price {
+        font-size: 18px;
+        font-weight: 600;
+        color: #67c23a;
+      }
+
+      &.cost-price {
+        font-size: 18px;
+        font-weight: 600;
+        color: #e6a23c;
+      }
+
+      &.low-stock {
+        color: #f56c6c;
+        font-weight: 600;
+      }
+    }
+  }
+
+  .audit-info {
+    padding: 0;
+
+    .audit-result-section {
+      text-align: center;
+      margin-bottom: 32px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid #ebeef5;
+
+      .audit-result-tag {
+        font-size: 15px;
+        padding: 10px 24px;
+        border-radius: 16px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+
+        .result-icon {
+          margin-right: 8px;
+          font-size: 14px;
+        }
+      }
+    }
+
+    .audit-details {
+      .audit-item {
+        margin-bottom: 24px;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+
+        .audit-label {
+          display: flex;
+          align-items: center;
+          font-size: 13px;
+          color: #909399;
+          margin-bottom: 6px;
+          font-weight: 400;
+          letter-spacing: 0.3px;
+
+          .el-icon {
+            margin-right: 6px;
+            color: #c0c4cc;
+            font-size: 14px;
+          }
+        }
+
+        .audit-value {
+          font-size: 16px;
+          color: #303133;
+          font-weight: 500;
+          line-height: 1.4;
+          padding-left: 20px;
+          margin-bottom: 4px;
+
+          &.audit-remark {
+            background: #f5f7fa;
+            padding: 16px 20px;
+            border-radius: 8px;
+            border-left: 4px solid #409eff;
+            margin-left: 0;
+            margin-top: 8px;
+            line-height: 1.6;
+            font-size: 14px;
+            color: #606266;
+            font-weight: 400;
+          }
+        }
+      }
     }
   }
 }
 
 .description-content {
   line-height: 1.6;
-  color: #595959;
-  
+  color: #606266;
+
   h3 {
-    color: #262626;
+    color: #303133;
     margin-bottom: 16px;
   }
-  
+
   ul {
     padding-left: 20px;
-    
+
     li {
       margin-bottom: 8px;
     }
@@ -788,57 +932,175 @@ onMounted(() => {
 
 .specifications {
   margin-top: 24px;
-  
+
   h4 {
     margin-bottom: 16px;
-    color: #262626;
+    color: #303133;
   }
 }
 
-.related-products {
-  .related-product-item {
-    display: flex;
-    align-items: center;
-    padding: 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-    
+.sales-statistics {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-bottom: 32px;
+
+  .statistic-item {
+    text-align: center;
+    padding: 20px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 12px;
+    border: 1px solid #e4e7ed;
+    transition: all 0.3s ease;
+
     &:hover {
-      background-color: #f5f5f5;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
-    
-    .product-info {
-      margin-left: 12px;
-      flex: 1;
-      
-      .product-name {
-        font-weight: 500;
-        color: #262626;
-        margin-bottom: 4px;
-        font-size: 14px;
+
+    .statistic-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: #303133;
+      margin-bottom: 8px;
+
+      &.sales-revenue {
+        color: #409eff;
       }
-      
-      .product-price {
-        color: #52c41a;
-        font-weight: 600;
-        font-size: 14px;
+
+      &.profit {
+        color: #67c23a;
       }
+    }
+
+    .statistic-label {
+      font-size: 14px;
+      color: #606266;
+      font-weight: 500;
     }
   }
 }
 
-:deep(.ant-descriptions-item-label) {
+.chart-section {
+  .chart-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #303133;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #409eff;
+    display: inline-block;
+  }
+
+  .chart-container {
+    height: 200px;
+    border-radius: 8px;
+    background: #fafafa;
+  }
+}
+
+.operation-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  .operation-btn {
+    width: 100%;
+    height: 44px;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .el-icon {
+      margin-right: 8px;
+    }
+
+    &.back-btn {
+      margin-top: 8px;
+      border-top: 1px solid #e4e7ed;
+      padding-top: 20px;
+    }
+  }
+}
+
+
+
+:deep(.el-descriptions__label) {
   font-weight: 500;
-  color: #595959;
+  color: #606266;
 }
 
-:deep(.ant-descriptions-item-content) {
-  color: #262626;
+:deep(.el-descriptions__content) {
+  color: #303133;
 }
 
-:deep(.ant-card-head-title) {
-  font-size: 16px;
-  font-weight: 600;
+// 全局卡片样式
+:deep(.el-card) {
+  border-radius: 12px;
+  border: 1px solid #e4e7ed;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s ease;
+
+  &:hover {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  }
+}
+
+:deep(.el-card__header) {
+  background: linear-gradient(135deg, #fafbfc 0%, #f1f3f4 100%);
+  border-bottom: 1px solid #e4e7ed;
+  padding: 20px 24px;
+
+  .card-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #303133;
+  }
+}
+
+:deep(.el-card__body) {
+  padding: 24px;
+}
+
+// 面包屑样式
+:deep(.el-breadcrumb) {
+  font-size: 14px;
+
+  .el-breadcrumb__item {
+    .el-breadcrumb__inner {
+      color: #606266;
+
+      &:hover {
+        color: #409eff;
+      }
+    }
+
+    &:last-child .el-breadcrumb__inner {
+      color: #303133;
+      font-weight: 500;
+    }
+  }
+}
+
+// 表格样式优化
+:deep(.el-table) {
+  border-radius: 8px;
+  overflow: hidden;
+
+  .el-table__header {
+    background: #fafbfc;
+  }
+
+  .el-table__row {
+    &:hover {
+      background: #f8f9fa;
+    }
+  }
 }
 </style> 

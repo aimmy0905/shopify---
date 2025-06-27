@@ -86,16 +86,7 @@ const routes = [
           requiresAuth: true
         }
       },
-      // 余额管理
-      {
-        path: 'balance',
-        name: 'Balance',
-        component: () => import('@/views/merchant/Balance.vue'),
-        meta: {
-          title: '账户余额 - Shopify铺货系统',
-          requiresAuth: true
-        }
-      },
+
       // 店铺管理
       {
         path: 'stores',
@@ -187,24 +178,48 @@ const routes = [
         meta: {
           title: '店铺订单 - Shopify铺货系统',
           requiresAuth: true
+        },
+        beforeEnter: (to, from, next) => {
+          // 自动添加type参数
+          if (!to.query.type) {
+            next({ ...to, query: { ...to.query, type: 'store' } })
+          } else {
+            next()
+          }
         }
       },
       {
         path: 'orders/purchase',
         name: 'PurchaseOrders',
-        component: () => import('@/views/merchant/orders/Purchase.vue'),
+        component: () => import('@/views/merchant/orders/Store.vue'),
         meta: {
           title: '采购订单 - Shopify铺货系统',
           requiresAuth: true
+        },
+        beforeEnter: (to, from, next) => {
+          // 自动添加type参数
+          if (!to.query.type) {
+            next({ ...to, query: { ...to.query, type: 'purchase' } })
+          } else {
+            next()
+          }
         }
       },
       {
         path: 'orders/aftersale',
         name: 'AftersaleOrders',
-        component: () => import('@/views/merchant/orders/Aftersale.vue'),
+        component: () => import('@/views/merchant/orders/Store.vue'),
         meta: {
           title: '售后订单 - Shopify铺货系统',
           requiresAuth: true
+        },
+        beforeEnter: (to, from, next) => {
+          // 自动添加type参数
+          if (!to.query.type) {
+            next({ ...to, query: { ...to.query, type: 'aftersale' } })
+          } else {
+            next()
+          }
         }
       },
       {

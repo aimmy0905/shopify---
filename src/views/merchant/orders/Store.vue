@@ -1,9 +1,28 @@
 
 <template>
   <div class="store-orders-page">
-    <!-- 页面标题 -->
-    <div class="page-header">
-      <h2>店铺订单</h2>
+    <!-- 订单类型切换按钮 -->
+    <div class="order-type-switcher-top">
+      <el-button-group>
+        <el-button
+          :type="activeOrderType === 'store' ? 'primary' : 'default'"
+          @click="switchOrderType('store')"
+        >
+          店铺订单
+        </el-button>
+        <el-button
+          :type="activeOrderType === 'purchase' ? 'primary' : 'default'"
+          @click="switchOrderType('purchase')"
+        >
+          采购订单
+        </el-button>
+        <el-button
+          :type="activeOrderType === 'aftersale' ? 'primary' : 'default'"
+          @click="switchOrderType('aftersale')"
+        >
+          售后订单
+        </el-button>
+      </el-button-group>
     </div>
 
     <!-- 搜索和筛选区 -->
@@ -121,15 +140,32 @@
       <el-card>
         <template #header>
           <div class="table-header">
-            <span>订单列表 (共 {{ total }} 条)</span>
+            <span>{{ getTableTitle() }} (共 {{ total }} 条)</span>
             <div class="table-actions">
               <el-button
+                v-if="activeOrderType === 'store'"
                 type="primary"
                 :disabled="selectedOrders.length === 0"
                 @click="handleBulkInvoice"
               >
                 <el-icon><Document /></el-icon>
                 批量开具Invoice ({{ selectedOrders.length }})
+              </el-button>
+              <el-button
+                v-if="activeOrderType === 'purchase'"
+                type="success"
+                :disabled="selectedOrders.length === 0"
+                @click="handleBatchPayment"
+              >
+                批量付款 ({{ selectedOrders.length }})
+              </el-button>
+              <el-button
+                v-if="activeOrderType === 'aftersale'"
+                type="warning"
+                :disabled="selectedOrders.length === 0"
+                @click="handleBatchRefund"
+              >
+                批量退款 ({{ selectedOrders.length }})
               </el-button>
             </div>
           </div>
@@ -151,7 +187,8 @@
             </template>
           </el-table-column>
 
-          <el-table-column label="订单商品" width="450">
+          <!-- 店铺订单特有列 -->
+          <el-table-column v-if="activeOrderType === 'store'" label="订单商品" width="450">
             <template #default="{ row }">
               <div class="order-products">
                 <div
@@ -239,19 +276,68 @@
             </template>
           </el-table-column>
 
-          <el-table-column label="下单时间" width="150">
+          <!-- 店铺订单特有列 -->
+          <el-table-column v-if="activeOrderType === 'store'" label="下单时间" width="150">
             <template #default="{ row }">
               {{ formatDateTime(row.createdAt) }}
             </template>
           </el-table-column>
 
-          <el-table-column label="结算时间" width="150">
+          <el-table-column v-if="activeOrderType === 'store'" label="结算时间" width="150">
             <template #default="{ row }">
               {{ row.settlementTime ? formatDateTime(row.settlementTime) : '-' }}
             </template>
           </el-table-column>
 
-          <el-table-column label="操作" width="150" fixed="right">
+          <!-- 采购订单特有列 -->
+          <el-table-column v-if="activeOrderType === 'purchase'" label="供应商" width="150">
+            <template #default="{ row }">
+              {{ row.supplierName }}
+            </template>
+          </el-table-column>
+
+          <el-table-column v-if="activeOrderType === 'purchase'" label="付款状态" width="120">
+            <template #default="{ row }">
+              <el-tag :type="row.paymentStatus === 'paid' ? 'success' : 'warning'">
+                {{ row.paymentStatus === 'paid' ? '已付款' : '待付款' }}
+              </el-tag>
+            </template>
+          </el-table-column>
+
+          <el-table-column v-if="activeOrderType === 'purchase'" label="预计交货" width="150">
+            <template #default="{ row }">
+              {{ row.expectedDelivery }}
+            </template>
+          </el-table-column>
+
+          <!-- 售后订单特有列 -->
+          <el-table-column v-if="activeOrderType === 'aftersale'" label="原订单号" width="180">
+            <template #default="{ row }">
+              <el-link type="primary" @click="goToOrderDetail(row.originalOrderNo)">
+                {{ row.originalOrderNo }}
+              </el-link>
+            </template>
+          </el-table-column>
+
+          <el-table-column v-if="activeOrderType === 'aftersale'" label="客户邮箱" width="200">
+            <template #default="{ row }">
+              {{ row.customerEmail }}
+            </template>
+          </el-table-column>
+
+          <el-table-column v-if="activeOrderType === 'aftersale'" label="退款金额" width="120">
+            <template #default="{ row }">
+              ${{ row.refundAmount }}
+            </template>
+          </el-table-column>
+
+          <el-table-column v-if="activeOrderType === 'aftersale'" label="退款原因" width="150">
+            <template #default="{ row }">
+              {{ row.reason }}
+            </template>
+          </el-table-column>
+
+          <el-table-column label="操作" width="200" fixed="right">
             <template #default="{ row }">
               <el-button
                 size="small"
@@ -261,13 +347,38 @@
               >
                 查看详情
               </el-button>
+
+              <!-- 店铺订单操作 -->
               <el-button
+                v-if="activeOrderType === 'store'"
                 size="small"
                 type="success"
                 link
                 @click="viewLogistics(row)"
               >
                 查看物流
+              </el-button>
+
+              <!-- 采购订单操作 -->
+              <el-button
+                v-if="activeOrderType === 'purchase' && row.paymentStatus === 'unpaid'"
+                size="small"
+                type="warning"
+                link
+                @click="handlePayment(row)"
+              >
+                付款
+              </el-button>
+
+              <!-- 售后订单操作 -->
+              <el-button
+                v-if="activeOrderType === 'aftersale' && row.status === 'processing'"
+                size="small"
+                type="success"
+                link
+                @click="handleRefund(row)"
+              >
+                处理退款
               </el-button>
             </template>
           </el-table-column>
@@ -346,13 +457,17 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, reactive, onMounted, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Search, Download, Document } from '@element-plus/icons-vue'
 import BulkInvoiceDialog from '../components/BulkInvoiceDialog.vue'
 
 const router = useRouter()
+const route = useRoute()
+
+// 订单类型切换
+const activeOrderType = ref('store')
 
 // 响应式数据
 const loading = ref(false)
@@ -382,10 +497,49 @@ const pagination = reactive({
   size: 20
 })
 
+// 订单类型切换方法
+const switchOrderType = (type) => {
+  if (activeOrderType.value === type) return
+
+  activeOrderType.value = type
+
+  // 更新URL参数
+  router.push({
+    path: route.path,
+    query: { ...route.query, type }
+  })
+
+  // 重置分页和选中项
+  pagination.page = 1
+  selectedOrders.value = []
+
+  // 重新加载数据
+  loadOrderList()
+}
+
+// 初始化订单类型
+const initOrderType = () => {
+  const typeFromQuery = route.query.type
+  if (typeFromQuery && ['store', 'purchase', 'aftersale'].includes(typeFromQuery)) {
+    activeOrderType.value = typeFromQuery
+  } else {
+    activeOrderType.value = 'store'
+  }
+}
+
 // 生命周期
 onMounted(() => {
+  initOrderType()
   loadStoreList()
   loadOrderList()
+})
+
+// 监听路由变化
+watch(() => route.query.type, (newType) => {
+  if (newType && newType !== activeOrderType.value) {
+    activeOrderType.value = newType
+    loadOrderList()
+  }
 })
 
 // 方法
@@ -408,8 +562,10 @@ const loadOrderList = async () => {
   try {
     // 模拟订单数据
     await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    orderList.value = [
+
+    // 根据订单类型加载不同的数据
+    if (activeOrderType.value === 'store') {
+      orderList.value = [
       {
         id: '1',
         orderNo: 'ORD202312150001',
@@ -720,8 +876,68 @@ const loadOrderList = async () => {
         settlementTime: '2023-12-12 21:30:00'
       }
     ]
-    
+
     total.value = 156
+    } else if (activeOrderType.value === 'purchase') {
+      // 采购订单数据
+      orderList.value = [
+        {
+          id: 'P001',
+          orderNo: 'PUR202312150001',
+          products: [
+            {
+              name: '智能手表批量采购',
+              image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=50&h=50&fit=crop',
+              quantity: 100,
+              unitPrice: 199.99,
+              specifications: {
+                color: '多色',
+                size: '44mm',
+                storage: '32GB'
+              },
+              lineTotal: 19999.00
+            }
+          ],
+          supplierName: 'TechSupplier Co.',
+          totalAmount: 19999.00,
+          status: 'pending',
+          paymentStatus: 'unpaid',
+          createdAt: '2023-12-15 10:30:00',
+          expectedDelivery: '2023-12-25'
+        }
+      ]
+      total.value = 25
+    } else if (activeOrderType.value === 'aftersale') {
+      // 售后订单数据
+      orderList.value = [
+        {
+          id: 'AS001',
+          orderNo: 'AS202312150001',
+          originalOrderNo: 'ORD202312150001',
+          products: [
+            {
+              name: '智能手表 Pro Max',
+              image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=50&h=50&fit=crop',
+              quantity: 1,
+              unitPrice: 299.99,
+              specifications: {
+                color: '深空黑',
+                size: '44mm'
+              },
+              lineTotal: 299.99
+            }
+          ],
+          customerName: 'John Doe',
+          customerEmail: 'john@example.com',
+          refundAmount: 299.99,
+          refundCurrency: 'USD',
+          status: 'processing',
+          reason: '商品质量问题',
+          createdAt: '2023-12-15 14:20:00'
+        }
+      ]
+      total.value = 12
+    }
   } catch (error) {
     ElMessage.error('加载订单列表失败')
   } finally {
@@ -847,12 +1063,46 @@ const formatDateTime = (dateTime) => {
   return new Date(dateTime).toLocaleString('zh-CN')
 }
 
+// 获取表格标题
+const getTableTitle = () => {
+  const titles = {
+    store: '店铺订单列表',
+    purchase: '采购订单列表',
+    aftersale: '售后订单列表'
+  }
+  return titles[activeOrderType.value] || '订单列表'
+}
+
 const handleBulkInvoice = () => {
   if (selectedOrders.value.length === 0) {
     ElMessage.warning('请先选择要开具Invoice的订单')
     return
   }
   bulkInvoiceVisible.value = true
+}
+
+const handleBatchPayment = () => {
+  if (selectedOrders.value.length === 0) {
+    ElMessage.warning('请先选择要付款的采购订单')
+    return
+  }
+  ElMessage.success(`批量付款功能开发中... (${selectedOrders.value.length} 个订单)`)
+}
+
+const handleBatchRefund = () => {
+  if (selectedOrders.value.length === 0) {
+    ElMessage.warning('请先选择要退款的售后订单')
+    return
+  }
+  ElMessage.success(`批量退款功能开发中... (${selectedOrders.value.length} 个订单)`)
+}
+
+const handlePayment = (order) => {
+  ElMessage.success(`付款功能开发中... 订单号: ${order.orderNo}`)
+}
+
+const handleRefund = (order) => {
+  ElMessage.success(`处理退款功能开发中... 订单号: ${order.orderNo}`)
 }
 
 const handleBulkInvoiceSuccess = () => {
@@ -868,13 +1118,52 @@ const handleBulkInvoiceSuccess = () => {
   padding: 20px;
 }
 
-.page-header {
+.order-type-switcher-top {
   margin-bottom: 20px;
 }
 
-.page-header h2 {
-  margin: 0;
-  color: #303133;
+.order-type-switcher-top :deep(.el-button-group) {
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.order-type-switcher-top :deep(.el-button) {
+  border-radius: 0;
+  transition: all 0.3s ease;
+  font-size: 14px;
+  padding: 10px 20px;
+  font-weight: 500;
+  border-color: #dcdfe6;
+}
+
+.order-type-switcher-top :deep(.el-button:first-child) {
+  border-top-left-radius: 6px;
+  border-bottom-left-radius: 6px;
+}
+
+.order-type-switcher-top :deep(.el-button:last-child) {
+  border-top-right-radius: 6px;
+  border-bottom-right-radius: 6px;
+}
+
+.order-type-switcher-top :deep(.el-button--primary) {
+  background-color: #409eff;
+  border-color: #409eff;
+  color: white;
+  box-shadow: 0 2px 4px rgba(64, 158, 255, 0.3);
+  z-index: 1;
+}
+
+.order-type-switcher-top :deep(.el-button--default) {
+  background-color: #fff;
+  color: #606266;
+}
+
+.order-type-switcher-top :deep(.el-button--default:hover) {
+  background-color: #ecf5ff;
+  border-color: #b3d8ff;
+  color: #409eff;
 }
 
 .search-filter-section {

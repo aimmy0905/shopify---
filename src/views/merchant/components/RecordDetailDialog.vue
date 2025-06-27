@@ -90,11 +90,41 @@
       <!-- 充值特有信息 -->
       <div v-if="record.type === 'recharge'" class="detail-section">
         <h4>充值信息</h4>
+
+        <!-- 充值货币信息 -->
+        <div class="detail-item">
+          <span class="label">充值货币：</span>
+          <span class="value">
+            <el-tag type="info" size="small">{{ record.originalCurrency || 'USD' }}</el-tag>
+          </span>
+        </div>
+
+        <div class="detail-item">
+          <span class="label">充值金额：</span>
+          <span class="value amount-positive">
+            {{ (record.originalCurrency || 'USD') }} {{ Math.abs(record.originalAmount || record.amount).toFixed(2) }}
+          </span>
+        </div>
+
+        <!-- 汇率信息 -->
+        <div v-if="record.originalCurrency && record.originalCurrency !== 'USD'" class="detail-item">
+          <span class="label">当时汇率：</span>
+          <span class="value exchange-rate">
+            1 {{ record.originalCurrency }} = {{ (record.exchangeRate || 1).toFixed(4) }} USD
+          </span>
+        </div>
+        <div v-else class="detail-item">
+          <span class="label">当时汇率：</span>
+          <span class="value exchange-rate">
+            1 USD = 1.0000 USD
+          </span>
+        </div>
+
         <div class="detail-item" v-if="record.paymentMethod">
           <span class="label">支付方式：</span>
           <span class="value">{{ getPaymentMethodLabel(record.paymentMethod) }}</span>
         </div>
-        
+
         <div class="detail-item" v-if="record.receiptUrl">
           <span class="label">支付凭证：</span>
           <span class="value">
@@ -328,7 +358,19 @@ const handleClose = () => {
       color: #f56c6c;
       font-weight: 600;
     }
+
+    &.amount-positive {
+      color: #059669;
+      font-weight: 600;
+      font-size: 15px;
+    }
   }
+}
+
+.exchange-rate {
+  color: #6b7280 !important;
+  font-style: italic;
+  font-size: 14px;
 }
 
 .dialog-footer {

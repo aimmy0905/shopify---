@@ -227,26 +227,7 @@ const merchantMenuItems = [
     key: 'orders',
     title: '订单管理',
     icon: ShoppingCart,
-    children: [
-      {
-        key: 'orders-store',
-        title: '店铺订单',
-        icon: ShoppingCart,
-        route: '/merchant/orders/store'
-      },
-      {
-        key: 'orders-purchase',
-        title: '采购订单',
-        icon: ShoppingBag,
-        route: '/merchant/orders/purchase'
-      },
-      {
-        key: 'orders-aftersale',
-        title: '售后订单',
-        icon: ShoppingCart,
-        route: '/merchant/orders/aftersale'
-      }
-    ]
+    route: '/merchant/orders/store'
   },
   {
     key: 'purchase',
@@ -267,12 +248,7 @@ const merchantMenuItems = [
       }
     ]
   },
-  {
-    key: 'balance',
-    title: '余额管理',
-    icon: Wallet,
-    route: '/merchant/balance'
-  },
+
   {
     key: 'commission',
     title: '佣金管理',
