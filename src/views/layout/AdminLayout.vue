@@ -35,7 +35,6 @@
           </template>
           <el-menu-item index="/admin/users">管理员用户</el-menu-item>
           <el-menu-item index="/admin/roles">角色管理</el-menu-item>
-          <el-menu-item index="/admin/commission-management">佣金管理</el-menu-item>
         </el-sub-menu>
         
         <el-menu-item index="/admin/merchants">

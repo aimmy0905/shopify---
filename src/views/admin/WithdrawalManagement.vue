@@ -106,17 +106,7 @@
             <el-option label="已完成" value="completed" />
             <el-option label="已拒绝" value="rejected" />
           </el-select>
-          <el-select
-            v-model="filterCurrency"
-            placeholder="币种筛选"
-            style="width: 120px; margin-right: 15px;"
-            clearable
-          >
-            <el-option label="全部币种" value="" />
-            <el-option label="USD" value="USD" />
-            <el-option label="CNY" value="CNY" />
-            <el-option label="EUR" value="EUR" />
-          </el-select>
+
           <el-select
             v-model="filterMethod"
             placeholder="提现方式"
@@ -161,17 +151,10 @@
         <el-table-column type="selection" width="55" />
         <el-table-column prop="id" label="提现单号" width="140" />
         <el-table-column prop="customer_name" label="客户名称" width="120" />
-        <el-table-column label="提现币种" width="100" align="center">
+        <el-table-column label="提现金额" width="150" align="right">
           <template #default="{ row }">
-            <el-tag size="small">{{ row.currency }}</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column label="提现金额" width="180" align="right">
-          <template #default="{ row }">
-            <div class="amount-info">
-              <div class="original-amount">{{ row.currency }} {{ formatAmount(row.amount) }}</div>
-              <div class="fee-amount">手续费: {{ getCurrencySymbol(row.currency) }}{{ formatAmount(row.fee_amount) }}</div>
-              <div class="actual-amount">实际到账: {{ getCurrencySymbol(row.currency) }}{{ formatAmount(row.actual_amount) }}</div>
+            <div class="usd-amount">
+              ${{ formatAmount(row.usd_amount || row.amount) }}
             </div>
           </template>
         </el-table-column>
@@ -257,17 +240,8 @@
           <el-descriptions :column="2" border>
             <el-descriptions-item label="提现单号">{{ currentRecord.id }}</el-descriptions-item>
             <el-descriptions-item label="客户名称">{{ currentRecord.customer_name }}</el-descriptions-item>
-            <el-descriptions-item label="提现币种">
-              <el-tag size="small">{{ currentRecord.currency }}</el-tag>
-            </el-descriptions-item>
             <el-descriptions-item label="提现金额">
-              {{ getCurrencySymbol(currentRecord.currency) }}{{ formatAmount(currentRecord.amount) }}
-            </el-descriptions-item>
-            <el-descriptions-item label="手续费">
-              {{ getCurrencySymbol(currentRecord.currency) }}{{ formatAmount(currentRecord.fee_amount) }}
-            </el-descriptions-item>
-            <el-descriptions-item label="实际到账">
-              {{ getCurrencySymbol(currentRecord.currency) }}{{ formatAmount(currentRecord.actual_amount) }}
+              ${{ formatAmount(currentRecord.usd_amount || currentRecord.amount) }}
             </el-descriptions-item>
             <el-descriptions-item label="申请时间">{{ currentRecord.apply_time }}</el-descriptions-item>
             <el-descriptions-item label="提现方式">{{ getWithdrawalMethodText(currentRecord.withdrawal_method) }}</el-descriptions-item>
@@ -337,7 +311,7 @@
           <h3>提现信息概要</h3>
           <el-descriptions :column="2" border>
             <el-descriptions-item label="客户名称">{{ currentRecord.customer_name }}</el-descriptions-item>
-            <el-descriptions-item label="提现金额">{{ currentRecord.currency }} {{ formatAmount(currentRecord.amount) }}</el-descriptions-item>
+            <el-descriptions-item label="提现金额">${{ formatAmount(currentRecord.usd_amount || currentRecord.amount) }}</el-descriptions-item>
             <el-descriptions-item label="申请时间">{{ currentRecord.apply_time }}</el-descriptions-item>
             <el-descriptions-item label="提现方式">{{ getWithdrawalMethodText(currentRecord.withdrawal_method) }}</el-descriptions-item>
             <el-descriptions-item label="收款账户" :span="2">{{ getAccountDisplay(currentRecord) }}</el-descriptions-item>
@@ -390,8 +364,7 @@
           <h3>提现信息概要</h3>
           <el-descriptions :column="2" border>
             <el-descriptions-item label="客户名称">{{ currentRecord.customer_name }}</el-descriptions-item>
-            <el-descriptions-item label="提现金额">{{ currentRecord.currency }} {{ formatAmount(currentRecord.amount) }}</el-descriptions-item>
-            <el-descriptions-item label="实际到账">{{ getCurrencySymbol(currentRecord.currency) }}{{ formatAmount(currentRecord.actual_amount) }}</el-descriptions-item>
+            <el-descriptions-item label="提现金额">${{ formatAmount(currentRecord.usd_amount || currentRecord.amount) }}</el-descriptions-item>
             <el-descriptions-item label="提现方式">{{ getWithdrawalMethodText(currentRecord.withdrawal_method) }}</el-descriptions-item>
             <el-descriptions-item label="收款账户" :span="2">{{ getAccountDisplay(currentRecord) }}</el-descriptions-item>
           </el-descriptions>
@@ -453,7 +426,6 @@ import { withdrawalApplications } from '@/data/mockData.js'
 const searchKeyword = ref('')
 const dateRange = ref([])
 const filterStatus = ref('')
-const filterCurrency = ref('')
 const filterMethod = ref('')
 const currentPage = ref(1)
 const pageSize = ref(10)
@@ -517,11 +489,6 @@ const filteredRecords = computed(() => {
     filtered = filtered.filter(record => record.status === filterStatus.value)
   }
 
-  // 币种过滤
-  if (filterCurrency.value) {
-    filtered = filtered.filter(record => record.currency === filterCurrency.value)
-  }
-
   // 提现方式过滤
   if (filterMethod.value) {
     filtered = filtered.filter(record => record.withdrawal_method === filterMethod.value)
@@ -563,14 +530,7 @@ const formatAmount = (amount) => {
   }).format(amount)
 }
 
-const getCurrencySymbol = (currency) => {
-  const symbolMap = {
-    'USD': '$',
-    'CNY': '¥',
-    'EUR': '€'
-  }
-  return symbolMap[currency] || currency
-}
+
 
 const getWithdrawalMethodText = (method) => {
   const methodMap = {
@@ -623,7 +583,6 @@ const resetFilters = () => {
   searchKeyword.value = ''
   dateRange.value = []
   filterStatus.value = ''
-  filterCurrency.value = ''
   filterMethod.value = ''
   currentPage.value = 1
 }
@@ -1048,5 +1007,12 @@ onMounted(() => {
   padding: 16px;
   border-radius: 6px;
   border: 1px solid #ebeef5;
+}
+
+/* USD金额样式 */
+.usd-amount {
+  font-weight: 600;
+  font-size: 14px;
+  color: #409eff;
 }
 </style>

@@ -283,6 +283,27 @@
               审核不通过
             </el-button>
 
+            <!-- 上架/下架按钮 -->
+            <el-button
+              v-if="productDetail.status === 'published' && hasPermission('product:unpublish')"
+              type="warning"
+              class="operation-btn"
+              @click="toggleProductStatus('unpublished')"
+            >
+              <el-icon><Close /></el-icon>
+              下架商品
+            </el-button>
+
+            <el-button
+              v-else-if="productDetail.status === 'unpublished' && hasPermission('product:publish')"
+              type="success"
+              class="operation-btn"
+              @click="toggleProductStatus('published')"
+            >
+              <el-icon><Check /></el-icon>
+              上架商品
+            </el-button>
+
             <el-button class="operation-btn" @click="copyProduct">
               <el-icon><CopyDocument /></el-icon>
               复制商品
@@ -401,6 +422,7 @@ const getStatusType = (status) => {
     pending: 'warning',
     draft: 'info',
     published: 'success',
+    unpublished: 'warning',
     rejected: 'danger'
   }
   return types[status] || 'info'
@@ -412,6 +434,7 @@ const getStatusText = (status) => {
     pending: '审核中',
     draft: '待发布',
     published: '已上架',
+    unpublished: '已下架',
     rejected: '审核不通过'
   }
   return texts[status] || '未知'
@@ -678,6 +701,56 @@ const deleteProduct = () => {
   })
 }
 
+// 权限检查
+const hasPermission = (permission) => {
+  // 这里应该根据实际的权限系统进行检查
+  // 目前模拟管理员权限
+  const userRole = 'admin' // 从用户状态或token中获取
+  const permissions = {
+    admin: ['product:manage', 'product:publish', 'product:unpublish'],
+    editor: ['product:manage'],
+    viewer: []
+  }
+
+  return permissions[userRole]?.includes(permission) || false
+}
+
+// 切换商品状态（上架/下架）
+const toggleProductStatus = async (newStatus) => {
+  const action = newStatus === 'published' ? '上架' : '下架'
+  const permission = newStatus === 'published' ? 'product:publish' : 'product:unpublish'
+
+  // 权限检查
+  if (!hasPermission(permission)) {
+    ElMessage.error(`您没有${action}商品的权限`)
+    return
+  }
+
+  try {
+    await ElMessageBox.confirm(
+      `确认${action}商品 "${productDetail.value.name}" 吗？`,
+      `${action}确认`,
+      {
+        confirmButtonText: '确认',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+
+    // 模拟API调用
+    await new Promise(resolve => setTimeout(resolve, 500))
+
+    // 更新商品状态
+    productDetail.value.status = newStatus
+    ElMessage.success(`商品已${action}`)
+
+  } catch (error) {
+    if (error !== 'cancel') {
+      ElMessage.error(`${action}失败，请重试`)
+    }
+  }
+}
+
 // 查看店铺
 const viewStore = (store) => {
   ElMessage.info(`查看店铺：${store.storeName}`)
@@ -839,72 +912,78 @@ onMounted(() => {
     }
   }
 
-  .audit-info {
-    padding: 0;
+  :deep(.audit-info) {
+    padding: 0 !important;
 
     .audit-result-section {
-      text-align: center;
-      margin-bottom: 32px;
-      padding-bottom: 24px;
-      border-bottom: 1px solid #ebeef5;
+      text-align: center !important;
+      margin-bottom: 32px !important;
+      padding-bottom: 24px !important;
+      border-bottom: 1px solid #ebeef5 !important;
 
       .audit-result-tag {
-        font-size: 15px;
-        padding: 10px 24px;
-        border-radius: 16px;
-        font-weight: 600;
-        letter-spacing: 0.5px;
+        font-size: 15px !important;
+        padding: 10px 24px !important;
+        border-radius: 16px !important;
+        font-weight: 600 !important;
+        letter-spacing: 0.5px !important;
 
         .result-icon {
-          margin-right: 8px;
-          font-size: 14px;
+          margin-right: 8px !important;
+          font-size: 14px !important;
         }
       }
     }
 
     .audit-details {
       .audit-item {
-        margin-bottom: 24px;
+        margin-bottom: 24px !important;
 
         &:last-child {
-          margin-bottom: 0;
+          margin-bottom: 0 !important;
         }
 
         .audit-label {
-          display: flex;
-          align-items: center;
-          font-size: 13px;
-          color: #909399;
-          margin-bottom: 6px;
-          font-weight: 400;
-          letter-spacing: 0.3px;
+          display: flex !important;
+          align-items: center !important;
+          font-size: 13px !important;
+          color: #909399 !important;
+          margin-bottom: 6px !important;
+          font-weight: 400 !important;
+          letter-spacing: 0.3px !important;
 
           .el-icon {
-            margin-right: 6px;
-            color: #c0c4cc;
-            font-size: 14px;
+            margin-right: 6px !important;
+            color: #c0c4cc !important;
+            font-size: 14px !important;
+          }
+
+          span {
+            font-size: 13px !important;
+            color: #909399 !important;
+            font-weight: 400 !important;
           }
         }
 
         .audit-value {
-          font-size: 16px;
-          color: #303133;
-          font-weight: 500;
-          line-height: 1.4;
-          padding-left: 20px;
-          margin-bottom: 4px;
+          font-size: 16px !important;
+          color: #303133 !important;
+          font-weight: 500 !important;
+          line-height: 1.4 !important;
+          padding-left: 20px !important;
+          margin-bottom: 4px !important;
 
           &.audit-remark {
-            background: #f5f7fa;
-            padding: 16px 20px;
-            border-radius: 8px;
-            border-left: 4px solid #409eff;
-            margin-left: 0;
-            margin-top: 8px;
-            line-height: 1.6;
-            font-size: 14px;
-            color: #606266;
-            font-weight: 400;
+            background: #f5f7fa !important;
+            padding: 16px 20px !important;
+            border-radius: 8px !important;
+            border-left: 4px solid #409eff !important;
+            margin-left: 0 !important;
+            margin-top: 8px !important;
+            line-height: 1.6 !important;
+            font-size: 14px !important;
+            color: #606266 !important;
+            font-weight: 400 !important;
           }
         }
       }

@@ -469,16 +469,8 @@ const routes = [
           requiresAdmin: true
         }
       },
-      {
-        path: 'commission-management',
-        name: 'CommissionManagement',
-        component: () => import('@/views/admin/CommissionManagement.vue'),
-        meta: {
-          title: '佣金管理 - Shopify铺货系统',
-          requiresAuth: true,
-          requiresAdmin: true
-        }
-      },
+
+
       {
         path: 'roles/create',
         name: 'CreateRole',
@@ -633,6 +625,27 @@ const routes = [
         component: () => import('@/views/admin/Orders.vue'),
         meta: {
           title: '订单管理 - Shopify铺货系统',
+          requiresAuth: true,
+          requiresAdmin: true
+        }
+      },
+      // 管理端订单管理子页面
+      {
+        path: 'orders/store',
+        name: 'AdminStoreOrders',
+        component: () => import('@/views/admin/orders/Store.vue'),
+        meta: {
+          title: '店铺订单管理 - Shopify铺货系统',
+          requiresAuth: true,
+          requiresAdmin: true
+        }
+      },
+      {
+        path: 'orders/purchase',
+        name: 'AdminPurchaseOrdersPage',
+        component: () => import('@/views/admin/PurchaseOrders.vue'),
+        meta: {
+          title: '采购订单管理 - Shopify铺货系统',
           requiresAuth: true,
           requiresAdmin: true
         }

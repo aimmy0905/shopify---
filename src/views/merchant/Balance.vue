@@ -211,6 +211,7 @@ const totalRecords = computed(() => {
   if (activeTab.value === 'recharge') return rechargeRecords.value.length
   if (activeTab.value === 'expense') return expenseRecords.value.length
   if (activeTab.value === 'commission') return commissionRecords.value.length
+  if (activeTab.value === 'withdrawal') return withdrawalRecords.value.length
   return 0
 })
 

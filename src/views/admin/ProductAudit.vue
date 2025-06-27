@@ -151,25 +151,33 @@
           })
         }"
         @change="handleTableChange"
-        :scroll="{ x: 1200 }"
+        :scroll="{ x: 1400 }"
       >
         <template #bodyCell="{ column, record }">
-          <!-- 商品信息列 -->
-          <template v-if="column.key === 'product'">
-            <div class="product-info">
-              <a-image
-                :width="60"
-                :height="60"
-                :src="record.images?.[0]"
-                :preview="false"
-                style="border-radius: 4px; margin-right: 12px;"
-              />
-              <div>
-                <div class="product-name">{{ record.name }}</div>
-                <div class="product-code">{{ record.code }}</div>
-                <div class="product-price">${{ record.price?.toFixed(2) }}</div>
-              </div>
-            </div>
+          <!-- 商品图片列 -->
+          <template v-if="column.key === 'image'">
+            <a-image
+              :width="50"
+              :height="50"
+              :src="record.images?.[0]"
+              :preview="false"
+              style="border-radius: 4px;"
+            />
+          </template>
+
+          <!-- 商品名称列 -->
+          <template v-if="column.key === 'name'">
+            <div class="product-name">{{ record.name }}</div>
+          </template>
+
+          <!-- 商品编码列 -->
+          <template v-if="column.key === 'code'">
+            <span class="product-code">{{ record.code }}</span>
+          </template>
+
+          <!-- 价格列 -->
+          <template v-if="column.key === 'price'">
+            <span class="product-price">${{ record.price?.toFixed(2) }}</span>
           </template>
 
           <!-- 分类列 -->
@@ -441,10 +449,28 @@ const batchAuditRules = {
 // 表格列配置
 const columns = [
   {
-    title: '商品信息',
-    key: 'product',
-    width: 280,
+    title: '商品图片',
+    key: 'image',
+    width: 80,
+    align: 'center',
     fixed: 'left'
+  },
+  {
+    title: '商品名称',
+    key: 'name',
+    width: 200,
+    ellipsis: true
+  },
+  {
+    title: '商品编码',
+    key: 'code',
+    width: 120
+  },
+  {
+    title: '价格($)',
+    key: 'price',
+    width: 100,
+    align: 'right'
   },
   {
     title: '分类',
@@ -459,7 +485,8 @@ const columns = [
   {
     title: '状态',
     key: 'status',
-    width: 100
+    width: 100,
+    align: 'center'
   },
   {
     title: '提交时间',
@@ -838,25 +865,19 @@ onMounted(() => {
   }
 }
 
-.product-info {
-  display: flex;
-  align-items: center;
-  
-  .product-name {
-    font-weight: 500;
-    margin-bottom: 4px;
-  }
-  
-  .product-code {
-    color: #666;
-    font-size: 12px;
-    margin-bottom: 4px;
-  }
-  
-  .product-price {
-    color: #f5222d;
-    font-weight: 500;
-  }
+.product-name {
+  font-weight: 500;
+  color: #333;
+}
+
+.product-code {
+  color: #666;
+  font-size: 12px;
+}
+
+.product-price {
+  color: #f5222d;
+  font-weight: 500;
 }
 
 .audit-product-info {

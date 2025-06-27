@@ -219,6 +219,22 @@
               <a-divider type="vertical" />
               <a @click="editProduct(record)">编辑</a>
               <a-divider type="vertical" />
+              <!-- 上架/下架按钮 -->
+              <a
+                v-if="record.status === 'published' && hasPermission('product:unpublish')"
+                @click="toggleProductStatus(record, 'unpublished')"
+                style="color: #ff4d4f;"
+              >
+                下架
+              </a>
+              <a
+                v-else-if="record.status === 'unpublished' && hasPermission('product:publish')"
+                @click="toggleProductStatus(record, 'published')"
+                style="color: #52c41a;"
+              >
+                上架
+              </a>
+              <a-divider type="vertical" />
               <a-dropdown>
                 <a @click.prevent>
                   更多
@@ -584,6 +600,7 @@ const getStatusColor = (status) => {
     pending: 'processing',
     draft: 'default',
     published: 'success',
+    unpublished: 'warning',
     rejected: 'error'
   }
   return colors[status] || 'default'
@@ -595,6 +612,7 @@ const getStatusText = (status) => {
     pending: '审核中',
     draft: '待发布',
     published: '已上架',
+    unpublished: '已下架',
     rejected: '审核不通过'
   }
   return texts[status] || '未知'
@@ -685,22 +703,76 @@ const handleAudit = async () => {
       message.error('审核不通过时必须填写拒绝原因')
       return
     }
-    
+
     // 模拟API调用
     await new Promise(resolve => setTimeout(resolve, 500))
-    
+
     // 更新商品状态
     const product = productList.value.find(p => p.id === auditForm.product.id)
     if (product) {
       product.status = auditForm.result === 'approved' ? 'published' : 'rejected'
     }
-    
+
     message.success(`商品审核${auditForm.result === 'approved' ? '通过' : '不通过'}`)
     auditModalVisible.value = false
-    
+
   } catch (error) {
     message.error('审核失败，请重试')
   }
+}
+
+// 权限检查
+const hasPermission = (permission) => {
+  // 这里应该根据实际的权限系统进行检查
+  // 目前模拟管理员权限
+  const userRole = 'admin' // 从用户状态或token中获取
+  const permissions = {
+    admin: ['product:manage', 'product:publish', 'product:unpublish'],
+    editor: ['product:manage'],
+    viewer: []
+  }
+
+  return permissions[userRole]?.includes(permission) || false
+}
+
+// 切换商品状态（上架/下架）
+const toggleProductStatus = async (product, newStatus) => {
+  const action = newStatus === 'published' ? '上架' : '下架'
+  const permission = newStatus === 'published' ? 'product:publish' : 'product:unpublish'
+
+  // 权限检查
+  if (!hasPermission(permission)) {
+    message.error(`您没有${action}商品的权限`)
+    return
+  }
+
+  Modal.confirm({
+    title: `${action}确认`,
+    content: `确认${action}商品 "${product.name}" 吗？`,
+    okText: '确认',
+    cancelText: '取消',
+    onOk: async () => {
+      try {
+        // 模拟API调用
+        await new Promise(resolve => setTimeout(resolve, 500))
+
+        // 更新商品状态
+        const targetProduct = productList.value.find(p => p.id === product.id)
+        if (targetProduct) {
+          targetProduct.status = newStatus
+        }
+
+        message.success(`商品已${action}`)
+      } catch (error) {
+        console.error(`${action}操作失败:`, error)
+        message.error(`${action}失败，请重试`)
+      }
+    },
+    onCancel: () => {
+      // 用户取消操作，不需要做任何处理
+      console.log('用户取消了操作')
+    }
+  })
 }
 
 // 取消审核

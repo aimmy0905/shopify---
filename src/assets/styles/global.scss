@@ -170,4 +170,83 @@ a {
   .hidden-desktop {
     display: none !important;
   }
-} 
+}
+
+// 审核信息卡片样式 - 全局强制应用
+.audit-info {
+  padding: 0 !important;
+
+  .audit-result-section {
+    text-align: center !important;
+    margin-bottom: 32px !important;
+    padding-bottom: 24px !important;
+    border-bottom: 1px solid #ebeef5 !important;
+
+    .audit-result-tag {
+      font-size: 15px !important;
+      padding: 10px 24px !important;
+      border-radius: 16px !important;
+      font-weight: 600 !important;
+      letter-spacing: 0.5px !important;
+
+      .result-icon {
+        margin-right: 8px !important;
+        font-size: 14px !important;
+      }
+    }
+  }
+
+  .audit-details {
+    .audit-item {
+      margin-bottom: 24px !important;
+
+      &:last-child {
+        margin-bottom: 0 !important;
+      }
+
+      .audit-label {
+        display: flex !important;
+        align-items: center !important;
+        font-size: 13px !important;
+        color: #909399 !important;
+        margin-bottom: 6px !important;
+        font-weight: 400 !important;
+        letter-spacing: 0.3px !important;
+
+        .el-icon {
+          margin-right: 6px !important;
+          color: #c0c4cc !important;
+          font-size: 14px !important;
+        }
+
+        span {
+          font-size: 13px !important;
+          color: #909399 !important;
+          font-weight: 400 !important;
+        }
+      }
+
+      .audit-value {
+        font-size: 16px !important;
+        color: #303133 !important;
+        font-weight: 500 !important;
+        line-height: 1.4 !important;
+        padding-left: 20px !important;
+        margin-bottom: 4px !important;
+
+        &.audit-remark {
+          background: #f5f7fa !important;
+          padding: 16px 20px !important;
+          border-radius: 8px !important;
+          border-left: 4px solid #409eff !important;
+          margin-left: 0 !important;
+          margin-top: 8px !important;
+          line-height: 1.6 !important;
+          font-size: 14px !important;
+          color: #606266 !important;
+          font-weight: 400 !important;
+        }
+      }
+    }
+  }
+}
