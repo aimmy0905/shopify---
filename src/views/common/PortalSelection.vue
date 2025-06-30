@@ -2,8 +2,8 @@
   <div class="portal-selection">
     <div class="container">
       <div class="header">
-        <img src="/logo.png" alt="Shopify铺货系统" class="logo">
-        <h1>Shopify铺货系统</h1>
+        <img src="/logo.png" alt="JSCDropshipping" class="logo">
+        <h1>JSCDropshipping</h1>
         <p class="subtitle">请选择您的登录方式</p>
       </div>
       
@@ -46,7 +46,7 @@
       </div>
       
       <div class="footer">
-        <p>&copy; 2024 Shopify铺货系统. 为您的电商业务提供专业解决方案</p>
+        <p>&copy; 2024 JSCDropshipping. 为您的电商业务提供专业解决方案</p>
       </div>
     </div>
   </div>

@@ -162,7 +162,7 @@ const breadcrumbItems = computed(() => {
     currentPath += `/${path}`
     const routeRecord = router.getRoutes().find(r => r.path === currentPath)
     if (routeRecord && routeRecord.meta?.title) {
-      const title = routeRecord.meta.title.replace(' - Shopify铺货系统', '')
+      const title = routeRecord.meta.title.replace(' - JSCDropshipping', '')
       breadcrumbs.push({
         title,
         path: currentPath,

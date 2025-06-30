@@ -237,7 +237,7 @@ VITE_SHOPIFY_APP_URL=your_shopify_app_url
 VITE_SHOPIFY_API_KEY=your_shopify_api_key
 
 # 应用配置
-VITE_APP_TITLE=Shopify铺货系统
+VITE_APP_TITLE=JSCDropshipping
 VITE_APP_VERSION=1.0.0
 
 # 开发环境配置
@@ -561,7 +561,7 @@ export default defineConfig({
 
 ---
 
-**前端开发团队**: Shopify铺货系统前端组  
+**前端开发团队**: JSCDropshipping前端组  
 **项目负责人**: 前端架构师  
 **UI/UX设计**: UI设计师  
 **最后更新**: 2024年1月

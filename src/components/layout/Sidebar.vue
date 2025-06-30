@@ -163,7 +163,7 @@ const collapsed = ref(false)
 
 // Logo文本
 const logoText = computed(() => {
-  return props.mode === 'merchant' ? 'Shopify铺货系统' : '管理后台'
+  return props.mode === 'merchant' ? 'JSCDropshipping' : '管理后台'
 })
 
 // 当前激活的菜单

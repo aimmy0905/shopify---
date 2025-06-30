@@ -277,7 +277,7 @@ const saving = ref(false)
 // 系统设置表单数据
 const systemForm = reactive({
   // 基础设置
-  systemName: 'Shopify铺货系统',
+  systemName: 'JSCDropshipping',
   logoUrl: '',
   contactEmail: 'admin@shopify-system.com',
 
@@ -285,7 +285,7 @@ const systemForm = reactive({
   smtpHost: 'smtp.gmail.com',
   smtpPort: 587,
   senderEmail: 'noreply@shopify-system.com',
-  senderName: 'Shopify铺货系统',
+  senderName: 'JSCDropshipping',
   smtpUsername: '',
   smtpPassword: '',
   smtpEncryption: 'tls',

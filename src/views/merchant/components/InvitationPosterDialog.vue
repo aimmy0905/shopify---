@@ -13,7 +13,7 @@
             <div class="logo">
               <el-icon><Shop /></el-icon>
             </div>
-            <h3>Shopify铺货系统</h3>
+            <h3>JSCDropshipping</h3>
             <p class="subtitle">邀请您一起创业赚钱</p>
           </div>
           
@@ -176,12 +176,12 @@ const downloadPoster = () => {
 }
 
 const shareToSocial = () => {
-  const shareText = `邀请您加入Shopify铺货系统，使用邀请码：${props.invitationCode}`
+  const shareText = `邀请您加入JSCDropshipping，使用邀请码：${props.invitationCode}`
   
   // 检查是否支持Web Share API
   if (navigator.share) {
     navigator.share({
-      title: 'Shopify铺货系统邀请',
+      title: 'JSCDropshipping邀请',
       text: shareText,
       url: props.invitationLink
     }).then(() => {

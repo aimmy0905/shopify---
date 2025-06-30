@@ -102,7 +102,7 @@
     <!-- 页脚：版权信息和协议链接 -->
     <div class="auth-footer">
       <div class="copyright">
-        © 2024 Shopify铺货系统. 保留所有权利。
+        © 2024 JSCDropshipping. 保留所有权利。
       </div>
       <div class="footer-links">
         <a href="/privacy" target="_blank">隐私政策</a>

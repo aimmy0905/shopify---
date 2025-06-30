@@ -5,7 +5,7 @@
       <!-- Logo区域 -->
       <div class="logo">
         <el-icon class="logo-icon"><Shop /></el-icon>
-        <span class="logo-text">Shopify铺货系统</span>
+        <span class="logo-text">JSCDropshipping</span>
       </div>
       
       <!-- 导航菜单 -->
