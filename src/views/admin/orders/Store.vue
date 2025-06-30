@@ -10,9 +10,6 @@
         <el-button type="primary" :icon="Document" @click="handleExport">
           导出订单
         </el-button>
-        <el-button type="success" :icon="DataAnalysis" @click="handleStats">
-          订单统计
-        </el-button>
       </div>
     </div>
 
@@ -152,6 +149,22 @@
             </template>
           </el-table-column>
 
+          <el-table-column label="商家结算状态" width="120">
+            <template #default="{ row }">
+              <el-tag :type="getSettlementStatusType(row.settlementStatus)">
+                {{ getSettlementStatusText(row.settlementStatus) }}
+              </el-tag>
+            </template>
+          </el-table-column>
+
+          <el-table-column label="结算金额" width="120">
+            <template #default="{ row }">
+              <div class="settlement-amount">
+                ${{ row.settlementAmount ? row.settlementAmount.toFixed(2) : '0.00' }}
+              </div>
+            </template>
+          </el-table-column>
+
           <el-table-column label="状态" width="100">
             <template #default="{ row }">
               <el-tag :type="getStatusType(row.status)">
@@ -171,16 +184,6 @@
                 @click="goToOrderDetail(row.id)"
               >
                 查看详情
-              </el-button>
-
-              <el-button
-                v-if="row.status === 'pending'"
-                size="small"
-                type="success"
-                link
-                @click="handleShip(row)"
-              >
-                发货
               </el-button>
 
               <el-button
@@ -217,7 +220,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { Search, Document, DataAnalysis } from '@element-plus/icons-vue'
+import { Search, Document } from '@element-plus/icons-vue'
 
 const router = useRouter()
 
@@ -286,6 +289,8 @@ const loadOrderList = async () => {
         customerName: 'John Doe',
         totalAmount: 329.99,
         status: 'shipped',
+        settlementStatus: 'success',
+        settlementAmount: 296.99,
         createdAt: '2023-12-15 10:30:00'
       },
       {
@@ -306,6 +311,8 @@ const loadOrderList = async () => {
         customerName: 'Jane Smith',
         totalAmount: 419.98,
         status: 'pending',
+        settlementStatus: 'pending',
+        settlementAmount: 377.98,
         createdAt: '2023-12-15 11:15:00'
       },
       {
@@ -327,6 +334,8 @@ const loadOrderList = async () => {
         customerName: 'Mike Johnson',
         totalAmount: 47.97,
         status: 'completed',
+        settlementStatus: 'failed',
+        settlementAmount: 43.17,
         createdAt: '2023-12-15 09:20:00'
       }
     ]
@@ -359,9 +368,7 @@ const handleExport = () => {
   ElMessage.success('导出功能开发中...')
 }
 
-const handleStats = () => {
-  ElMessage.success('统计功能开发中...')
-}
+// 移除了订单统计功能
 
 const handleBatchProcess = () => {
   ElMessage.success(`批量处理 ${selectedOrders.value.length} 个订单`)
@@ -385,10 +392,7 @@ const goToOrderDetail = (orderId) => {
   router.push(`/admin/orders/${orderId}`)
 }
 
-const handleShip = (order) => {
-  ElMessage.success(`订单 ${order.orderNo} 发货成功`)
-  loadOrderList()
-}
+// 移除了发货功能
 
 const viewLogistics = (order) => {
   ElMessage.info(`查看订单 ${order.orderNo} 的物流信息`)
@@ -410,6 +414,24 @@ const getStatusText = (status) => {
     shipped: '已发货',
     completed: '已完成',
     cancelled: '已取消'
+  }
+  return statusMap[status] || '未知'
+}
+
+const getSettlementStatusType = (status) => {
+  const statusMap = {
+    success: 'success',
+    failed: 'danger',
+    pending: 'warning'
+  }
+  return statusMap[status] || 'info'
+}
+
+const getSettlementStatusText = (status) => {
+  const statusMap = {
+    success: '成功',
+    failed: '失败',
+    pending: '待结算'
   }
   return statusMap[status] || '未知'
 }

@@ -70,6 +70,10 @@
               <span class="value code">{{ referrerInfo.inviteCode }}</span>
             </div>
             <div class="info-item">
+              <span class="label">邀请链接：</span>
+              <span class="value invite-link">{{ referrerInfo.inviteLink }}</span>
+            </div>
+            <div class="info-item">
               <span class="label">加入时间：</span>
               <span class="value">{{ referrerInfo.joinTime }}</span>
             </div>
@@ -395,9 +399,10 @@ const expandedLevel2Users = ref([])
 // 推荐人信息
 const referrerInfo = reactive({
   id: 1,
-  name: 'John Smith',
+  name: '广州化工集团',
   email: 'john@example.com',
   inviteCode: 'JS001',
+  inviteLink: 'https://platform.com/register?ref=JS001',
   joinTime: '2023-08-15 10:30:00',
   status: 'active',
   totalCommission: 1250.50,
@@ -1077,6 +1082,17 @@ onMounted(() => {
   background: #f5f7fa;
   padding: 2px 6px;
   border-radius: 4px;
+}
+
+.value.invite-link {
+  font-family: 'Courier New', monospace;
+  background: #f0f9ff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid #409eff;
+  color: #409eff;
+  font-size: 12px;
+  word-break: break-all;
 }
 
 .value.amount {

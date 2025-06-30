@@ -167,6 +167,84 @@
               </el-form-item>
             </el-card>
 
+            <!-- 操作日志设置卡片 -->
+            <el-card class="settings-card">
+              <template #header>
+                <div class="card-header">
+                  <el-icon><Document /></el-icon>
+                  <span class="card-title">操作日志设置</span>
+                </div>
+              </template>
+
+              <el-row :gutter="20">
+                <el-col :span="12">
+                  <el-form-item label="日志记录开关">
+                    <el-switch
+                      v-model="systemForm.logEnabled"
+                      active-text="启用"
+                      inactive-text="禁用"
+                    />
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item label="日志保留天数" prop="logRetentionDays">
+                    <el-input-number
+                      v-model="systemForm.logRetentionDays"
+                      :min="1"
+                      :max="365"
+                      placeholder="默认30天"
+                      style="width: 100%"
+                    />
+                  </el-form-item>
+                </el-col>
+              </el-row>
+
+              <el-form-item label="记录操作类型">
+                <el-checkbox-group v-model="systemForm.logOperationTypes">
+                  <el-checkbox value="create">数据新增</el-checkbox>
+                  <el-checkbox value="update">数据修改</el-checkbox>
+                  <el-checkbox value="delete">数据删除</el-checkbox>
+                  <el-checkbox value="login">用户登录</el-checkbox>
+                  <el-checkbox value="logout">用户登出</el-checkbox>
+                  <el-checkbox value="export">数据导出</el-checkbox>
+                </el-checkbox-group>
+              </el-form-item>
+
+              <el-form-item label="操作日志管理">
+                <el-button type="primary" @click="viewOperationLogs">
+                  <el-icon><View /></el-icon>
+                  查看操作日志
+                </el-button>
+                <el-button @click="exportLogs">
+                  <el-icon><Download /></el-icon>
+                  导出日志
+                </el-button>
+                <el-button type="danger" @click="clearLogs">
+                  <el-icon><Delete /></el-icon>
+                  清空日志
+                </el-button>
+              </el-form-item>
+
+              <!-- 最近操作日志预览 -->
+              <el-form-item label="最近操作记录">
+                <div class="recent-logs">
+                  <el-table :data="recentLogs" size="small" max-height="300">
+                    <el-table-column prop="time" label="操作时间" width="180" />
+                    <el-table-column prop="user" label="操作用户" width="120" />
+                    <el-table-column prop="operation" label="操作类型" width="100">
+                      <template #default="scope">
+                        <el-tag :type="getOperationTypeColor(scope.row.operation)" size="small">
+                          {{ getOperationTypeText(scope.row.operation) }}
+                        </el-tag>
+                      </template>
+                    </el-table-column>
+                    <el-table-column prop="module" label="操作模块" width="120" />
+                    <el-table-column prop="description" label="操作描述" />
+                  </el-table>
+                </div>
+              </el-form-item>
+            </el-card>
+
             <!-- 保存设置按钮 -->
             <div class="form-actions">
               <el-button size="large" @click="resetForm">重置</el-button>
@@ -188,7 +266,10 @@ import {
   Message,
   Document,
   Connection,
-  Plus
+  Plus,
+  View,
+  Download,
+  Delete
 } from '@element-plus/icons-vue'
 const systemFormRef = ref()
 const saving = ref(false)
@@ -207,8 +288,57 @@ const systemForm = reactive({
   senderName: 'Shopify铺货系统',
   smtpUsername: '',
   smtpPassword: '',
-  smtpEncryption: 'tls'
+  smtpEncryption: 'tls',
+
+  // 操作日志设置
+  logEnabled: true,
+  logRetentionDays: 30,
+  logOperationTypes: ['create', 'update', 'delete']
 })
+
+// 最近操作日志数据
+const recentLogs = ref([
+  {
+    id: 1,
+    time: '2023-12-01 14:30:25',
+    user: '管理员',
+    operation: 'create',
+    module: '商品管理',
+    description: '新增商品：iPhone 15 Pro Max'
+  },
+  {
+    id: 2,
+    time: '2023-12-01 14:25:18',
+    user: '张三',
+    operation: 'delete',
+    module: '用户管理',
+    description: '删除用户：test@example.com'
+  },
+  {
+    id: 3,
+    time: '2023-12-01 14:20:42',
+    user: '李四',
+    operation: 'update',
+    module: '订单管理',
+    description: '修改订单状态：ORD001 -> 已发货'
+  },
+  {
+    id: 4,
+    time: '2023-12-01 14:15:33',
+    user: '王五',
+    operation: 'export',
+    module: '数据导出',
+    description: '导出商品数据：2023年11月销售报表'
+  },
+  {
+    id: 5,
+    time: '2023-12-01 14:10:15',
+    user: '赵六',
+    operation: 'login',
+    module: '系统登录',
+    description: '用户登录系统'
+  }
+])
 
 // 表单验证规则
 const systemRules = {
@@ -332,6 +462,64 @@ const resetForm = async () => {
     }
 
     ElMessage.success('设置已重置')
+  } catch {
+    // 用户取消
+  }
+}
+
+// 操作日志相关方法
+const getOperationTypeText = (operation) => {
+  const typeMap = {
+    'create': '新增',
+    'update': '修改',
+    'delete': '删除',
+    'login': '登录',
+    'logout': '登出',
+    'export': '导出'
+  }
+  return typeMap[operation] || operation
+}
+
+const getOperationTypeColor = (operation) => {
+  const colorMap = {
+    'create': 'success',
+    'update': 'primary',
+    'delete': 'danger',
+    'login': 'info',
+    'logout': 'warning',
+    'export': ''
+  }
+  return colorMap[operation] || ''
+}
+
+const viewOperationLogs = () => {
+  ElMessage.info('跳转到操作日志详情页面...')
+  // 这里可以跳转到专门的操作日志页面
+  // router.push('/admin/operation-logs')
+}
+
+const exportLogs = () => {
+  ElMessage.success('操作日志导出中，请稍候...')
+  // 模拟导出操作
+  setTimeout(() => {
+    ElMessage.success('操作日志导出完成')
+  }, 2000)
+}
+
+const clearLogs = async () => {
+  try {
+    await ElMessageBox.confirm(
+      '确定要清空所有操作日志吗？此操作不可恢复！',
+      '清空日志确认',
+      {
+        confirmButtonText: '确定清空',
+        cancelButtonText: '取消',
+        type: 'error'
+      }
+    )
+
+    ElMessage.success('操作日志已清空')
+    recentLogs.value = []
   } catch {
     // 用户取消
   }
@@ -462,12 +650,36 @@ onMounted(() => {
   margin-top: 8px;
 }
 
-.upload-tips p {
-  margin: 0;
-  color: #909399;
-  font-size: 12px;
-  line-height: 1.4;
-}
+  .upload-tips p {
+    margin: 0;
+    color: #909399;
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
+  /* 操作日志样式 */
+  .recent-logs {
+    border: 1px solid #e4e7ed;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .recent-logs .el-table {
+    border: none;
+  }
+
+  .recent-logs .el-table th {
+    background: #f8f9fa;
+    font-weight: 600;
+  }
+
+  .recent-logs .el-table td {
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .recent-logs .el-table tr:hover td {
+    background: #f5f7fa;
+  }
 
 
 

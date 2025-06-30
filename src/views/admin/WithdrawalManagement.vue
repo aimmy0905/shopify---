@@ -392,6 +392,24 @@
                 placeholder="请输入银行或支付平台的交易ID"
               />
             </el-form-item>
+            <el-form-item
+              v-if="processForm.status === 'completed'"
+              label="付款凭证"
+              prop="paymentVoucher"
+            >
+              <el-upload
+                class="voucher-uploader"
+                action="#"
+                :show-file-list="false"
+                :before-upload="beforeVoucherUpload"
+                :on-success="handleVoucherSuccess"
+                accept="image/*"
+              >
+                <img v-if="processForm.voucherUrl" :src="processForm.voucherUrl" class="voucher-image" />
+                <el-icon v-else class="voucher-uploader-icon"><Plus /></el-icon>
+              </el-upload>
+              <div class="upload-tip">支持 JPG、PNG 格式，大小不超过 2MB</div>
+            </el-form-item>
             <el-form-item label="处理备注" prop="remark">
               <el-input
                 v-model="processForm.remark"
@@ -418,7 +436,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
-  Download, Search, Refresh, Clock, Loading, Check, Money
+  Download, Search, Refresh, Clock, Loading, Check, Money, Plus
 } from '@element-plus/icons-vue'
 import { withdrawalApplications } from '@/data/mockData.js'
 
@@ -451,6 +469,7 @@ const auditRules = {
 const processForm = reactive({
   status: 'processing',
   transactionId: '',
+  voucherUrl: '',
   remark: ''
 })
 
@@ -626,6 +645,7 @@ const processWithdrawal = (record) => {
   // 重置表单
   processForm.status = 'processing'
   processForm.transactionId = ''
+  processForm.voucherUrl = ''
   processForm.remark = ''
   processDialogVisible.value = true
 }
@@ -735,6 +755,33 @@ const batchApprove = () => {
 
 const exportWithdrawalData = () => {
   ElMessage.success('提现数据导出功能开发中...')
+}
+
+const beforeVoucherUpload = (file) => {
+  const isImage = file.type.startsWith('image/')
+  const isLt2M = file.size / 1024 / 1024 < 2
+
+  if (!isImage) {
+    ElMessage.error('只能上传图片文件!')
+    return false
+  }
+  if (!isLt2M) {
+    ElMessage.error('图片大小不能超过 2MB!')
+    return false
+  }
+
+  // 模拟文件上传，生成预览URL
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    processForm.voucherUrl = e.target.result
+  }
+  reader.readAsDataURL(file)
+  
+  return false // 阻止自动上传
+}
+
+const handleVoucherSuccess = () => {
+  ElMessage.success('凭证上传成功')
 }
 
 // 生命周期
@@ -1014,5 +1061,47 @@ onMounted(() => {
   font-weight: 600;
   font-size: 14px;
   color: #409eff;
+}
+
+/* 上传组件样式 */
+.voucher-uploader {
+  border: 1px dashed #d9d9d9;
+  border-radius: 6px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s;
+  width: 148px;
+  height: 148px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.voucher-uploader:hover {
+  border-color: #409eff;
+}
+
+.voucher-uploader-icon {
+  font-size: 28px;
+  color: #8c939d;
+  width: 148px;
+  height: 148px;
+  text-align: center;
+  line-height: 148px;
+}
+
+.voucher-image {
+  width: 148px;
+  height: 148px;
+  display: block;
+  object-fit: cover;
+}
+
+.upload-tip {
+  color: #606266;
+  font-size: 12px;
+  margin-top: 8px;
+  line-height: 1.4;
 }
 </style>

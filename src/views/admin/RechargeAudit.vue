@@ -112,6 +112,20 @@
             <span class="account-info">{{ row.payment_account }}</span>
           </template>
         </el-table-column>
+        <el-table-column label="支付凭证" width="100" align="center">
+          <template #default="{ row }">
+            <el-button
+              v-if="row.voucher_url"
+              type="primary"
+              size="small"
+              link
+              @click="viewVoucher(row.voucher_url)"
+            >
+              查看凭证
+            </el-button>
+            <span v-else class="no-voucher">无凭证</span>
+          </template>
+        </el-table-column>
         <el-table-column label="状态" width="100" align="center">
           <template #default="{ row }">
             <el-tag :type="getStatusType(row.status)" size="small">
@@ -229,11 +243,14 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   Download, Search, Refresh, Plus
 } from '@element-plus/icons-vue'
 import { rechargeApplications } from '@/data/mockData.js'
+
+const router = useRouter()
 
 // 响应式数据
 const searchKeyword = ref('')
@@ -364,7 +381,7 @@ const handleCurrentChange = (page) => {
 }
 
 const viewRechargeDetail = (record) => {
-  ElMessage.info('查看充值详情功能开发中...')
+  router.push(`/admin/recharge-audit/${record.id}`)
 }
 
 const auditRecharge = (record) => {
@@ -407,6 +424,10 @@ const batchApprove = () => {
 
 const exportRechargeData = () => {
   ElMessage.success('充值数据导出功能开发中...')
+}
+
+const viewVoucher = (voucherUrl) => {
+  window.open(voucherUrl, '_blank')
 }
 
 // 生命周期
@@ -541,6 +562,11 @@ onMounted(() => {
 .pending-text {
   color: #e6a23c;
   font-size: 13px;
+}
+
+.no-voucher {
+  color: #c0c4cc;
+  font-size: 12px;
 }
 
 /* 分页 */

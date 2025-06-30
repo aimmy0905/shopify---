@@ -60,6 +60,7 @@
           </template>
           <el-menu-item index="/admin/orders/store">店铺订单</el-menu-item>
           <el-menu-item index="/admin/orders/purchase">采购订单</el-menu-item>
+          <el-menu-item index="/admin/orders/aftersale">售后订单</el-menu-item>
         </el-sub-menu>
         
         <el-sub-menu index="purchase">
@@ -191,6 +192,7 @@ const pageNames = {
   '/admin/product-ranking': '销量排名',
   '/admin/orders/store': '店铺订单',
   '/admin/orders/purchase': '采购订单',
+  '/admin/orders/aftersale': '售后订单',
   '/admin/purchase-applications': '采购申请管理',
   '/admin/purchase-orders': '采购订单管理',
   '/admin/shipping-records': '发货记录管理',

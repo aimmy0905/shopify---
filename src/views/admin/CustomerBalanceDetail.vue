@@ -12,12 +12,6 @@
         </div>
       </div>
       <div class="header-right">
-        <el-button type="primary" :icon="Edit" @click="showAdjustBalanceDialog">
-          调整余额
-        </el-button>
-        <el-button :icon="Download" @click="exportCustomerData">
-          导出数据
-        </el-button>
       </div>
     </div>
 
@@ -283,7 +277,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import {
-  ArrowLeft, Edit, Download, CreditCard, ShoppingBag,
+  ArrowLeft, CreditCard, ShoppingBag,
   Money, List, Wallet
 } from '@element-plus/icons-vue'
 import { customers, balanceTransactions } from '@/data/mockData.js'
@@ -431,13 +425,7 @@ const goBack = () => {
   router.push('/admin/customer-balance')
 }
 
-const showAdjustBalanceDialog = () => {
-  ElMessage.info('调整余额功能开发中...')
-}
 
-const exportCustomerData = () => {
-  ElMessage.info('导出数据功能开发中...')
-}
 
 const getCurrencySymbol = (currency) => {
   const symbolMap = {

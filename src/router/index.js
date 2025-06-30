@@ -545,6 +545,17 @@ const routes = [
           activeMenu: '/admin/merchants'
         }
       },
+      // 店铺管理路由
+      {
+        path: 'stores',
+        name: 'AdminStores',
+        component: () => import('@/views/admin/Stores.vue'),
+        meta: {
+          title: '店铺管理 - Shopify铺货系统',
+          requiresAuth: true,
+          requiresAdmin: true
+        }
+      },
       // 商品管理路由
       {
         path: 'products',
@@ -651,6 +662,36 @@ const routes = [
         }
       },
       {
+        path: 'orders/:id',
+        name: 'AdminOrderDetail',
+        component: () => import('@/views/admin/orders/Detail.vue'),
+        meta: {
+          title: '订单详情 - Shopify铺货系统',
+          requiresAuth: true,
+          requiresAdmin: true
+        }
+      },
+      {
+        path: 'orders/aftersale',
+        name: 'AdminAftersaleOrders',
+        component: () => import('@/views/admin/orders/Aftersale.vue'),
+        meta: {
+          title: '售后订单管理 - Shopify铺货系统',
+          requiresAuth: true,
+          requiresAdmin: true
+        }
+      },
+      {
+        path: 'orders/aftersale/:id',
+        name: 'AdminAftersaleOrderDetail',
+        component: () => import('@/views/admin/orders/AftersaleDetail.vue'),
+        meta: {
+          title: '售后订单详情 - Shopify铺货系统',
+          requiresAuth: true,
+          requiresAdmin: true
+        }
+      },
+      {
         path: 'purchase',
         name: 'AdminPurchase',
         component: () => import('@/views/admin/Purchase.vue'),
@@ -736,6 +777,16 @@ const routes = [
         component: () => import('@/views/admin/RechargeAudit.vue'),
         meta: {
           title: '充值审核 - Shopify铺货系统',
+          requiresAuth: true,
+          requiresAdmin: true
+        }
+      },
+      {
+        path: 'recharge-audit/:id',
+        name: 'AdminRechargeDetail',
+        component: () => import('@/views/admin/RechargeDetail.vue'),
+        meta: {
+          title: '充值详情 - Shopify铺货系统',
           requiresAuth: true,
           requiresAdmin: true
         }

@@ -76,9 +76,7 @@
           
           <!-- 账户余额列 -->
           <template v-if="column.key === 'balance'">
-            <div v-for="bal in record.balances" :key="bal.currency" style="line-height: 1.5;">
-              {{ bal.currency }}: {{ bal.amount.toFixed(2) }}
-            </div>
+            <span>${{ record.balance.toFixed(2) }}</span>
           </template>
 
           <!-- 操作列 -->
@@ -180,6 +178,25 @@ const columns = [
     ellipsis: true,
   },
   {
+    title: '客户名称',
+    dataIndex: 'customerName',
+    key: 'customerName',
+    width: 150,
+    ellipsis: true,
+  },
+  {
+    title: '联系人',
+    dataIndex: 'contactPerson',
+    key: 'contactPerson',
+    width: 100,
+  },
+  {
+    title: '联系方式',
+    dataIndex: 'contactInfo',
+    key: 'contactInfo',
+    width: 150,
+  },
+  {
     title: '账号(邮箱)',
     dataIndex: 'email',
     key: 'email',
@@ -222,7 +239,7 @@ const columns = [
     width: 110,
   },
   {
-    title: '账户余额',
+    title: '账户余额($)',
     dataIndex: 'balance',
     key: 'balance',
     width: 120,
@@ -278,6 +295,9 @@ const loadMerchantList = async () => {
       {
         id: 1,
         name: '环球电子科技',
+        customerName: '广州化工集团',
+        contactPerson: '张经理',
+        contactInfo: '+86 138-0013-8000',
         email: 'global.tech@example.com',
         status: 'active',
         storeCount: 3,
@@ -285,16 +305,16 @@ const loadMerchantList = async () => {
         pendingCommission: 750.25,
         createdAt: '2023-05-12 14:30:21',
         referralCount: 8,
-        balances: [
-          { currency: 'USD', amount: 3250.75 },
-          { currency: 'EUR', amount: 1580.32 }
-        ],
+        balance: 3250.75,
         salesId: 1,
         salesName: '张三'
       },
       {
         id: 2,
         name: '极速数码',
+        customerName: '深圳科技有限公司',
+        contactPerson: '李总',
+        contactInfo: '+86 139-0013-9000',
         email: 'fast.digital@example.com',
         status: 'active',
         storeCount: 2,
@@ -302,16 +322,16 @@ const loadMerchantList = async () => {
         pendingCommission: 420.30,
         createdAt: '2023-06-18 09:15:42',
         referralCount: 5,
-        balances: [
-          { currency: 'USD', amount: 2150.50 },
-          { currency: 'GBP', amount: 980.45 }
-        ],
+        balance: 2150.50,
         salesId: 2,
         salesName: '李四'
       },
       {
         id: 3,
         name: '未来家居',
+        customerName: '上海家居装饰集团',
+        contactPerson: '王主管',
+        contactInfo: '+86 137-0013-7000',
         email: 'future.home@example.com',
         status: 'disabled',
         storeCount: 1,
@@ -319,15 +339,16 @@ const loadMerchantList = async () => {
         pendingCommission: 310.15,
         createdAt: '2023-07-22 16:45:33',
         referralCount: 3,
-        balances: [
-          { currency: 'USD', amount: 1250.30 }
-        ],
+        balance: 1250.30,
         salesId: 3,
         salesName: '王五'
       },
       {
         id: 4,
         name: '优品服饰',
+        customerName: '北京时尚贸易公司',
+        contactPerson: '赵店长',
+        contactInfo: '+86 136-0013-6000',
         email: 'best.fashion@example.com',
         status: 'active',
         storeCount: 4,
@@ -335,17 +356,16 @@ const loadMerchantList = async () => {
         pendingCommission: 980.60,
         createdAt: '2023-04-05 11:20:18',
         referralCount: 12,
-        balances: [
-          { currency: 'USD', amount: 4580.25 },
-          { currency: 'EUR', amount: 2150.70 },
-          { currency: 'CAD', amount: 1580.35 }
-        ],
+        balance: 4580.25,
         salesId: 1,
         salesName: '张三'
       },
       {
         id: 5,
         name: '城市花园',
+        customerName: '杭州园林建设集团',
+        contactPerson: '刘经理',
+        contactInfo: '+86 135-0013-5000',
         email: 'city.garden@example.com',
         status: 'active',
         storeCount: 2,
@@ -353,10 +373,7 @@ const loadMerchantList = async () => {
         pendingCommission: 520.45,
         createdAt: '2023-08-10 08:55:27',
         referralCount: 6,
-        balances: [
-          { currency: 'USD', amount: 1980.50 },
-          { currency: 'GBP', amount: 750.25 }
-        ],
+        balance: 1980.50,
         salesId: 4,
         salesName: '赵六'
       }

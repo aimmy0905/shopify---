@@ -314,72 +314,61 @@
       title="订单发货 - 扫码发货"
       width="700px"
     >
-      <div class="shipping-tabs">
-        <el-tabs v-model="shippingMode" @tab-change="handleShippingModeChange">
-          <el-tab-pane label="扫码发货" name="scan">
-            <div class="scan-shipping-content">
-              <div class="scan-instructions">
-                <el-alert
-                  title="扫码发货说明"
-                  type="info"
-                  :closable="false"
-                  show-icon
-                >
-                  <template #default>
-                    <p>1. 使用扫码枪扫描订单二维码自动填充订单信息</p>
-                    <p>2. 扫描物流单号条码自动填充运单号</p>
-                    <p>3. 确认信息无误后点击发货</p>
-                  </template>
-                </el-alert>
-              </div>
+      <div class="scan-shipping-content">
+        <div class="scan-instructions">
+          <el-alert
+            title="扫码发货说明"
+            type="info"
+            :closable="false"
+            show-icon
+          >
+            <template #default>
+              <p>1. 使用扫码枪扫描订单二维码自动填充订单信息</p>
+              <p>2. 扫描物流单号条码自动填充运单号</p>
+              <p>3. 确认信息无误后点击发货</p>
+            </template>
+          </el-alert>
+        </div>
 
-              <div class="scan-area">
-                <el-form :model="shippingForm" label-width="120px">
-                  <el-form-item label="扫码输入区域">
-                    <el-input
-                      ref="scanInput"
-                      v-model="scanBuffer"
-                      placeholder="请使用扫码枪扫描二维码或条码"
-                      @input="handleScanInput"
-                      @keyup.enter="processScanData"
-                      style="width: 100%"
-                      size="large"
-                    >
-                      <template #prefix>
-                        <el-icon><View /></el-icon>
-                      </template>
-                    </el-input>
-                  </el-form-item>
+        <div class="scan-area">
+          <el-form :model="shippingForm" label-width="120px">
+            <el-form-item label="扫码输入区域">
+              <el-input
+                ref="scanInput"
+                v-model="scanBuffer"
+                placeholder="请使用扫码枪扫描二维码或条码"
+                @input="handleScanInput"
+                @keyup.enter="processScanData"
+                style="width: 100%"
+                size="large"
+              >
+                <template #prefix>
+                  <el-icon><View /></el-icon>
+                </template>
+              </el-input>
+            </el-form-item>
 
-                  <el-form-item label="扫描状态">
-                    <el-tag :type="scanStatus.type" size="large">
-                      {{ scanStatus.text }}
-                    </el-tag>
-                  </el-form-item>
-                </el-form>
-              </div>
-            </div>
-          </el-tab-pane>
+            <el-form-item label="扫描状态">
+              <el-tag :type="scanStatus.type" size="large">
+                {{ scanStatus.text }}
+              </el-tag>
+            </el-form-item>
 
-          <el-tab-pane label="手动输入" name="manual">
-            <div class="manual-shipping-content">
-              <el-form :model="shippingForm" label-width="120px">
-                <el-form-item label="物流公司" required>
-                  <el-select v-model="shippingForm.shipping_company" placeholder="请选择物流公司" style="width: 100%">
-                    <el-option label="DHL Express" value="DHL Express" />
-                    <el-option label="FedEx" value="FedEx" />
-                    <el-option label="UPS" value="UPS" />
-                    <el-option label="EMS" value="EMS" />
-                    <el-option label="顺丰速运" value="顺丰速运" />
-                  </el-select>
-                </el-form-item>
-                <el-form-item label="运单号" required>
-                  <el-input v-model="shippingForm.tracking_number" placeholder="请输入运单号" />
-                </el-form-item>
-              </el-form>
-            </div>
-          </el-tab-pane>
-        </el-tabs>
+            <el-form-item label="物流公司" required>
+              <el-select v-model="shippingForm.shipping_company" placeholder="请选择物流公司" style="width: 100%">
+                <el-option label="DHL Express" value="DHL Express" />
+                <el-option label="FedEx" value="FedEx" />
+                <el-option label="UPS" value="UPS" />
+                <el-option label="EMS" value="EMS" />
+                <el-option label="顺丰速运" value="顺丰速运" />
+              </el-select>
+            </el-form-item>
+
+            <el-form-item label="运单号" required>
+              <el-input v-model="shippingForm.tracking_number" placeholder="请输入运单号或扫描条码自动填充" />
+            </el-form-item>
+          </el-form>
+        </div>
       </div>
 
       <div class="shipping-form-common">
@@ -457,7 +446,6 @@ const customerList = ref([...customers])
 const createOrderDialogVisible = ref(false)
 const shippingDialogVisible = ref(false)
 const qrCodeDialogVisible = ref(false)
-const shippingMode = ref('scan')
 const scanBuffer = ref('')
 const scanInput = ref(null)
 const scanStatus = ref({
@@ -724,7 +712,6 @@ const showShippingDialog = (order) => {
   currentOrder.value = order
   shippingDialogVisible.value = true
   // 重置扫码状态
-  shippingMode.value = 'scan'
   scanBuffer.value = ''
   scanStatus.value = {
     type: 'info',
@@ -811,15 +798,6 @@ const downloadQRCode = () => {
 }
 
 // 扫码相关方法
-const handleShippingModeChange = (mode) => {
-  if (mode === 'scan') {
-    nextTick(() => {
-      if (scanInput.value) {
-        scanInput.value.focus()
-      }
-    })
-  }
-}
 
 const handleScanInput = (value) => {
   // 扫码枪通常会快速输入完整数据，这里可以添加防抖处理
