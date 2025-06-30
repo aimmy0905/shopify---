@@ -494,7 +494,7 @@ const handleSelectionChange = (selection) => {
 
 const handleAddProduct = () => {
   router.push({ 
-    name: 'CreateProduct', 
+    name: 'AdminProductCreate', 
     query: { supplier_id: supplierId.value } 
   })
 }

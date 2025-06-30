@@ -147,7 +147,7 @@
     <el-dialog
       v-model="createOrderDialogVisible"
       title="创建采购订单"
-      width="800px"
+      width="1200px"
       :before-close="handleCreateOrderClose"
     >
       <el-form :model="orderForm" label-width="120px">
@@ -175,6 +175,68 @@
             placeholder="请输入详细收货地址" 
           />
         </el-form-item>
+        
+        <!-- 商品选择区域 -->
+        <el-form-item label="选择商品" required>
+          <div class="product-selection-area">
+            <el-button type="primary" @click="showProductDialog = true">
+              <el-icon><Plus /></el-icon>
+              添加商品
+            </el-button>
+            
+            <!-- 已选商品列表 -->
+            <div v-if="orderForm.items.length > 0" class="selected-products">
+              <h4>已选商品</h4>
+              <div class="product-list">
+                <div 
+                  v-for="(item, index) in orderForm.items" 
+                  :key="item.id" 
+                  class="product-item-card"
+                >
+                  <img :src="item.image" class="product-image" />
+                  <div class="product-info">
+                    <div class="product-name">{{ item.name }}</div>
+                    <div class="product-sku">SKU: {{ item.sku }}</div>
+                  </div>
+                  <div class="product-controls">
+                    <div class="quantity-control">
+                      <label>数量:</label>
+                      <el-input-number 
+                        v-model="item.quantity" 
+                        :min="1" 
+                        :max="item.stock"
+                        @change="updateItemTotal(index)"
+                      />
+                    </div>
+                    <div class="price-control">
+                      <label>单价:</label>
+                      <el-input-number 
+                        v-model="item.unit_price" 
+                        :min="0" 
+                        :precision="2"
+                        @change="updateItemTotal(index)"
+                      />
+                    </div>
+                    <div class="item-total">
+                      小计: ${{ (item.quantity * item.unit_price).toFixed(2) }}
+                    </div>
+                    <el-button 
+                      type="danger" 
+                      size="small" 
+                      @click="removeProduct(index)"
+                    >
+                      删除
+                    </el-button>
+                  </div>
+                </div>
+              </div>
+              <div class="order-total">
+                <strong>订单总价: ${{ orderTotal.toFixed(2) }}</strong>
+              </div>
+            </div>
+          </div>
+        </el-form-item>
+
         <el-form-item label="备注">
           <el-input 
             v-model="orderForm.remark" 
@@ -187,6 +249,62 @@
       <template #footer>
         <el-button @click="createOrderDialogVisible = false">取消</el-button>
         <el-button type="primary" @click="createOrder">创建订单</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 商品选择弹窗 -->
+    <el-dialog
+      v-model="showProductDialog"
+      title="选择商品"
+      width="900px"
+      :before-close="handleProductDialogClose"
+    >
+      <div class="product-selection-dialog">
+        <!-- 搜索区域 -->
+        <div class="product-search">
+          <el-input
+            v-model="productSearchKeyword"
+            placeholder="搜索商品名称、SKU"
+            style="width: 300px"
+            :prefix-icon="Search"
+            clearable
+            @input="filterProducts"
+          />
+          <el-select v-model="productCategoryFilter" placeholder="商品分类" style="width: 150px" @change="filterProducts">
+            <el-option label="全部分类" value="" />
+            <el-option v-for="category in categories" :key="category.id" :label="category.name" :value="category.id" />
+          </el-select>
+        </div>
+        
+        <!-- 商品列表 -->
+        <div class="product-grid">
+          <div 
+            v-for="product in filteredProducts" 
+            :key="product.id"
+            class="product-card"
+            :class="{ 'selected': isProductSelected(product.id) }"
+            @click="toggleProductSelection(product)"
+          >
+            <img :src="product.image" class="product-card-image" />
+            <div class="product-card-info">
+              <div class="product-card-name">{{ product.name }}</div>
+              <div class="product-card-sku">SKU: {{ product.sku }}</div>
+              <div class="product-card-price">${{ product.price.toFixed(2) }}</div>
+              <div class="product-card-stock">库存: {{ product.stock }}</div>
+            </div>
+            <div class="product-card-overlay" v-if="isProductSelected(product.id)">
+              <el-icon><Check /></el-icon>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <template #footer>
+        <div class="dialog-footer">
+          <span class="selected-count">已选择 {{ selectedProducts.length }} 个商品</span>
+          <el-button @click="showProductDialog = false">取消</el-button>
+          <el-button type="primary" @click="confirmProductSelection">确认选择</el-button>
+        </div>
       </template>
     </el-dialog>
 
@@ -321,9 +439,9 @@
 <script setup>
 import { ref, reactive, computed, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Search, Download, View } from '@element-plus/icons-vue'
+import { Plus, Search, Download, View, Check } from '@element-plus/icons-vue'
 import { useRouter } from 'vue-router'
-import { purchaseOrders, customers } from '@/data/mockData.js'
+import { purchaseOrders, customers, generateMockProducts, categories } from '@/data/mockData.js'
 import QRCode from 'qrcode'
 
 const router = useRouter()
@@ -347,12 +465,21 @@ const scanStatus = ref({
   text: '等待扫码'
 })
 
+// 商品相关数据
+const showProductDialog = ref(false)
+const productSearchKeyword = ref('')
+const productCategoryFilter = ref('')
+const allProducts = ref(generateMockProducts(50))
+const selectedProducts = ref([])
+const filteredProducts = ref([])
+
 // 表单数据
 const orderForm = reactive({
   customer_id: null,
   receiver_name: '',
   receiver_phone: '',
   receiver_address: '',
+  items: [],
   remark: ''
 })
 
@@ -379,6 +506,16 @@ const filteredOrders = computed(() => {
     return matchKeyword && matchStatus && matchPaymentStatus
   })
 })
+
+// 订单总价计算
+const orderTotal = computed(() => {
+  return orderForm.items.reduce((total, item) => {
+    return total + (item.quantity * item.unit_price)
+  }, 0)
+})
+
+// 初始化商品列表
+filteredProducts.value = allProducts.value
 
 // 状态映射函数
 const getStatusType = (status) => {
@@ -432,13 +569,20 @@ const handleCreateOrderClose = () => {
     receiver_name: '',
     receiver_phone: '',
     receiver_address: '',
+    items: [],
     remark: ''
   })
+  selectedProducts.value = []
 }
 
 const createOrder = () => {
   if (!orderForm.customer_id || !orderForm.receiver_name || !orderForm.receiver_phone || !orderForm.receiver_address) {
     ElMessage.error('请填写完整的订单信息')
+    return
+  }
+
+  if (orderForm.items.length === 0) {
+    ElMessage.error('请至少选择一个商品')
     return
   }
 
@@ -470,9 +614,93 @@ const createOrder = () => {
     paid_at: null
   }
 
+  // 使用表单中的商品数据
+  newOrder.items = [...orderForm.items]
+  newOrder.total_amount = orderTotal.value
+  newOrder.subtotal = orderTotal.value
+
   orderList.value.unshift(newOrder)
   createOrderDialogVisible.value = false
   ElMessage.success('订单创建成功')
+}
+
+// 商品选择相关方法
+const filterProducts = () => {
+  let filtered = allProducts.value
+
+  // 按关键词筛选
+  if (productSearchKeyword.value) {
+    const keyword = productSearchKeyword.value.toLowerCase()
+    filtered = filtered.filter(product => 
+      product.name.toLowerCase().includes(keyword) ||
+      product.sku.toLowerCase().includes(keyword)
+    )
+  }
+
+  // 按分类筛选
+  if (productCategoryFilter.value) {
+    filtered = filtered.filter(product => 
+      product.categoryId === productCategoryFilter.value
+    )
+  }
+
+  filteredProducts.value = filtered
+}
+
+const isProductSelected = (productId) => {
+  return selectedProducts.value.some(p => p.id === productId)
+}
+
+const toggleProductSelection = (product) => {
+  const index = selectedProducts.value.findIndex(p => p.id === product.id)
+  if (index > -1) {
+    selectedProducts.value.splice(index, 1)
+  } else {
+    selectedProducts.value.push(product)
+  }
+}
+
+const confirmProductSelection = () => {
+  // 将选中的商品添加到订单中
+  selectedProducts.value.forEach(product => {
+    const existingItem = orderForm.items.find(item => item.id === product.id)
+    if (!existingItem) {
+      orderForm.items.push({
+        id: product.id,
+        product_id: product.id,
+        product_name: product.name,
+        product_image: product.image,
+        name: product.name,
+        image: product.image,
+        sku: product.sku,
+        stock: product.stock,
+        quantity: 1,
+        unit_price: product.price
+      })
+    }
+  })
+  
+  const addedCount = selectedProducts.value.length
+  showProductDialog.value = false
+  selectedProducts.value = []
+  ElMessage.success(`已添加 ${addedCount} 个商品`)
+}
+
+const handleProductDialogClose = () => {
+  selectedProducts.value = []
+  productSearchKeyword.value = ''
+  productCategoryFilter.value = ''
+  filteredProducts.value = allProducts.value
+}
+
+const updateItemTotal = (index) => {
+  // 触发响应式更新，计算总价
+  // orderTotal 是计算属性，会自动更新
+}
+
+const removeProduct = (index) => {
+  orderForm.items.splice(index, 1)
+  ElMessage.success('商品已移除')
 }
 
 const viewOrderDetail = (order) => {
@@ -805,5 +1033,257 @@ const processScanData = () => {
   margin-top: 20px;
   padding-top: 20px;
   border-top: 1px solid #ebeef5;
+}
+
+/* 商品选择相关样式 */
+.product-selection-area {
+  border: 1px solid #e4e7ed;
+  border-radius: 8px;
+  padding: 20px;
+  background: #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+.selected-products {
+  margin-top: 20px;
+}
+
+.selected-products h4 {
+  margin: 0 0 16px 0;
+  color: #303133;
+  font-size: 16px;
+  font-weight: 600;
+  border-bottom: 2px solid #409eff;
+  padding-bottom: 8px;
+  display: inline-block;
+}
+
+.product-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.product-item-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px;
+  background: #fafafa;
+  border: 1px solid #e4e7ed;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.product-item-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-color: #409eff;
+}
+
+.product-image {
+  width: 80px;
+  height: 80px;
+  border-radius: 6px;
+  object-fit: cover;
+  border: 1px solid #e4e7ed;
+  flex-shrink: 0;
+}
+
+.product-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.product-name {
+  font-weight: 600;
+  color: #303133;
+  margin-bottom: 6px;
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.product-sku {
+  font-size: 13px;
+  color: #909399;
+  background: #f0f2f5;
+  padding: 2px 8px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.product-controls {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.quantity-control,
+.price-control {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.quantity-control label,
+.price-control label {
+  font-size: 13px;
+  color: #606266;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.quantity-control .el-input-number,
+.price-control .el-input-number {
+  width: 120px;
+}
+
+.item-total {
+  font-weight: 600;
+  color: #E6A23C;
+  font-size: 16px;
+  background: #fef7e7;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #f5d57a;
+}
+
+.order-total {
+  margin-top: 20px;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #fef7e7 0%, #fff2cc 100%);
+  border: 2px solid #f5d57a;
+  border-radius: 8px;
+  text-align: center;
+  font-size: 20px;
+  font-weight: 700;
+  color: #b8860b;
+  box-shadow: 0 2px 8px rgba(245, 213, 122, 0.3);
+}
+
+@media (max-width: 768px) {
+  .product-item-card {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  
+  .product-controls {
+    justify-content: center;
+    width: 100%;
+  }
+  
+  .quantity-control,
+  .price-control {
+    align-items: center;
+  }
+}
+
+/* 商品选择弹窗样式 */
+.product-selection-dialog {
+  padding: 16px 0;
+}
+
+.product-search {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  align-items: center;
+}
+
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.product-card {
+  position: relative;
+  border: 1px solid #dcdfe6;
+  border-radius: 8px;
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.product-card:hover {
+  border-color: #409EFF;
+  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.1);
+}
+
+.product-card.selected {
+  border-color: #409EFF;
+  background: #ecf5ff;
+}
+
+.product-card-image {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+
+.product-card-info {
+  text-align: center;
+}
+
+.product-card-name {
+  font-weight: 500;
+  color: #303133;
+  margin-bottom: 4px;
+  font-size: 14px;
+  line-height: 1.2;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.product-card-sku {
+  font-size: 12px;
+  color: #909399;
+  margin-bottom: 4px;
+}
+
+.product-card-price {
+  font-weight: 500;
+  color: #E6A23C;
+  margin-bottom: 4px;
+}
+
+.product-card-stock {
+  font-size: 12px;
+  color: #67C23A;
+}
+
+.product-card-overlay {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  background: #409EFF;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.selected-count {
+  color: #606266;
+  font-size: 14px;
 }
 </style>

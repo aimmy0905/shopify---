@@ -1,11 +1,18 @@
 <template>
   <div id="app">
+    <StagewiseToolbar :config="stageWiseConfig" />
     <router-view />
   </div>
 </template>
 
 <script setup>
-// 使用 Composition API 的 setup 语法
+import { StagewiseToolbar } from '@stagewise/toolbar-vue'
+import { VuePlugin } from '@stagewise-plugins/vue'
+
+// Configure stagewise toolbar for development mode
+const stageWiseConfig = {
+  plugins: [VuePlugin]
+}
 </script>
 
 <style>
